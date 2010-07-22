@@ -40,7 +40,14 @@ public class Parser extends BaseParser<Object> {
 
 
     /**
-     * 
+     * (
+     *     (Class / ID / Tag / Ident)
+     *     Attribute*
+     *     (
+     *         '(' Alpha+ ')' / '(' (PseudoExp / Selector / Digit1) ')'
+     *     )?
+     * )+
+     * / Attribute+ / '@media' / '@font-face'
      *
      * Ex: div / .class / #id / input[type="text"] / lang(fr)
      */
