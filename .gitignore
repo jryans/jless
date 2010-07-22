@@ -2,3 +2,6 @@
 *.iml
 *.ipr
 *.iws
+
+# Compiled Output
+target

@@ -1,5 +1,6 @@
 package com.bazaarvoice.jless;
 
+import com.bazaarvoice.jless.parser.Parser;
 import org.parboiled.Parboiled;
 import org.parboiled.RecoveringParseRunner;
 import org.parboiled.errors.ErrorUtils;
