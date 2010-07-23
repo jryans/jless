@@ -2,6 +2,7 @@ package com.bazaarvoice.jless.parser;
 
 import org.parboiled.BaseParser;
 import org.parboiled.Rule;
+import org.parboiled.annotations.SuppressSubnodes;
 
 /**
  * Transcribed from the <a href="http://github.com/cloudhead/less/blob/master/lib/less/engine/grammar">LESS Treetop grammar</a>
@@ -13,31 +14,59 @@ public class Parser extends BaseParser<Object> {
 
     // TODO: Remove Lower, Use Ident, etc.
 
-    public Rule Document() {
-        return Entity();
+    @SuppressSubnodes
+    public Rule Primary() {
+        return ZeroOrMore(FirstOf(/*Import(), */Declaration(), RuleSet()/*, Mixin()*/, Comment()));
     }
 
-    Rule URL() {
-        return Empty();
+    Rule Comment() {
+        return FirstOf(MultipleLineComment(), SingleLineComment());
     }
 
-    Rule Accessor() {
-        return Empty();
+    /**
+     * Ws0 '//' (!'\n' .)* '\n' Ws0
+     */
+    Rule SingleLineComment() {
+        return Sequence(Ws0(), "//", ZeroOrMore(Sequence(TestNot('\n'), Any())), '\n', Ws0());
     }
 
-    Rule Variable() {
-        return Empty();
+    /**
+     * Ws0 '/*' (!'*\/' .)* '*\/' Ws0
+     */
+    Rule MultipleLineComment() {
+        return Sequence(Ws0(), "/*", ZeroOrMore(Sequence(TestNot("*/"), Any())), "*/", Ws0());
+    }
+
+    // ********** CSS Rule Sets **********
+
+    /**
+     * Selectors '{' Ws0 Primary Ws0 '}' Sp0 ';'? Ws0
+     *
+     * TODO: What is hide for? Add mixin.
+     *
+     * Ex: div, .class, body > p {...}
+     */
+    Rule RuleSet() {
+        return Sequence(Selectors(), '{', Ws0(), Primary(), Ws0(), '}', Sp0(), Optional(';'), Ws0());
     }
 
     // ********** CSS Selectors **********
 
     /**
+     * Ws0 Selector (Sp0 ',' Ws0 Selector)* Ws0
+     */
+    Rule Selectors() {
+        return Sequence(Ws0(), Selector(), ZeroOrMore(Sequence(Sp0(), ',', Ws0(), Selector())), Ws0());
+    }
+
+    /**
+     * (Sp0 Select Element Sp0)+
+     *
      * Ex: div > p a { ... }
      */
     Rule Selector() {
-        
+        return OneOrMore(Sequence(Sp0(), Select(), Element(), Sp0()));
     }
-
 
     /**
      * (
@@ -52,7 +81,19 @@ public class Parser extends BaseParser<Object> {
      * Ex: div / .class / #id / input[type="text"] / lang(fr)
      */
     Rule Element() {
-        
+        return FirstOf(
+                OneOrMore(Sequence(
+                        FirstOf(Class(), ID(), Tag(), Ident()),
+                        ZeroOrMore(Attribute()),
+                        Optional(FirstOf(
+                                Sequence('(', OneOrMore(Alpha()), ')'),
+                                Sequence('(', FirstOf(/*PseudoExp(), */Selector(), Digit1()), ')')
+                        ))
+                )),
+                OneOrMore(Attribute()),
+                "@media",
+                "@font-face"
+        );
     }
 
     /**
@@ -77,6 +118,39 @@ public class Parser extends BaseParser<Object> {
                 FirstOf(CharSet("-_"), Alpha()),
                 ZeroOrMore(FirstOf(CharSet("-_"), Alphanumeric()))
         );
+    }
+
+    // ********** Variables & Expressions **********
+
+    /**
+     * Ws0 (Ident / Variable) Sp0 ':' Ws0 Expressions (Ws0 ',' Ws0 Expressions)* Sp0 (';' / Ws0 &'}') Ws0
+     * / Ws0 Ident Sp0 ':' Sp0 ';' Ws0
+     *
+     * Ex: @my-var: 12px; height: 100%;
+     */
+    Rule Declaration() {
+        return FirstOf(
+                Sequence(
+                        Ws0(),
+                        /*FirstOf(*/Ident()/*, Variable())*/,
+                        Sp0(),
+                        ':',
+                        Ws0(),
+                        Expressions(),
+                        ZeroOrMore(Sequence(Ws0(), ',', Ws0(), Expressions())),
+                        Sp0(),
+                        FirstOf(';', Sequence(Ws0(), Test('}'))),
+                        Ws0()
+                ),
+                Sequence(Ws0(), Ident(), Sp0(), ':', Sp0(), ';', Ws0())
+        );
+    }
+
+    /**
+     * TODO: More than catch-all rule
+     */
+    Rule Expressions() {
+        return OneOrMore(FirstOf(CharSet("-_.&*/=:,+? []()#%"), Alphanumeric()));
     }
 
     // ********** HTML Entities **********
@@ -147,19 +221,16 @@ public class Parser extends BaseParser<Object> {
     /**
      * [-_Alpha]+ Arguments
      */
-    Rule Function() {
+    /*Rule Function() {
         return Sequence(
                 OneOrMore(FirstOf(CharSet("-_"), Alpha())),
                 Arguments()
         );
-    }
+    }*/
 
     /**
      * '(' Sp0 Expressions Sp0 (',' Sp0 Expressions Sp0)* ')' / '(' Sp0 ')'
      */
-    Rule Arguments() {
-        return Empty();
-    }
 
     // ********** Entities **********
 
@@ -169,14 +240,7 @@ public class Parser extends BaseParser<Object> {
      * Any whitespace delimited token (??)
      */
     Rule Entity() {
-        return FirstOf(/*URL(), AlphaFilter(), Function(), Accessor(), */Keyword(), Variable(), Literal(), Font());
-    }
-
-    /**
-     * May not be used...
-     */
-    Rule Fonts() {
-        return Empty();
+        return FirstOf(/*URL(), AlphaFilter(), Function(), Accessor(), */Keyword(), /*Variable(), */Literal(), Font());
     }
 
     /**
@@ -259,10 +323,10 @@ public class Parser extends BaseParser<Object> {
      * '#' RGB / (('hsl' / 'rgb') 'a'?) Arguments
      */
     Rule Color() {
-        return FirstOf(
-                Sequence('#', RGB()),
+        return /*FirstOf(*/
+                Sequence('#', RGB())/*,
                 Sequence(FirstOf("hsl", "rgb"), Optional('a'), Arguments())
-        );
+        )*/;
     }
 
     /**
@@ -273,10 +337,6 @@ public class Parser extends BaseParser<Object> {
                 Sequence(Hex(), Hex(), Hex(), Hex(), Hex(), Hex()),
                 Sequence(Hex(), Hex(), Hex())
         );
-    }
-
-    Rule AlphaFilter() {
-        return Empty();
     }
 
     // ********** Characters & Simple Character Groups **********

@@ -27,7 +27,41 @@ public class LessTransformer {
 
         Parser parser = transformer.getParser();
 
-        ParsingResult<?> result = RecoveringParseRunner.run(parser.Document(), ".BVDI_Test { padding: 3px; }");
+//        ParsingResult<?> result = RecoveringParseRunner.run(parser.Primary(), ".BVDI_Test { padding: 3px; }");
+
+        ParsingResult<?> result = RecoveringParseRunner.run(parser.Primary(),
+                "@x: blue;\n" +
+                "@z: transparent;\n" +
+                "@mix: none;\n" +
+                "\n" +
+                ".mixin {\n" +
+                "  @mix: #989;\n" +
+                "}\n" +
+                "\n" +
+                ".tiny-scope {\n" +
+                "  color: @mix; // #989\n" +
+                "  .mixin;\n" +
+                "}\n" +
+                "\n" +
+                ".scope1 {\n" +
+                "  @y: orange;\n" +
+                "  @z: black;\n" +
+                "  color: @x; // blue\n" +
+                "  border-color: @z; // black\n" +
+                "  .hidden {\n" +
+                "    @x: #131313;\n" +
+                "  }\n" +
+                "  .scope2 {\n" +
+                "    @y: red;\n" +
+                "    color: @x; // blue\n" +
+                "    .scope3 {\n" +
+                "      @local: white;\n" +
+                "      color: @y; // red\n" +
+                "      border-color: @z; // black\n" +
+                "      background-color: @local; // white\n" +
+                "    }\n" +
+                "  }\n" +
+                "}");
 
         if (result.hasErrors()) {
             System.out.println("Parse Errors:\n" + ErrorUtils.printParseErrors(result));
