@@ -10,6 +10,7 @@ import org.parboiled.annotations.SuppressSubnodes;
  *
  * @author J. Ryan Stinnett
  */
+//@BuildParseTree
 public class Parser extends BaseParser<Object> {
 
     // TODO: Remove Lower, Use Ident, etc.
