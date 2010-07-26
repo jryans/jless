@@ -1,8 +1,11 @@
 package com.bazaarvoice.jless.parser;
 
+import com.bazaarvoice.jless.ast.DocumentNode;
+import com.bazaarvoice.jless.ast.Node;
+import com.bazaarvoice.jless.ast.SimpleNode;
 import org.parboiled.BaseParser;
 import org.parboiled.Rule;
-import org.parboiled.annotations.SuppressSubnodes;
+import org.parboiled.annotations.BuildParseTree;
 
 /**
  * Transcribed from the <a href="http://github.com/cloudhead/less/blob/master/lib/less/engine/grammar">LESS Treetop grammar</a>
@@ -10,14 +13,20 @@ import org.parboiled.annotations.SuppressSubnodes;
  *
  * @author J. Ryan Stinnett
  */
-//@BuildParseTree
-public class Parser extends BaseParser<Object> {
+@BuildParseTree
+public class Parser extends BaseParser<Node> {
 
     // TODO: Remove Lower, Use Ident, etc.
 
-    @SuppressSubnodes
+//    @SuppressSubnodes
     public Rule Primary() {
-        return ZeroOrMore(FirstOf(/*Import(), */Declaration(), RuleSet()/*, Mixin()*/, Comment()));
+        return Sequence(
+                push(new DocumentNode()),
+                ZeroOrMore(Sequence(
+                        FirstOf(/*Import(), */Declaration(), RuleSet()/*, Mixin()*/, Comment()),
+                        peek().addChild(new SimpleNode(match()))
+                ))
+        );
     }
 
     Rule Comment() {
