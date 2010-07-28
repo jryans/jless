@@ -21,15 +21,5 @@ public abstract class Node extends MutableTreeNodeImpl<Node> {
         return true;
     }
 
-    public boolean accept(NodeVisitor visitor) {
-        if (visitor.visitEnter(this)) {
-            for (Node child : getChildren()) {
-                if (!child.accept(visitor)) {
-                    break;
-                }
-            }
-        }
-
-        return visitor.visit(this);
-    }
+    public abstract boolean accept(NodeVisitor visitor);
 }

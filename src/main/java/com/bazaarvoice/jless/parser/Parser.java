@@ -1,11 +1,14 @@
 package com.bazaarvoice.jless.parser;
 
-import com.bazaarvoice.jless.ast.DocumentNode;
-import com.bazaarvoice.jless.ast.ListNode;
 import com.bazaarvoice.jless.ast.MultipleLineCommentNode;
 import com.bazaarvoice.jless.ast.Node;
+import com.bazaarvoice.jless.ast.PropertyNode;
 import com.bazaarvoice.jless.ast.RuleSetNode;
+import com.bazaarvoice.jless.ast.ScopeNode;
 import com.bazaarvoice.jless.ast.SelectorNode;
+import com.bazaarvoice.jless.ast.SelectorSegmentNode;
+import com.bazaarvoice.jless.ast.SelectorsNode;
+import com.bazaarvoice.jless.ast.SimpleNode;
 import com.bazaarvoice.jless.ast.SingleLineCommentNode;
 import org.parboiled.BaseParser;
 import org.parboiled.Context;
@@ -29,17 +32,17 @@ public class Parser extends BaseParser<Node> {
     // TODO: Remove Lower, Use Ident, etc.
 
 //    @SuppressSubnodes
-    public Rule Primary() {
+    public Rule Scope() {
         return Sequence(
-                push(new DocumentNode()),
+                push(new ScopeNode()),
                 ZeroOrMore(Sequence(
                         FirstOf(/*Import(), */Declaration(), RuleSet()/*, Mixin()*/, Comment()),
-                        peek(1).addChild(pop()),
-                        debug(getContext())
+                        peek(1).addChild(pop())
                 ))
         );
     }
 
+    // TODO: Remove
     public Rule Primary2() {
         return Sequence(
                 true,
@@ -90,7 +93,8 @@ public class Parser extends BaseParser<Node> {
     Rule RuleSet() {
         return Sequence(
                 Selectors(), push(new RuleSetNode(pop())),
-                '{', Ws0(), Primary2(), Ws0(), '}', Sp0(), Optional(';'), Ws0()
+                '{', Ws0(), Scope(), peek(1).addChild(pop()), Ws0(), '}',
+                Sp0(), Optional(';'), Ws0()
         );
     }
 
@@ -100,7 +104,12 @@ public class Parser extends BaseParser<Node> {
      * Ws0 Selector (Sp0 ',' Ws0 Selector)* Ws0
      */
     Rule Selectors() {
-        return Sequence(Ws0(), Selector(), ZeroOrMore(Sequence(Sp0(), ',', Ws0(), Selector())), Ws0());
+        return Sequence(
+                Ws0(),
+                Selector(), push(new SelectorsNode(pop())),
+                ZeroOrMore(Sequence(Sp0(), ',', Ws0(), Selector(), peek(1).addChild(pop()))),
+                Ws0()
+        );
     }
 
     /**
@@ -109,18 +118,16 @@ public class Parser extends BaseParser<Node> {
      * Ex: div > p a { ... }
      */
     Rule Selector() {
-        Var<ListNode<SelectorNode>> selectorsNode = new Var<ListNode<SelectorNode>>();
-        Var<SelectorNode> selectorNode = new Var<SelectorNode>();
+        Var<SelectorSegmentNode> selectorSegmentNode = new Var<SelectorSegmentNode>();
         return Sequence(
-                selectorsNode.set(new ListNode<SelectorNode>()),
+                push(new SelectorNode()),
                 OneOrMore(Sequence(
                         Sp0(),
-                        Select(), selectorNode.set(new SelectorNode(match())),
-                        Element(), selectorNode.get().setElement(match()),
+                        Select(), selectorSegmentNode.set(new SelectorSegmentNode(match())),
+                        Element(), selectorSegmentNode.get().setElement(match()),
                         Sp0(),
-                        selectorsNode.get().addChild(selectorNode.getAndClear())
-                )),
-                push(selectorsNode.getAndClear())
+                        peek().addChild(selectorSegmentNode.getAndClear())
+                ))
         );
     }
 
@@ -188,15 +195,13 @@ public class Parser extends BaseParser<Node> {
         return FirstOf(
                 Sequence(
                         Ws0(),
-                        /*FirstOf(*/Ident()/*, Variable())*/,
-                        Sp0(),
-                        ':',
-                        Ws0(),
-                        Expressions(),
-                        ZeroOrMore(Sequence(Ws0(), ',', Ws0(), Expressions())),
-                        Sp0(),
-                        FirstOf(';', Sequence(Ws0(), Test('}'))),
-                        Ws0()
+                        /*FirstOf(*/Ident()/*, Variable())*/, push(new PropertyNode(match())),
+                        Sp0(), ':', Ws0(),
+                        Expressions(), peek(1).addChild(pop()),
+                        ZeroOrMore(
+                                Sequence(Ws0(), ',', Ws0(), Expressions(), peek(1).addChild(pop()))
+                        ),
+                        Sp0(), FirstOf(';', Sequence(Ws0(), Test('}'))), Ws0()
                 ),
                 // Empty rules are ignored (TODO: Remove?)
                 Sequence(Ws0(), Ident(), Sp0(), ':', Sp0(), ';', Ws0())
@@ -207,7 +212,7 @@ public class Parser extends BaseParser<Node> {
      * TODO: More than catch-all rule
      */
     Rule Expressions() {
-        return OneOrMore(FirstOf(CharSet("-_.&*/=:,+? []()#%"), Alphanumeric()));
+        return Sequence(OneOrMore(FirstOf(CharSet("-_.&*/=:,+? []()#%"), Alphanumeric())), push(new SimpleNode(match())));
     }
 
     // ********** HTML Entities **********

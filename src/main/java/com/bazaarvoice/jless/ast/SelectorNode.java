@@ -1,34 +1,19 @@
 package com.bazaarvoice.jless.ast;
 
+import com.bazaarvoice.jless.ast.visitor.NodeVisitor;
+
 public class SelectorNode extends Node {
 
-    private String _select;
-    private String _element;
+    @Override
+    public boolean accept(NodeVisitor visitor) {
+        if (visitor.visitEnter(this)) {
+            for (Node child : getChildren()) {
+                if (!child.accept(visitor)) {
+                    break;
+                }
+            }
+        }
 
-    public SelectorNode(String select) {
-        _select = select;
-    }
-
-    public SelectorNode(String select, String element) {
-        _select = select;
-        _element = element;
-    }
-
-    public String getSelect() {
-        return _select;
-    }
-
-    public boolean setSelect(String select) {
-        _select = select;
-        return true;
-    }
-
-    public String getElement() {
-        return _element;
-    }
-
-    public boolean setElement(String element) {
-        _element = element;
-        return true;
+        return visitor.visit(this);
     }
 }

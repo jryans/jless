@@ -1,15 +1,23 @@
 package com.bazaarvoice.jless.ast;
 
-import java.util.ArrayList;
-import java.util.List;
+import com.bazaarvoice.jless.ast.visitor.NodeVisitor;
 
 public class RuleSetNode extends Node {
 
-    private ListNode<SelectorNode> _selectors;
+    public RuleSetNode(Node child) {
+        super(child);
+    }
 
-    
+    @Override
+    public boolean accept(NodeVisitor visitor) {
+        if (visitor.visitEnter(this)) {
+            for (Node child : getChildren()) {
+                if (!child.accept(visitor)) {
+                    break;
+                }
+            }
+        }
 
-    public void addSelector(SelectorNode selector) {
-        _selectors.add(selector);
+        return visitor.visit(this);
     }
 }

@@ -1,6 +1,7 @@
 package com.bazaarvoice.jless;
 
 import com.bazaarvoice.jless.ast.Node;
+import com.bazaarvoice.jless.print.Printer;
 import org.apache.commons.io.IOUtils;
 import org.parboiled.RecoveringParseRunner;
 import org.parboiled.errors.ErrorUtils;
@@ -54,7 +55,7 @@ public class LessTranslatorTest {
     }
 
     private ParsingResult<Node> runParser(String lessInput) {
-        return RecoveringParseRunner.run(_transformer.getParser().Primary(), lessInput);
+        return RecoveringParseRunner.run(_transformer.getParser().Scope(), lessInput);
     }
 
     private String getResultStatus(ParsingResult<Node> result) {
@@ -71,6 +72,10 @@ public class LessTranslatorTest {
         if (result.resultValue != null) {
             sb.append("Abstract Syntax Tree:\n").append(GraphUtils.printTree(result.resultValue, new ToStringFormatter<Node>(null))).append('\n');
         }
+
+        Printer p = new Printer();
+        result.resultValue.accept(p);
+        sb.append(p.toString());
 
         return sb.toString();
     }

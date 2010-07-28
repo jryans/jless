@@ -2,10 +2,16 @@ package com.bazaarvoice.jless.ast;
 
 import com.bazaarvoice.jless.ast.visitor.NodeVisitor;
 
-public class SingleLineCommentNode extends SimpleNode {
+public class PropertyNode extends Node {
 
-    public SingleLineCommentNode(String text) {
-        super(text);
+    private String _name;
+
+    public PropertyNode(String name) {
+        _name = name;
+    }
+
+    public String getName() {
+        return _name;
     }
 
     @Override
