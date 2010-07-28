@@ -1,11 +1,17 @@
 package com.bazaarvoice.jless.parser;
 
 import com.bazaarvoice.jless.ast.DocumentNode;
+import com.bazaarvoice.jless.ast.ListNode;
+import com.bazaarvoice.jless.ast.MultipleLineCommentNode;
 import com.bazaarvoice.jless.ast.Node;
-import com.bazaarvoice.jless.ast.SimpleNode;
+import com.bazaarvoice.jless.ast.RuleSetNode;
+import com.bazaarvoice.jless.ast.SelectorNode;
+import com.bazaarvoice.jless.ast.SingleLineCommentNode;
 import org.parboiled.BaseParser;
+import org.parboiled.Context;
 import org.parboiled.Rule;
 import org.parboiled.annotations.BuildParseTree;
+import org.parboiled.support.Var;
 
 /**
  * Transcribed from the <a href="http://github.com/cloudhead/less/blob/master/lib/less/engine/grammar">LESS Treetop grammar</a>
@@ -16,6 +22,10 @@ import org.parboiled.annotations.BuildParseTree;
 @BuildParseTree
 public class Parser extends BaseParser<Node> {
 
+    boolean debug(Context context) {
+        return true;
+    }
+
     // TODO: Remove Lower, Use Ident, etc.
 
 //    @SuppressSubnodes
@@ -24,7 +34,20 @@ public class Parser extends BaseParser<Node> {
                 push(new DocumentNode()),
                 ZeroOrMore(Sequence(
                         FirstOf(/*Import(), */Declaration(), RuleSet()/*, Mixin()*/, Comment()),
-                        peek().addChild(new SimpleNode(match()))
+                        peek(1).addChild(pop()),
+                        debug(getContext())
+                ))
+        );
+    }
+
+    public Rule Primary2() {
+        return Sequence(
+                true,
+                ZeroOrMore(Sequence(
+                        FirstOf(/*Import(), */Declaration(), RuleSet()/*, Mixin()*/, Comment()),
+                        peek(1).addChild(pop())
+//                        peek().addChild(new TextNode(match())),
+//                        debug(getContext())
                 ))
         );
     }
@@ -37,14 +60,22 @@ public class Parser extends BaseParser<Node> {
      * Ws0 '//' (!'\n' .)* '\n' Ws0
      */
     Rule SingleLineComment() {
-        return Sequence(Ws0(), "//", ZeroOrMore(Sequence(TestNot('\n'), Any())), '\n', Ws0());
+        return Sequence(
+                Ws0(), "//", ZeroOrMore(Sequence(TestNot('\n'), Any())),
+                push(new SingleLineCommentNode(match())),
+                '\n', Ws0()
+        );
     }
 
     /**
      * Ws0 '/*' (!'*\/' .)* '*\/' Ws0
      */
     Rule MultipleLineComment() {
-        return Sequence(Ws0(), "/*", ZeroOrMore(Sequence(TestNot("*/"), Any())), "*/", Ws0());
+        return Sequence(
+                Ws0(), "/*", ZeroOrMore(Sequence(TestNot("*/"), Any())),
+                push(new MultipleLineCommentNode(match())),
+                "*/", Ws0()
+        );
     }
 
     // ********** CSS Rule Sets **********
@@ -57,7 +88,10 @@ public class Parser extends BaseParser<Node> {
      * Ex: div, .class, body > p {...}
      */
     Rule RuleSet() {
-        return Sequence(Selectors(), '{', Ws0(), Primary(), Ws0(), '}', Sp0(), Optional(';'), Ws0());
+        return Sequence(
+                Selectors(), push(new RuleSetNode(pop())),
+                '{', Ws0(), Primary2(), Ws0(), '}', Sp0(), Optional(';'), Ws0()
+        );
     }
 
     // ********** CSS Selectors **********
@@ -75,7 +109,19 @@ public class Parser extends BaseParser<Node> {
      * Ex: div > p a { ... }
      */
     Rule Selector() {
-        return OneOrMore(Sequence(Sp0(), Select(), Element(), Sp0()));
+        Var<ListNode<SelectorNode>> selectorsNode = new Var<ListNode<SelectorNode>>();
+        Var<SelectorNode> selectorNode = new Var<SelectorNode>();
+        return Sequence(
+                selectorsNode.set(new ListNode<SelectorNode>()),
+                OneOrMore(Sequence(
+                        Sp0(),
+                        Select(), selectorNode.set(new SelectorNode(match())),
+                        Element(), selectorNode.get().setElement(match()),
+                        Sp0(),
+                        selectorsNode.get().addChild(selectorNode.getAndClear())
+                )),
+                push(selectorsNode.getAndClear())
+        );
     }
 
     /**
@@ -152,6 +198,7 @@ public class Parser extends BaseParser<Node> {
                         FirstOf(';', Sequence(Ws0(), Test('}'))),
                         Ws0()
                 ),
+                // Empty rules are ignored (TODO: Remove?)
                 Sequence(Ws0(), Ident(), Sp0(), ':', Sp0(), ';', Ws0())
         );
     }

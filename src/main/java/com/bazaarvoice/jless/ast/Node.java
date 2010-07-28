@@ -1,16 +1,16 @@
 package com.bazaarvoice.jless.ast;
 
-import com.bazaarvoice.jless.print.Printer;
+import com.bazaarvoice.jless.ast.visitor.NodeVisitor;
 import org.parboiled.trees.MutableTreeNodeImpl;
 import org.parboiled.trees.TreeUtils;
 
-public class Node extends MutableTreeNodeImpl<Node> {
+public abstract class Node extends MutableTreeNodeImpl<Node> {
 
     public Node() {
-        // empty constructor
     }
 
     public Node(Node child) {
+        this();
         addChild(child);
     }
 
@@ -21,8 +21,15 @@ public class Node extends MutableTreeNodeImpl<Node> {
         return true;
     }
 
-    public void print(Printer printer) {
-        printer.append("Yay!");
-        printer.printChildren(this);
+    public boolean accept(NodeVisitor visitor) {
+        if (visitor.visitEnter(this)) {
+            for (Node child : getChildren()) {
+                if (!child.accept(visitor)) {
+                    break;
+                }
+            }
+        }
+
+        return visitor.visit(this);
     }
 }

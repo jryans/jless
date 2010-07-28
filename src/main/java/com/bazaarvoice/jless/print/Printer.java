@@ -1,15 +1,12 @@
 package com.bazaarvoice.jless.print;
 
-import com.bazaarvoice.jless.ast.Node;
+import com.bazaarvoice.jless.ast.MultipleLineCommentNode;
+import com.bazaarvoice.jless.ast.SelectorNode;
+import com.bazaarvoice.jless.ast.SingleLineCommentNode;
+import com.bazaarvoice.jless.ast.visitor.NodeVisitor;
 import org.parboiled.google.base.Preconditions;
 
-public class Printer {
-
-    public enum Optimization {
-        NONE,
-        LESS_RUBY,
-        INFINITE // This is not selectable as an actual value
-    }
+public class Printer extends NodeVisitor {
 
     private StringBuilder _sb = new StringBuilder();
     private Optimization _optimization;
@@ -23,20 +20,51 @@ public class Printer {
         _optimization = optimization;
     }
 
-    public <T> void printChildren(Node parent) {
-        for (Node child : parent.getChildren()) {
-            child.print(this);
+    @Override
+    public boolean visit(MultipleLineCommentNode node) {
+        if (isIncluded(Optimization.LESS_RUBY)) {
+            print("/*").print(node.getText()).print("*/");
         }
+        return true;
     }
 
-    public Printer append(String s) {
-        return append(s, Optimization.INFINITE);
+    @Override
+    public boolean visit(SelectorNode node) {
+        print(node.getSelect()).print(node.getElement());
+        return true;
     }
 
-    public Printer append(String s, Optimization optionalAt) {
-        if (_optimization.compareTo(optionalAt) < 0) {
+    @Override
+    public boolean visit(SingleLineCommentNode node) {
+        if (isIncluded(Optimization.LESS_RUBY)) {
+            print("//").print(node.getText()).print('\n');
+        }
+        return true;
+    }
+
+    private Printer print(String s) {
+        return print(s, Optimization.INFINITE);
+    }
+
+    private Printer print(String s, Optimization optionalAt) {
+        if (isIncluded(optionalAt)) {
             _sb.append(s);
         }
         return this;
+    }
+
+    private Printer print(Character c) {
+        return print(c, Optimization.INFINITE);
+    }
+
+    private Printer print(Character c, Optimization optionalAt) {
+        if (isIncluded(optionalAt)) {
+            _sb.append(c);
+        }
+        return this;
+    }
+
+    private boolean isIncluded(Optimization optionalAt) {
+        return _optimization.compareTo(optionalAt) < 0;
     }
 }
