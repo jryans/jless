@@ -1,5 +1,7 @@
 package com.bazaarvoice.jless.print;
 
+import com.bazaarvoice.jless.ast.ExpressionNode;
+import com.bazaarvoice.jless.ast.ExpressionsNode;
 import com.bazaarvoice.jless.ast.MultipleLineCommentNode;
 import com.bazaarvoice.jless.ast.PropertyNode;
 import com.bazaarvoice.jless.ast.RuleSetNode;
@@ -29,6 +31,20 @@ public class Printer extends NodeVisitor {
 
     // Node output
 
+
+    @Override
+    public boolean visit(ExpressionNode node) {
+        if (GraphUtils.getLastChild(node.getParent()) != node) {
+            print(' ');
+        }
+        return true;
+    }
+
+    @Override
+    public boolean visit(ExpressionsNode node) {
+        return true;
+    }
+
     @Override
     public boolean visit(MultipleLineCommentNode node) {
         if (isIncluded(Optimization.LESS_RUBY)) {
@@ -39,7 +55,7 @@ public class Printer extends NodeVisitor {
 
     @Override
     public boolean visitEnter(PropertyNode node) {
-        print(node.getName()).print(": ");
+        print(' ').print(node.getName()).print(": ");
         return true;
     }
 
@@ -57,7 +73,7 @@ public class Printer extends NodeVisitor {
     @Override
     public boolean visitEnter(ScopeNode node) {
         if (node.getParent() != null) {
-            print(" { ");
+            print(" {");
         }
         return true;
     }
@@ -86,6 +102,9 @@ public class Printer extends NodeVisitor {
     @Override
     public boolean visit(SelectorSegmentNode node) {
         print(node.getSelect()).print(node.getElement());
+        if (GraphUtils.getLastChild(node.getParent()) != node) {
+            print(' ');
+        }
         return true;
     }
 

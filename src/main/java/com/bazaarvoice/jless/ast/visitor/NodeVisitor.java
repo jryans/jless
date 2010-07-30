@@ -1,5 +1,7 @@
 package com.bazaarvoice.jless.ast.visitor;
 
+import com.bazaarvoice.jless.ast.ExpressionNode;
+import com.bazaarvoice.jless.ast.ExpressionsNode;
 import com.bazaarvoice.jless.ast.MultipleLineCommentNode;
 import com.bazaarvoice.jless.ast.Node;
 import com.bazaarvoice.jless.ast.PropertyNode;
@@ -21,6 +23,10 @@ public abstract class NodeVisitor {
     public boolean visit(Node node) {
         throw new IllegalArgumentException("No visit method for class " + node.getClass().getSimpleName());
     }
+
+    public abstract boolean visit(ExpressionNode node);
+
+    public abstract boolean visit(ExpressionsNode node);
 
     public abstract boolean visit(MultipleLineCommentNode node);
 
