@@ -16,7 +16,6 @@ import com.bazaarvoice.jless.ast.SingleLineCommentNode;
 import org.parboiled.BaseParser;
 import org.parboiled.Context;
 import org.parboiled.Rule;
-import org.parboiled.annotations.BuildParseTree;
 import org.parboiled.support.Var;
 
 /**
@@ -25,36 +24,20 @@ import org.parboiled.support.Var;
  *
  * @author J. Ryan Stinnett
  */
-@BuildParseTree
+//@BuildParseTree
 public class Parser extends BaseParser<Node> {
 
     boolean debug(Context context) {
         return true;
     }
 
-    /*boolean push(Node node) {
-        return set(node);
-    }
-
-    Node pop() {
-        return value();
-    }
-
-    Node peek(int i) {
-        return value();
-    }
-
-    Node peek() {
-        return value();
-    }
-    
-    String match() {
-        return prevText();
-    }*/
-
     // TODO: Remove Lower, Use Ident, etc.
 
 //    @SuppressSubnodes
+    public Rule Document() {
+        return Sequence(Scope(), Eoi());
+    }
+
     public Rule Scope() {
         return Sequence(
                 push(new ScopeNode()),
@@ -138,8 +121,8 @@ public class Parser extends BaseParser<Node> {
                         Sp0(),
                         Select(), selectorSegmentNode.set(new SelectorSegmentNode(match())),
                         Element(), selectorSegmentNode.get().setElement(match()),
-                        Sp0(),
-                        peek().addChild(selectorSegmentNode.getAndClear())
+                        peek().addChild(selectorSegmentNode.getAndClear()),
+                        Sp0(), peek().addChild(new SimpleNode(match()))
                 ))
         );
     }
@@ -217,7 +200,7 @@ public class Parser extends BaseParser<Node> {
                         Sp0(), FirstOf(';', Sequence(Ws0(), Test('}'))), Ws0()
                 ),
                 // Empty rules are ignored (TODO: Remove?)
-                Sequence(Ws0(), Ident(), push(new PropertyNode(match())), Sp0(), ':', Sp0(), ';', Ws0())
+                Sequence(Ws0(), Ident(), push(null), /*push(new PropertyNode(match())), */Sp0(), ':', Sp0(), ';', Ws0())
         );
     }
 
@@ -228,6 +211,7 @@ public class Parser extends BaseParser<Node> {
      */
     Rule Expressions() {
         return FirstOf(
+                // Space-separated expressions
                 Sequence(
                         Expression(), push(new ExpressionsNode(pop())),
                         ZeroOrMore(Sequence(Ws1(), Expression(), peek(1).addChild(pop()))),

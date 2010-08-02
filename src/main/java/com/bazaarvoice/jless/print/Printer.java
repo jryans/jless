@@ -17,8 +17,11 @@ import org.parboiled.trees.GraphUtils;
 
 public class Printer extends NodeVisitor {
 
-    private StringBuilder _sb = new StringBuilder();
+    private static final int INDENT_STEP = 2;
+
     private Optimization _optimization;
+    private StringBuilder _sb = new StringBuilder();
+    private int _indent = 0;
 
     public Printer() {
         _optimization = Optimization.NONE;
@@ -31,7 +34,6 @@ public class Printer extends NodeVisitor {
 
     // Node output
 
-
     @Override
     public boolean visit(ExpressionNode node) {
         if (GraphUtils.getLastChild(node.getParent()) != node) {
@@ -42,6 +44,9 @@ public class Printer extends NodeVisitor {
 
     @Override
     public boolean visit(ExpressionsNode node) {
+        if (GraphUtils.getLastChild(node.getParent()) != node) {
+            print(", ");
+        }
         return true;
     }
 
@@ -55,13 +60,16 @@ public class Printer extends NodeVisitor {
 
     @Override
     public boolean visitEnter(PropertyNode node) {
-        print(' ').print(node.getName()).print(": ");
+        printIndent().print(node.getName()).print(": ");
         return true;
     }
 
     @Override
     public boolean visit(PropertyNode node) {
         print(";");
+        if (node.getParent().getChildren().size() > 1) {
+            printLine();
+        }
         return true;
     }
 
@@ -73,7 +81,12 @@ public class Printer extends NodeVisitor {
     @Override
     public boolean visitEnter(ScopeNode node) {
         if (node.getParent() != null) {
-            print(" {");
+            print("{");
+            if (node.getChildren().size() == 1) {
+                print(' ');
+            } else {
+                printLine().addIndent();
+            }
         }
         return true;
     }
@@ -81,7 +94,13 @@ public class Printer extends NodeVisitor {
     @Override
     public boolean visit(ScopeNode node) {
         if (node.getParent() != null) {
-            print(" }\n");
+            if (node.getChildren().size() == 1) {
+                print(' ');
+            }
+            print('}').printLine();
+            if (node.getChildren().size() > 1) {
+                removeIndent();
+            }
         }
         return true;
     }
@@ -103,7 +122,7 @@ public class Printer extends NodeVisitor {
     public boolean visit(SelectorSegmentNode node) {
         print(node.getSelect()).print(node.getElement());
         if (GraphUtils.getLastChild(node.getParent()) != node) {
-            print(' ');
+//            print(' ');
         }
         return true;
     }
@@ -143,6 +162,40 @@ public class Printer extends NodeVisitor {
         if (isIncluded(optionalAt)) {
             _sb.append(c);
         }
+        return this;
+    }
+
+    private Printer printIndent() {
+        return printIndent(Optimization.INFINITE);
+    }
+
+    private Printer printIndent(Optimization optionalAt) {
+        if (isIncluded(optionalAt)) {
+            for (int i = 0; i < _indent; i++) {
+                _sb.append(' ');
+            }
+        }
+        return this;
+    }
+
+    private Printer printLine() {
+        return printLine(Optimization.INFINITE);
+    }
+
+    private Printer printLine(Optimization optionalAt) {
+        if (isIncluded(optionalAt)) {
+            _sb.append('\n');
+        }
+        return this;
+    }
+
+    private Printer addIndent() {
+        _indent += INDENT_STEP;
+        return this;
+    }
+
+    private Printer removeIndent() {
+        _indent -= INDENT_STEP;
         return this;
     }
 
