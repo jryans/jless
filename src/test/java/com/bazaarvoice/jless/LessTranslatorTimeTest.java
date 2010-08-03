@@ -19,11 +19,11 @@ public class LessTranslatorTimeTest extends LessTranslatorParsingTest {
     private void timeLessParsing(String fileName) {
         long totalTime = 0, minTime = Long.MAX_VALUE, maxTime = 0;
         int i;
-        System.out.println("Parse times for " + fileName);
+        TestUtils.getLog().println("Parse times for " + fileName);
         for (i = 0; i < RUNS_PER_TIMED_SET; i++) {
             parseLess(fileName, false);
-//            System.out.println("Time: " + _parseTime + " ms");
-//            System.out.flush();
+//            TestUtils.getLog().println("Time: " + _parseTime + " ms");
+//            TestUtils.getLog().flush();
             totalTime += _parseTime;
             if (_parseTime < minTime) {
                 minTime = _parseTime;
@@ -32,10 +32,10 @@ public class LessTranslatorTimeTest extends LessTranslatorParsingTest {
                 maxTime = _parseTime;
             }
         }
-        System.out.println("Min. Time: " + minTime + " ms");
-        System.out.println("Max. Time: " + maxTime + " ms");
-        System.out.println("Avg. Time: " + (totalTime / i) + " ms");
-        System.out.flush();
+        TestUtils.getLog().println("Min. Time: " + minTime + " ms");
+        TestUtils.getLog().println("Max. Time: " + maxTime + " ms");
+        TestUtils.getLog().println("Avg. Time: " + (totalTime / i) + " ms");
+        TestUtils.getLog().flush();
     }
     
     @Override

@@ -5,4 +5,7 @@
 
 # Compiled Output
 target
+
+# Testing
 test-output
+test.log

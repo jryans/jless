@@ -1,9 +1,7 @@
 div { color: black; }
 div { width: 99%; }
 * { min-width: 45em; }
-h1 { color: none; }
-h2 > a > p { color: none; }
-h3 { color: none; }
+h1, h2 > a > p, h3 { color: none; }
 div.class { color: blue; }
 div#id { color: green; }
 .class#id { color: purple; }
@@ -14,10 +12,8 @@ div#id { color: green; }
   font-family: 'Garamond Pro';
   src: url("/fonts/garamond-pro.ttf");
 }
-a:hover { color: #999999; }
-a:link { color: #999999; }
-p { text-transform: none; }
-p:first-child { text-transform: none; }
+a:hover, a:link { color: #999999; }
+p, p:first-child { text-transform: none; }
 q:lang(no) { quotes: none; }
 p + h1 { font-size: 2.2em; }
 input[type="text"] { font-weight: normal; }

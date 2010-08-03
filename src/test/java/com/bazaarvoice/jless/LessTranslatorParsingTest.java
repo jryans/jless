@@ -30,7 +30,7 @@ public class LessTranslatorParsingTest {
         try {
             lessInput = IOUtils.toString(lessStream, "UTF-8");
         } catch (IOException e) {
-            System.out.println("Unable to read " + fileName + ".less");
+            TestUtils.getLog().println("Unable to read " + fileName + ".less");
             e.printStackTrace();
         }
 
@@ -39,8 +39,7 @@ public class LessTranslatorParsingTest {
         Assert.assertFalse(result.hasErrors(), getResultStatus(result));
 
         if (alwaysPrintStatus) {
-            System.out.print(getResultStatus(result));
-            System.out.flush();
+            TestUtils.getLog().print(getResultStatus(result));
         }
 
         return result;
@@ -87,13 +86,17 @@ public class LessTranslatorParsingTest {
         runTestFor("css-3");
     }
 
+    public void testWhitespace() {
+        runTestFor("whitespace");
+    }
+
     /*public void testBazaarvoiceDisplayShared() {
         runTestFor("bazaarvoiceDisplayShared");
     }*/
 
     @AfterMethod
     public void flushOutput() {
-        System.out.flush();
+        TestUtils.flushLog();
     }
 }
     

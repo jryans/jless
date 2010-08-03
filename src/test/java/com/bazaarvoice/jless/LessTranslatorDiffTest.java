@@ -30,7 +30,7 @@ public class LessTranslatorDiffTest extends LessTranslatorParsingTest {
             //noinspection unchecked
             referenceLines = IOUtils.readLines(referenceStream, "UTF-8");
         } catch (IOException e) {
-            System.out.println("Unable to read " + fileName + ".css");
+            TestUtils.getLog().println("Unable to read " + fileName + ".css");
             e.printStackTrace();
         }
 
@@ -38,10 +38,12 @@ public class LessTranslatorDiffTest extends LessTranslatorParsingTest {
 
         Patch diff = DiffUtils.diff(referenceLines, outputLines);
 
-        System.out.println("Reference output diff:");
-        List<String> diffOutput = DiffUtils.generateUnifiedDiff(fileName + ".css", fileName + ".css", referenceLines, diff, 3);
-        for (String diffOutputLine : diffOutput) {
-            System.out.println(diffOutputLine);
+        if (!diff.getDeltas().isEmpty()) {
+            TestUtils.getLog().println("Reference output diff:");
+            List<String> diffOutput = DiffUtils.generateUnifiedDiff(fileName + ".css", fileName + ".css", referenceLines, diff, 3);
+            for (String diffOutputLine : diffOutput) {
+                TestUtils.getLog().println(diffOutputLine);
+            }
         }
 
         Assert.assertEquals(diff.getDeltas().size(), 0);
