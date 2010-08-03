@@ -23,7 +23,7 @@ public class LessTranslatorDiffTest extends LessTranslatorParsingTest {
     }
 
     private void diffOutput(String fileName, ParsingResult<Node> parsingResult) {
-        InputStream referenceStream = getClass().getResourceAsStream("/css/" + fileName + ".css");
+        InputStream referenceStream = getClass().getResourceAsStream("/java/" + fileName + ".css");
         List<String> referenceLines = null;
 
         try {
@@ -46,6 +46,4 @@ public class LessTranslatorDiffTest extends LessTranslatorParsingTest {
 
         Assert.assertEquals(diff.getDeltas().size(), 0);
     }
-
-
 }

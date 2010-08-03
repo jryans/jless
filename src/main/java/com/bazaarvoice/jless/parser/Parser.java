@@ -16,6 +16,7 @@ import com.bazaarvoice.jless.ast.SingleLineCommentNode;
 import org.parboiled.BaseParser;
 import org.parboiled.Context;
 import org.parboiled.Rule;
+import org.parboiled.annotations.BuildParseTree;
 import org.parboiled.support.Var;
 
 /**
@@ -24,7 +25,7 @@ import org.parboiled.support.Var;
  *
  * @author J. Ryan Stinnett
  */
-//@BuildParseTree
+@BuildParseTree
 public class Parser extends BaseParser<Node> {
 
     boolean debug(Context context) {
@@ -146,12 +147,26 @@ public class Parser extends BaseParser<Node> {
                         ZeroOrMore(Attribute()),
                         Optional(FirstOf(
                                 Sequence('(', OneOrMore(Alpha()), ')'),
-                                Sequence('(', FirstOf(/*PseudoExp(), */Selector(), Digit1()), ')')
+                                Sequence('(', FirstOf(PseudoExpression(), Sequence(Selector(), pop() != null), Digit1()), ')')
                         ))
                 )),
                 OneOrMore(Attribute()),
                 "@media",
                 "@font-face"
+        );
+    }
+
+    /**
+     * '-'? Digit0 'n' ([-+] Digit1)?
+     *
+     * Ex: 4n+1
+     */
+    Rule PseudoExpression() {
+        return Sequence(
+                Optional('-'),
+                Digit0(),
+                'n',
+                Optional(Sequence(CharSet("-+"), Digit1()))
         );
     }
 
@@ -214,6 +229,7 @@ public class Parser extends BaseParser<Node> {
                 // Space-separated expressions
                 Sequence(
                         Expression(), push(new ExpressionsNode(pop())),
+                        debug(getContext()),
                         ZeroOrMore(Sequence(Ws1(), Expression(), peek(1).addChild(pop()))),
                         Optional(Sequence(Important(), peek(1).addChild(pop())))
                 ),
@@ -305,16 +321,32 @@ public class Parser extends BaseParser<Node> {
     /**
      * [-_Alpha]+ Arguments
      */
-    /*Rule Function() {
+    Rule Function() {
         return Sequence(
                 OneOrMore(FirstOf(CharSet("-_"), Alpha())),
                 Arguments()
         );
-    }*/
+    }
 
     /**
      * '(' Sp0 Expressions Sp0 (',' Sp0 Expressions Sp0)* ')' / '(' Sp0 ')'
      */
+    Rule Arguments() {
+        return FirstOf(
+                Sequence(
+                        '(', Sp0(),
+                        Expressions(), pop() != null, //push(new ArgumentsNode(pop())),
+                        Sp0(),
+                        ZeroOrMore(Sequence(
+                                ',', Sp0(),
+                                Expressions(), pop() != null, //peek(1).addChild(pop()),
+                                Sp0()
+                        )),
+                        ')'
+                ),
+                Sequence('(', Sp0(), ')')//, push(null))
+        );
+    }
 
     // ********** Entities **********
 
@@ -325,7 +357,7 @@ public class Parser extends BaseParser<Node> {
      */
     Rule Entity() {
         return Sequence(
-                FirstOf(URL(), /*AlphaFilter(), Function(), Accessor(), */Keyword(), /*Variable(), */Literal(), Font()),
+                FirstOf(URL(), /*AlphaFilter(), */Function(), /*Accessor(), */Keyword(), /*Variable(), */Literal(), Font()),
                 push(new SimpleNode(match()))
         );
     }
@@ -335,7 +367,14 @@ public class Parser extends BaseParser<Node> {
      * TODO: Function? Unescape?
      */
     Rule URL() {
-        return Sequence("url(", FirstOf(String(), FirstOf(CharSet("-_%$/.&=:;#+?"), Alphanumeric())), ')');
+        return Sequence(
+                "url(",
+                FirstOf(
+                        String(),
+                        OneOrMore(FirstOf(CharSet("-_%$/.&=:;#+?"), Alphanumeric()))
+                ),
+                ')'
+        );
     }
 
     /**
@@ -418,10 +457,10 @@ public class Parser extends BaseParser<Node> {
      * '#' RGB / (('hsl' / 'rgb') 'a'?) Arguments
      */
     Rule Color() {
-        return /*FirstOf(*/
-                Sequence('#', RGB())/*,
+        return FirstOf(
+                Sequence('#', RGB()),
                 Sequence(FirstOf("hsl", "rgb"), Optional('a'), Arguments())
-        )*/;
+        );
     }
 
     /**

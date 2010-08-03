@@ -4,7 +4,7 @@ import com.bazaarvoice.jless.ast.Node;
 import com.bazaarvoice.jless.print.Optimization;
 import com.bazaarvoice.jless.print.Printer;
 import org.apache.commons.io.IOUtils;
-import org.parboiled.ReportingParseRunner;
+import org.parboiled.RecoveringParseRunner;
 import org.parboiled.errors.ErrorUtils;
 import org.parboiled.support.ParsingResult;
 import org.testng.Assert;
@@ -47,7 +47,7 @@ public class LessTranslatorParsingTest {
     }
 
     protected ParsingResult<Node> runParser(String lessInput) {
-        return ReportingParseRunner.run(_transformer.getParser().Document(), lessInput);
+        return RecoveringParseRunner.run(_transformer.getParser().Document(), lessInput);
     }
 
     private String getResultStatus(ParsingResult<Node> result) {
