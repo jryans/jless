@@ -29,6 +29,9 @@ public final class TestUtils {
     }
 
     public static void flushLog() {
+        if (_sLogStream == null) {
+            return;
+        }
         _sLogStream.flush();
     }
 

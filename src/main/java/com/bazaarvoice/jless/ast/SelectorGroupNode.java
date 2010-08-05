@@ -2,9 +2,9 @@ package com.bazaarvoice.jless.ast;
 
 import com.bazaarvoice.jless.ast.visitor.NodeVisitor;
 
-public class SelectorsNode extends Node {
+public class SelectorGroupNode extends Node {
 
-    public SelectorsNode(Node child) {
+    public SelectorGroupNode(Node child) {
         super(child);
     }
 

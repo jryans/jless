@@ -8,9 +8,9 @@ import com.bazaarvoice.jless.ast.Node;
 import com.bazaarvoice.jless.ast.PropertyNode;
 import com.bazaarvoice.jless.ast.RuleSetNode;
 import com.bazaarvoice.jless.ast.ScopeNode;
+import com.bazaarvoice.jless.ast.SelectorGroupNode;
 import com.bazaarvoice.jless.ast.SelectorNode;
 import com.bazaarvoice.jless.ast.SelectorSegmentNode;
-import com.bazaarvoice.jless.ast.SelectorsNode;
 import com.bazaarvoice.jless.ast.SimpleNode;
 import com.bazaarvoice.jless.ast.SingleLineCommentNode;
 import org.parboiled.BaseParser;
@@ -32,9 +32,6 @@ public class Parser extends BaseParser<Node> {
         return true;
     }
 
-    // TODO: Remove Lower, Use Ident, etc.
-
-//    @SuppressSubnodes
     public Rule Document() {
         return Sequence(Scope(), Eoi());
     }
@@ -45,7 +42,9 @@ public class Parser extends BaseParser<Node> {
                 ZeroOrMore(Sequence(
                         debug(getContext()), 
                         FirstOf(/*Import(), */Declaration(), RuleSet(), /*Mixin(), */Comment()),
-                        peek(1).addChild(pop())
+                        debug(getContext()),
+                        peek(1).addChild(pop()),
+                        debug(getContext())
                 ))
         );
     }
@@ -87,11 +86,12 @@ public class Parser extends BaseParser<Node> {
      */
     Rule RuleSet() {
         return Sequence(
-                //debug(getContext()),
-                Selectors(), push(new RuleSetNode(pop())),
+                debug(getContext()),
+                SelectorGroup(), push(new RuleSetNode(pop())),
+                debug(getContext()),
                 '{', Ws0(), Scope(), peek(1).addChild(pop()), Ws0(), '}',
-                Sp0(), Optional(';'), Ws0()
-                //debug(getContext())
+                Sp0(), Optional(';'), Ws0(),
+                debug(getContext())
         );
     }
 
@@ -100,98 +100,93 @@ public class Parser extends BaseParser<Node> {
     /**
      * Ws0 Selector (Sp0 ',' Ws0 Selector)* Ws0
      */
-    Rule Selectors() {
+    Rule SelectorGroup() {
         return Sequence(
                 Ws0(),
-                Selector(), push(new SelectorsNode(pop())),
+                Selector(), push(new SelectorGroupNode(pop())),
                 ZeroOrMore(Sequence(Sp0(), ',', Ws0(), Selector(), peek(1).addChild(pop()))),
                 Ws0()
         );
     }
 
     /**
-     * (Sp0 Select Element Sp0)+
-     *
-     * Ex: div > p a { ... }
+     * SimpleSelector (Combinator SimpleSelector)*
      */
     Rule Selector() {
         Var<SelectorSegmentNode> selectorSegmentNode = new Var<SelectorSegmentNode>();
         return Sequence(
                 push(new SelectorNode()),
-                OneOrMore(Sequence(
-                        Sp0(),
-                        Select(), selectorSegmentNode.set(new SelectorSegmentNode(match())),
-                        Element(), selectorSegmentNode.get().setElement(match()),
-                        peek().addChild(selectorSegmentNode.getAndClear()),
-                        Sp0(), peek().addChild(new SimpleNode(match()))
-                ))
+                // First selector segment has no combinator
+                selectorSegmentNode.set(new SelectorSegmentNode("")),
+                SimpleSelector(), selectorSegmentNode.get().setSimpleSelector(match()),
+                peek().addChild(selectorSegmentNode.getAndClear()),
+                debug(getContext()),
+                // Additional selector segments include a combinator
+                ZeroOrMore(Sequence(
+                        Combinator(), selectorSegmentNode.set(new SelectorSegmentNode(match())),
+                        SimpleSelector(), selectorSegmentNode.get().setSimpleSelector(match()),
+                        peek().addChild(selectorSegmentNode.getAndClear())
+                )),
+                debug(getContext())
         );
     }
 
     /**
-     * (
-     *     (Class / ID / Tag / Ident)
-     *     Attribute*
-     *     (
-     *         '(' Alpha+ ')' / '(' (PseudoExp / Selector / Digit1) ')'
-     *     )?
-     * )+
-     * / Attribute+ / '@media' / '@font-face'
-     *
-     * Ex: div / .class / #id / input[type="text"] / lang(fr)
+     * [+>~] Sp0 / Sp1
      */
-    Rule Element() {
+    Rule Combinator() {
         return FirstOf(
-                OneOrMore(Sequence(
-                        FirstOf(Class(), ID(), Tag(), Ident()),
-                        ZeroOrMore(Attribute()),
-                        Optional(FirstOf(
-                                Sequence('(', OneOrMore(Alpha()), ')'),
-                                Sequence('(', FirstOf(PseudoExpression(), Sequence(Selector(), pop() != null), Digit1()), ')')
-                        ))
-                )),
-                OneOrMore(Attribute()),
+                Sequence(Sp0(), CharSet("+>~"), Sp0()),
+                Sp1()
+        );
+    }
+
+    Rule SimpleSelector() {
+        return FirstOf(
+                Sequence(
+                        debug(getContext()),
+                        FirstOf(ElementName(), Universal()),
+                        debug(getContext()),
+                        ZeroOrMore(FirstOf(Hash(), Class(), Attribute(), Negation(), Pseudo())),
+                        debug(getContext())
+                ),
+                OneOrMore(FirstOf(Hash(), Class(), Attribute(), Negation(), Pseudo())),
                 "@media",
                 "@font-face"
         );
     }
 
-    /**
-     * '-'? Digit0 'n' ([-+] Digit1)?
-     *
-     * Ex: 4n+1
-     */
+    Rule Attribute() {
+        return Sequence(
+                '[', Sp0(),
+                Ident(), Sp0(),
+                Optional(Sequence(
+                        Optional(CharSet("~|^$*")),
+                        '=', Sp0(),
+                        FirstOf(Ident(), String()), Sp0()
+                )),
+                ']'
+        );
+    }
+
+    Rule Pseudo() {
+        return Sequence(':', Optional(':'), FirstOf(FunctionalPseudo(), Ident()));
+    }
+
+    Rule FunctionalPseudo() {
+        return Sequence(Ident(), '(', Sp0(), PseudoExpression(), ')');
+    }
+
     Rule PseudoExpression() {
-        return Sequence(
-                Optional('-'),
-                Digit0(),
-                'n',
-                Optional(Sequence(CharSet("-+"), Digit1()))
-        );
+        return OneOrMore(Sequence(FirstOf(CharSet("+-"), Dimension(), Digit(), String(), Ident()), Sp0()));
     }
 
-    /**
-     * (Sp0 [+>~] Sp0 / '::' / Sp0 ':' / Sp1)?
-     */
-    Rule Select() {
-        return Optional(FirstOf(
-                Sequence(Sp0(), CharSet("+>~"), Sp0()),
-                "::",
-                Sequence(Sp0(), ':'),
-                Sp1()
-        ));
+    Rule Negation() {
+        return Sequence(":not(", Sp0(), NegationArgument(), Sp0(), ')');
     }
 
-    /**
-     * '*'? '-'? [-_Alpha] [-_Alphanumeric]*
-     */
-    Rule Ident() {
-        return Sequence(
-                Optional('*'),
-                Optional('-'),
-                FirstOf(CharSet("-_"), Alpha()),
-                ZeroOrMore(FirstOf(CharSet("-_"), Alphanumeric()))
-        );
+    Rule NegationArgument() {
+        return FirstOf(ElementName(), Universal(), Hash(), Class(), Attribute(), Pseudo());
     }
 
     // ********** Variables & Expressions **********
@@ -233,7 +228,7 @@ public class Parser extends BaseParser<Node> {
                         ZeroOrMore(Sequence(Ws1(), Expression(), peek(1).addChild(pop()))),
                         Optional(Sequence(Important(), peek(1).addChild(pop())))
                 ),
-                Sequence(OneOrMore(FirstOf(CharSet("-_.&*/=:,+? []()#%"), Alphanumeric())), push(new CatchAllNode(match())))
+                false //Sequence(OneOrMore(FirstOf(CharSet("-_.&*/=:,+? []()#%"), Alphanumeric())), push(new CatchAllNode(match())))
         );
     }
 
@@ -252,68 +247,38 @@ public class Parser extends BaseParser<Node> {
         return Sequence(Sp0(), '!', Sp0(), "important", push(new SimpleNode("!important")));
     }
 
-    // ********** HTML Entities **********
+    // ********** CSS Entities **********
 
-    /**
-     * '.' [_Alpha] [-_Alphanumeric]*
-     */
+    Rule ElementName() {
+        return Ident();
+    }
+
+    Rule Universal() {
+        return Ch('*');
+    }
+
+    Rule Hash() {
+        return Sequence('#', Name());
+    }
+
     Rule Class() {
-        return Sequence(
-                '.',
-                FirstOf('-', Alpha()),
-                ZeroOrMore(FirstOf(CharSet("-_"), Alphanumeric()))
-        );
+        return Sequence('.', Ident());
     }
 
-    /**
-     * '#' [_Alpha] [-_Alphanumeric]*
-     */
-    Rule ID() {
-        return Sequence(
-                '#',
-                FirstOf('-', Alpha()),
-                ZeroOrMore(FirstOf(CharSet("-_"), Alphanumeric()))
-        );
+    Rule NameStart() {
+        return FirstOf('-', Alpha());
     }
 
-    /**
-     * Alpha [-Alpha]* Digit? / '*'
-     */
-    Rule Tag() {
-        return FirstOf(
-                Sequence(
-                        Alpha(),
-                        ZeroOrMore(FirstOf('-', Alpha())),
-                        Optional(Digit())
-                ),
-                '*'
-        );
+    Rule NameCharacter() {
+        return FirstOf(CharSet("-_"), Alphanumeric());
     }
 
-    /**
-     * '[' AttributeName [|~*$^]? '=' (String / [-_Alphanumeric]+) ']' / '[' (AttributeName / String) ']'
-     *
-     * Ex: [type="text"]
-     */
-    Rule Attribute() {
-        return FirstOf(
-                Sequence(
-                        '[',
-                        AttributeName(),
-                        Optional(CharSet("|~*$^")),
-                        '=',
-                        FirstOf(String(), OneOrMore(FirstOf(CharSet("-_"), Alphanumeric()))),
-                        ']'
-                ),
-                Sequence('[', FirstOf(AttributeName(), String()), ']')
-        );
+    Rule Ident() {
+        return Sequence(Optional('-'), NameStart(), ZeroOrMore(NameCharacter()));
     }
 
-    /**
-     * Alpha [-Alpha]* Digit? / '*' (This may not be needed here)
-     */
-    Rule AttributeName() {
-        return Tag();
+    Rule Name() {
+        return OneOrMore(NameCharacter());
     }
 
     // ********** Functions & Arguments **********
@@ -348,7 +313,7 @@ public class Parser extends BaseParser<Node> {
         );
     }
 
-    // ********** Entities **********
+    // ********** LESS Entities **********
 
     // TODO: Check use of !Nd
 

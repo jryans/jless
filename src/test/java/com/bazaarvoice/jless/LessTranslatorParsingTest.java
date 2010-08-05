@@ -5,8 +5,11 @@ import com.bazaarvoice.jless.print.Optimization;
 import com.bazaarvoice.jless.print.Printer;
 import org.apache.commons.io.IOUtils;
 import org.parboiled.RecoveringParseRunner;
+import org.parboiled.ReportingParseRunner;
 import org.parboiled.errors.ErrorUtils;
 import org.parboiled.support.ParsingResult;
+import org.parboiled.support.ToStringFormatter;
+import org.parboiled.trees.GraphUtils;
 import org.testng.Assert;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.Test;
@@ -36,17 +39,17 @@ public class LessTranslatorParsingTest {
 
         ParsingResult<Node> result = runParser(lessInput);
 
-        Assert.assertFalse(result.hasErrors(), getResultStatus(result));
-
         if (alwaysPrintStatus) {
             TestUtils.getLog().print(getResultStatus(result));
         }
+
+        Assert.assertFalse(result.hasErrors(), getResultStatus(result));
 
         return result;
     }
 
     protected ParsingResult<Node> runParser(String lessInput) {
-        return RecoveringParseRunner.run(_transformer.getParser().Document(), lessInput);
+        return ReportingParseRunner.run(_transformer.getParser().Document(), lessInput);
     }
 
     private String getResultStatus(ParsingResult<Node> result) {
@@ -62,7 +65,7 @@ public class LessTranslatorParsingTest {
 
         if (result.resultValue != null) {
 //            sb.append("Abstract Syntax Tree:\n").append(GraphUtils.printTree(result.resultValue, new ToStringFormatter<Node>(null))).append('\n');
-            sb.append(printResult(result));
+//            sb.append(printResult(result));
         }
 
         return sb.toString();
@@ -84,6 +87,10 @@ public class LessTranslatorParsingTest {
 
     public void testCss3() {
         runTestFor("css-3");
+    }
+
+    public void testStrings() {
+        runTestFor("strings");
     }
 
     public void testWhitespace() {

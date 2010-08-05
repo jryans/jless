@@ -8,7 +8,7 @@ import com.bazaarvoice.jless.ast.RuleSetNode;
 import com.bazaarvoice.jless.ast.ScopeNode;
 import com.bazaarvoice.jless.ast.SelectorNode;
 import com.bazaarvoice.jless.ast.SelectorSegmentNode;
-import com.bazaarvoice.jless.ast.SelectorsNode;
+import com.bazaarvoice.jless.ast.SelectorGroupNode;
 import com.bazaarvoice.jless.ast.SimpleNode;
 import com.bazaarvoice.jless.ast.SingleLineCommentNode;
 import com.bazaarvoice.jless.ast.visitor.NodeVisitor;
@@ -82,7 +82,9 @@ public class Printer extends NodeVisitor {
     public boolean visitEnter(ScopeNode node) {
         if (node.getParent() != null) {
             print("{");
-            if (node.getChildren().size() == 1) {
+            if (node.getChildren().isEmpty()) {
+                // do nothing
+            } else if (node.getChildren().size() == 1) {
                 print(' ');
             } else {
                 printLine().addIndent();
@@ -114,13 +116,14 @@ public class Printer extends NodeVisitor {
     }
 
     @Override
-    public boolean visit(SelectorsNode node) {
+    public boolean visit(SelectorGroupNode node) {
+        print(' ');
         return true;
     }
 
     @Override
     public boolean visit(SelectorSegmentNode node) {
-        print(node.getSelect()).print(node.getElement());
+        print(node.getCombinator()).print(node.getSimpleSelector());
         if (GraphUtils.getLastChild(node.getParent()) != node) {
 //            print(' ');
         }

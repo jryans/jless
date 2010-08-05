@@ -7,9 +7,9 @@ import com.bazaarvoice.jless.ast.Node;
 import com.bazaarvoice.jless.ast.PropertyNode;
 import com.bazaarvoice.jless.ast.RuleSetNode;
 import com.bazaarvoice.jless.ast.ScopeNode;
+import com.bazaarvoice.jless.ast.SelectorGroupNode;
 import com.bazaarvoice.jless.ast.SelectorNode;
 import com.bazaarvoice.jless.ast.SelectorSegmentNode;
-import com.bazaarvoice.jless.ast.SelectorsNode;
 import com.bazaarvoice.jless.ast.SimpleNode;
 import com.bazaarvoice.jless.ast.SingleLineCommentNode;
 
@@ -42,7 +42,7 @@ public abstract class NodeVisitor {
 
     public abstract boolean visit(SelectorNode node);
 
-    public abstract boolean visit(SelectorsNode node);
+    public abstract boolean visit(SelectorGroupNode node);
 
     public abstract boolean visit(SelectorSegmentNode node);
 

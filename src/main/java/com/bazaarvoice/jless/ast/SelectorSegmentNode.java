@@ -4,36 +4,33 @@ import com.bazaarvoice.jless.ast.visitor.NodeVisitor;
 
 public class SelectorSegmentNode extends Node {
 
-    private String _select;
-    private String _element;
+    private String _combinator;
+    private String _simpleSelector;
 
-    public SelectorSegmentNode() {
+    public SelectorSegmentNode(String combinator) {
+        _combinator = combinator;
     }
 
-    public SelectorSegmentNode(String select) {
-        _select = select;
+    public SelectorSegmentNode(String combinator, String simpleSelector) {
+        _combinator = combinator;
+        _simpleSelector = simpleSelector;
     }
 
-    public SelectorSegmentNode(String select, String element) {
-        _select = select;
-        _element = element;
+    public String getCombinator() {
+        return _combinator;
     }
 
-    public String getSelect() {
-        return _select;
-    }
-
-    public boolean setSelect(String select) {
-        _select = select;
+    public boolean setCombinator(String combinator) {
+        _combinator = combinator;
         return true;
     }
 
-    public String getElement() {
-        return _element;
+    public String getSimpleSelector() {
+        return _simpleSelector;
     }
 
-    public boolean setElement(String element) {
-        _element = element;
+    public boolean setSimpleSelector(String simpleSelector) {
+        _simpleSelector = simpleSelector;
         return true;
     }
 
