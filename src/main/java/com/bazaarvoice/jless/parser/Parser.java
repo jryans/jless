@@ -1,6 +1,5 @@
 package com.bazaarvoice.jless.parser;
 
-import com.bazaarvoice.jless.ast.CatchAllNode;
 import com.bazaarvoice.jless.ast.ExpressionNode;
 import com.bazaarvoice.jless.ast.ExpressionsNode;
 import com.bazaarvoice.jless.ast.MultipleLineCommentNode;
@@ -118,16 +117,16 @@ public class Parser extends BaseParser<Node> {
                 push(new SelectorNode()),
                 // First selector segment has no combinator
                 selectorSegmentNode.set(new SelectorSegmentNode("")),
-                SimpleSelector(), selectorSegmentNode.get().setSimpleSelector(match()),
+                SimpleSelector(selectorSegmentNode), selectorSegmentNode.get().setSimpleSelector(match()),
                 peek().addChild(selectorSegmentNode.getAndClear()),
-                debug(getContext()),
+//                debug(getContext()),
                 // Additional selector segments include a combinator
                 ZeroOrMore(Sequence(
                         Combinator(), selectorSegmentNode.set(new SelectorSegmentNode(match())),
-                        SimpleSelector(), selectorSegmentNode.get().setSimpleSelector(match()),
+                        SimpleSelector(selectorSegmentNode), selectorSegmentNode.get().setSimpleSelector(match()),
                         peek().addChild(selectorSegmentNode.getAndClear())
-                )),
-                debug(getContext())
+                ))
+//                debug(getContext())
         );
     }
 
@@ -141,16 +140,19 @@ public class Parser extends BaseParser<Node> {
         );
     }
 
-    Rule SimpleSelector() {
+    Rule SimpleSelector(Var<SelectorSegmentNode> selectorSegmentNode) {
         return FirstOf(
                 Sequence(
-                        debug(getContext()),
+//                        debug(getContext()),
                         FirstOf(ElementName(), Universal()),
-                        debug(getContext()),
-                        ZeroOrMore(FirstOf(Hash(), Class(), Attribute(), Negation(), Pseudo())),
-                        debug(getContext())
+//                        debug(getContext()),
+                        ZeroOrMore(FirstOf(Hash(), Class(), Attribute(), Negation(), Pseudo()))
+//                        debug(getContext())
                 ),
-                OneOrMore(FirstOf(Hash(), Class(), Attribute(), Negation(), Pseudo())),
+                OneOrMore(FirstOf(
+                        Hash(), Class(),
+                        Sequence(FirstOf(Attribute(), Negation(), Pseudo()), selectorSegmentNode.get().setSubElementSelector(true))
+                )),
                 "@media",
                 "@font-face"
         );
@@ -177,6 +179,7 @@ public class Parser extends BaseParser<Node> {
         return Sequence(Ident(), '(', Sp0(), PseudoExpression(), ')');
     }
 
+    // TODO: Use Number in place of Digit
     Rule PseudoExpression() {
         return OneOrMore(Sequence(FirstOf(CharSet("+-"), Dimension(), Digit(), String(), Ident()), Sp0()));
     }
@@ -263,14 +266,6 @@ public class Parser extends BaseParser<Node> {
 
     Rule Class() {
         return Sequence('.', Ident());
-    }
-
-    Rule NameStart() {
-        return FirstOf('-', Alpha());
-    }
-
-    Rule NameCharacter() {
-        return FirstOf(CharSet("-_"), Alphanumeric());
     }
 
     Rule Ident() {
@@ -490,5 +485,13 @@ public class Parser extends BaseParser<Node> {
 
     Rule Delimiter() {
         return CharSet(" ;,!})\n");
+    }
+
+    Rule NameStart() {
+        return FirstOf('-', Alpha());
+    }
+
+    Rule NameCharacter() {
+        return FirstOf(CharSet("-_"), Alphanumeric());
     }
 }

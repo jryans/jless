@@ -89,6 +89,10 @@ public class LessTranslatorParsingTest {
         runTestFor("css-3");
     }
 
+    public void testSelectors() {
+        runTestFor("selectors");
+    }
+
     public void testStrings() {
         runTestFor("strings");
     }

@@ -34,6 +34,8 @@ public abstract class NodeVisitor {
 
     public abstract boolean visit(PropertyNode node);
 
+    public abstract boolean visitEnter(RuleSetNode node);
+
     public abstract boolean visit(RuleSetNode node);
 
     public abstract boolean visitEnter(ScopeNode node);
