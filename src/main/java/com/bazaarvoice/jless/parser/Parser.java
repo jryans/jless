@@ -39,11 +39,11 @@ public class Parser extends BaseParser<Node> {
         return Sequence(
                 push(new ScopeNode()),
                 ZeroOrMore(Sequence(
-                        debug(getContext()), 
+//                        debug(getContext()),
                         FirstOf(/*Import(), */Declaration(), RuleSet(), /*Mixin(), */Comment()),
                         debug(getContext()),
-                        peek(1).addChild(pop()),
-                        debug(getContext())
+                        peek(1).addChild(pop())//,
+//                        debug(getContext())
                 ))
         );
     }
@@ -85,12 +85,12 @@ public class Parser extends BaseParser<Node> {
      */
     Rule RuleSet() {
         return Sequence(
-                debug(getContext()),
+//                debug(getContext()),
                 SelectorGroup(), push(new RuleSetNode(pop())),
-                debug(getContext()),
+//                debug(getContext()),
                 '{', Ws0(), Scope(), peek(1).addChild(pop()), Ws0(), '}',
-                Sp0(), Optional(';'), Ws0(),
-                debug(getContext())
+                Sp0(), Optional(';'), Ws0()//,
+//                debug(getContext())
         );
     }
 

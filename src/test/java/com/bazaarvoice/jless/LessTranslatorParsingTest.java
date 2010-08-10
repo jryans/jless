@@ -1,15 +1,12 @@
 package com.bazaarvoice.jless;
 
 import com.bazaarvoice.jless.ast.Node;
-import com.bazaarvoice.jless.print.Optimization;
+import com.bazaarvoice.jless.ast.visitor.FlattenNestedRuleSets;
 import com.bazaarvoice.jless.print.Printer;
 import org.apache.commons.io.IOUtils;
-import org.parboiled.RecoveringParseRunner;
 import org.parboiled.ReportingParseRunner;
 import org.parboiled.errors.ErrorUtils;
 import org.parboiled.support.ParsingResult;
-import org.parboiled.support.ToStringFormatter;
-import org.parboiled.trees.GraphUtils;
 import org.testng.Assert;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.Test;
@@ -65,15 +62,22 @@ public class LessTranslatorParsingTest {
 
         if (result.resultValue != null) {
 //            sb.append("Abstract Syntax Tree:\n").append(GraphUtils.printTree(result.resultValue, new ToStringFormatter<Node>(null))).append('\n');
-//            sb.append(printResult(result));
+
+            result.resultValue.accept(new FlattenNestedRuleSets());
+
+            sb.append(printResult(result));
         }
 
         return sb.toString();
     }
 
     protected String printResult(ParsingResult<Node> result) {
-        Printer p = new Printer(Optimization.LESS_RUBY);
-        result.resultValue.accept(p);
+        return printResult(result.resultValue);
+    }
+
+    public static String printResult(Node root) {
+        Printer p = new Printer();
+        root.accept(p);
         return p.toString();
     }
     

@@ -3,6 +3,7 @@ package com.bazaarvoice.jless.print;
 import com.bazaarvoice.jless.ast.ExpressionNode;
 import com.bazaarvoice.jless.ast.ExpressionsNode;
 import com.bazaarvoice.jless.ast.MultipleLineCommentNode;
+import com.bazaarvoice.jless.ast.Node;
 import com.bazaarvoice.jless.ast.PropertyNode;
 import com.bazaarvoice.jless.ast.RuleSetNode;
 import com.bazaarvoice.jless.ast.ScopeNode;
@@ -14,6 +15,8 @@ import com.bazaarvoice.jless.ast.SingleLineCommentNode;
 import com.bazaarvoice.jless.ast.visitor.NodeVisitor;
 import org.parboiled.google.base.Preconditions;
 import org.parboiled.trees.GraphUtils;
+
+import java.util.List;
 
 public class Printer extends NodeVisitor {
 
@@ -60,16 +63,25 @@ public class Printer extends NodeVisitor {
 
     @Override
     public boolean visitEnter(PropertyNode node) {
-        printIndent().print(node.getName()).print(": ");
+        print(node.getName()).print(": ");
         return true;
     }
 
     @Override
     public boolean visit(PropertyNode node) {
         print(";");
-        if (node.getParent().getChildren().size() > 1) {
-            printLine();
+        /*if (node.getParent().getChildIterator().hasNext()) {
+            printLine().printIndent();
+        }*/
+
+        if (node.getParent().getChildren().size() > 1 && node.getParent().getChildIterator().hasNext()) {
+            printLine().printIndent();
         }
+        return true;
+    }
+
+    @Override
+    public boolean visitEnter(RuleSetNode node) {
         return true;
     }
 
@@ -82,12 +94,13 @@ public class Printer extends NodeVisitor {
     public boolean visitEnter(ScopeNode node) {
         if (node.getParent() != null) {
             print("{");
-            if (node.getChildren().isEmpty()) {
+            List<Node> children = node.getChildren();
+            if (children.isEmpty()) {
                 // do nothing
-            } else if (node.getChildren().size() == 1) {
+            } else if (children.size() == 1 && !(children.get(0) instanceof RuleSetNode)) {
                 print(' ');
             } else {
-                printLine().addIndent();
+                addIndent().printLine().printIndent();
             }
         }
         return true;
@@ -96,12 +109,17 @@ public class Printer extends NodeVisitor {
     @Override
     public boolean visit(ScopeNode node) {
         if (node.getParent() != null) {
-            if (node.getChildren().size() == 1) {
+            List<Node> children = node.getChildren();
+            if (children.isEmpty()) {
+                // do nothing
+            } else if (children.size() == 1 && !(children.get(0) instanceof RuleSetNode)) {
                 print(' ');
+            } else {
+                removeIndent().printLine().printIndent();
             }
-            print('}').printLine();
-            if (node.getChildren().size() > 1) {
-                removeIndent();
+            print('}');
+            if (node.getParent().getParent().getChildIterator().hasNext()) {
+                printLine().printIndent();
             }
         }
         return true;

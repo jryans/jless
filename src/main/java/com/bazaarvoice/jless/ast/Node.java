@@ -1,10 +1,9 @@
 package com.bazaarvoice.jless.ast;
 
 import com.bazaarvoice.jless.ast.visitor.NodeVisitor;
-import org.parboiled.trees.MutableTreeNodeImpl;
 import org.parboiled.trees.TreeUtils;
 
-public abstract class Node extends MutableTreeNodeImpl<Node> {
+public abstract class Node extends BaseTreeNode<Node> {
 
     public Node() {
     }
