@@ -1,16 +1,8 @@
 package com.bazaarvoice.jless.ast.visitor;
 
-import com.bazaarvoice.jless.ast.ExpressionNode;
-import com.bazaarvoice.jless.ast.ExpressionsNode;
-import com.bazaarvoice.jless.ast.MultipleLineCommentNode;
 import com.bazaarvoice.jless.ast.Node;
-import com.bazaarvoice.jless.ast.PropertyNode;
 import com.bazaarvoice.jless.ast.RuleSetNode;
 import com.bazaarvoice.jless.ast.ScopeNode;
-import com.bazaarvoice.jless.ast.SelectorGroupNode;
-import com.bazaarvoice.jless.ast.SelectorNode;
-import com.bazaarvoice.jless.ast.SelectorSegmentNode;
-import com.bazaarvoice.jless.ast.SimpleNode;
 import com.bazaarvoice.jless.ast.SingleLineCommentNode;
 import com.bazaarvoice.jless.ast.util.MutableTreeUtils;
 import com.bazaarvoice.jless.print.Printer;
@@ -30,6 +22,12 @@ public class FlattenNestedRuleSets extends BaseNodeVisitor {
             _ruleSetStack.push(node);
             return true;
         }
+
+        /*NodeVisitor getSelectorGroupNode = new NodeVisitor() {
+
+        }*/
+
+        // Get this node's current selecto
 
         // There is a parent rule set, move this rule set up to be a sibling of its parent with comments that describe it.
         MutableTreeUtils.addSiblingAfter(_ruleSetStack.peek(), surroundWithContext(node));

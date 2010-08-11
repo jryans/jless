@@ -9,12 +9,14 @@ public class ScopeNode extends Node {
     @Override
     public boolean accept(NodeVisitor visitor) {
         if (visitor.visitEnter(this)) {
-            for (ListIterator<Node> it = newChildIterator(); it.hasNext();) {
+            ListIterator<Node> it = pushChildIterator();
+            while (it.hasNext()) {
                 Node child = it.next();
                 if (!child.accept(visitor)) {
                     break;
                 }
             }
+            popChildIterator();
         }
 
         return visitor.visit(this);

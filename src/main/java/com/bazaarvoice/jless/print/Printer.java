@@ -70,7 +70,7 @@ public class Printer extends BaseNodeVisitor {
     @Override
     public boolean visit(PropertyNode node) {
         print(";");
-        if (node.getParent().getChildren().size() > 1 && node.getParent().getChildIterator().hasNext()) {
+        if (node.getParent().getChildren().size() > 1 && node.getParent().getLatestChildIterator().hasNext()) {
             printLine().printIndent();
         }
         return true;
@@ -104,7 +104,7 @@ public class Printer extends BaseNodeVisitor {
                 removeIndent().printLine().printIndent();
             }
             print('}');
-            if (node.getParent().getParent().getChildIterator().hasNext()) {
+            if (node.getParent().getParent().getLatestChildIterator().hasNext()) {
                 printLine().printIndent();
             }
         }
@@ -122,6 +122,12 @@ public class Printer extends BaseNodeVisitor {
     @Override
     public boolean visit(SelectorGroupNode node) {
         print(' ');
+        return true;
+    }
+
+    @Override
+    public boolean visit(SelectorSegmentNode node) {
+        print(node.getCombinator()).print(node.getSimpleSelector());
         return true;
     }
 
