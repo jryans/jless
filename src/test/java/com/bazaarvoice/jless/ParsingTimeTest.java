@@ -6,7 +6,7 @@ import org.testng.Assert;
 import org.testng.annotations.Test;
 
 @Test
-public class LessTranslatorTimeTest extends LessTranslatorParsingTest {
+public class ParsingTimeTest extends ParsingTest {
 
     private static final int RUNS_PER_TIMED_SET = 50;
     private static final String[] CACHE_FILES = {"css", "css-3", "strings", "whitespace"};

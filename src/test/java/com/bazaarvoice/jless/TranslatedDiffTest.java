@@ -14,7 +14,7 @@ import java.util.Arrays;
 import java.util.List;
 
 @Test
-public class LessTranslatorDiffTest extends LessTranslatorParsingTest {
+public class TranslatedDiffTest extends ParsingTest {
 
     @Override
     protected void runTestFor(String fileName) {

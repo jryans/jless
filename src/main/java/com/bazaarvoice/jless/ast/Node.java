@@ -3,6 +3,7 @@ package com.bazaarvoice.jless.ast;
 import com.bazaarvoice.jless.ast.visitor.NodeVisitor;
 import org.parboiled.trees.TreeUtils;
 
+// TODO: Combine into BTN
 public abstract class Node extends BaseTreeNode<Node> {
 
     public Node() {
@@ -21,4 +22,4 @@ public abstract class Node extends BaseTreeNode<Node> {
     }
 
     public abstract boolean accept(NodeVisitor visitor);
-}
+}   

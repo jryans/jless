@@ -15,7 +15,7 @@ import java.io.IOException;
 import java.io.InputStream;
 
 @Test
-public class LessTranslatorParsingTest {
+public class ParsingTest {
 
     private LessTranslator _transformer = new LessTranslator();
 

@@ -15,42 +15,14 @@ import com.bazaarvoice.jless.ast.SingleLineCommentNode;
 import com.bazaarvoice.jless.ast.util.MutableTreeUtils;
 import com.bazaarvoice.jless.print.Printer;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Stack;
 
 /**
  *
  */
-public class FlattenNestedRuleSets extends NodeVisitor {
-//    private static final Pattern RULE_SET_CONTEXT = Pattern.compile("(.*{).*(}.*)");
+public class FlattenNestedRuleSets extends BaseNodeVisitor {
 
     private Stack<RuleSetNode> _ruleSetStack = new Stack<RuleSetNode>();
-
-    @Override
-    public boolean visit(ExpressionNode node) {
-        return true;
-    }
-
-    @Override
-    public boolean visit(ExpressionsNode node) {
-        return true;
-    }
-
-    @Override
-    public boolean visit(MultipleLineCommentNode node) {
-        return true;
-    }
-
-    @Override
-    public boolean visitEnter(PropertyNode node) {
-        return true;
-    }
-
-    @Override
-    public boolean visit(PropertyNode node) {
-        return true;
-    }
 
     @Override
     public boolean visitEnter(RuleSetNode node) {
@@ -72,44 +44,7 @@ public class FlattenNestedRuleSets extends NodeVisitor {
         return true;
     }
 
-    @Override
-    public boolean visitEnter(ScopeNode node) {
-        return true;
-    }
-
-    @Override
-    public boolean visit(ScopeNode node) {
-        return true;
-    }
-
-    @Override
-    public boolean visit(SelectorNode node) {
-        return true;
-    }
-
-    @Override
-    public boolean visit(SelectorGroupNode node) {
-        return true;
-    }
-
-    @Override
-    public boolean visit(SelectorSegmentNode node) {
-        return true;
-    }
-
-    @Override
-    public boolean visit(SimpleNode node) {
-        return true;
-    }
-
-    @Override
-    public boolean visit(SingleLineCommentNode node) {
-        return true;
-    }
-
     private Node[] surroundWithContext(RuleSetNode node) {
-        List<Node> nodeList = new ArrayList<Node>(3);
-
         Printer contextPrinter = new Printer() {
             @Override
             public boolean visitEnter(ScopeNode node) {
@@ -124,16 +59,10 @@ public class FlattenNestedRuleSets extends NodeVisitor {
 
         node.accept(contextPrinter);
 
-//        Matcher ruleSetContext  = RULE_SET_CONTEXT.matcher(contextPrinter.toString())
-//        contextPrinter.toString().replaceFirst("{.*?}(?s)", "\n")
-
         return new Node[] {
                 new SingleLineCommentNode(" " + contextPrinter.toString() + "{"),
                 node,
                 new SingleLineCommentNode(" } " + contextPrinter.toString())
         };
-    }
-
-    private class RuleSetCommentPrinter extends Printer {
     }
 }

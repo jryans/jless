@@ -12,13 +12,13 @@ import com.bazaarvoice.jless.ast.SelectorSegmentNode;
 import com.bazaarvoice.jless.ast.SelectorGroupNode;
 import com.bazaarvoice.jless.ast.SimpleNode;
 import com.bazaarvoice.jless.ast.SingleLineCommentNode;
-import com.bazaarvoice.jless.ast.visitor.NodeVisitor;
+import com.bazaarvoice.jless.ast.visitor.BaseNodeVisitor;
 import org.parboiled.google.base.Preconditions;
 import org.parboiled.trees.GraphUtils;
 
 import java.util.List;
 
-public class Printer extends NodeVisitor {
+public class Printer extends BaseNodeVisitor {
 
     private static final int INDENT_STEP = 2;
 
@@ -70,23 +70,9 @@ public class Printer extends NodeVisitor {
     @Override
     public boolean visit(PropertyNode node) {
         print(";");
-        /*if (node.getParent().getChildIterator().hasNext()) {
-            printLine().printIndent();
-        }*/
-
         if (node.getParent().getChildren().size() > 1 && node.getParent().getChildIterator().hasNext()) {
             printLine().printIndent();
         }
-        return true;
-    }
-
-    @Override
-    public boolean visitEnter(RuleSetNode node) {
-        return true;
-    }
-
-    @Override
-    public boolean visit(RuleSetNode node) {
         return true;
     }
 
@@ -136,15 +122,6 @@ public class Printer extends NodeVisitor {
     @Override
     public boolean visit(SelectorGroupNode node) {
         print(' ');
-        return true;
-    }
-
-    @Override
-    public boolean visit(SelectorSegmentNode node) {
-        print(node.getCombinator()).print(node.getSimpleSelector());
-        if (GraphUtils.getLastChild(node.getParent()) != node) {
-//            print(' ');
-        }
         return true;
     }
 

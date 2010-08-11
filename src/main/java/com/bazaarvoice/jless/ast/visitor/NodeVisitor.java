@@ -13,42 +13,45 @@ import com.bazaarvoice.jless.ast.SelectorSegmentNode;
 import com.bazaarvoice.jless.ast.SimpleNode;
 import com.bazaarvoice.jless.ast.SingleLineCommentNode;
 
-public abstract class NodeVisitor {
+/**
+ *
+ */
+public interface NodeVisitor {
 
-    public boolean visitEnter(Node node) {
-//        throw new IllegalArgumentException("No visitEnter method for class " + node.getClass().getSimpleName());
-        return true;
-    }
+    // Base visit methods
+    // These eliminate the need for visit methods that no visitor uses
 
-    public boolean visit(Node node) {
-        throw new IllegalArgumentException("No visit method for class " + node.getClass().getSimpleName());
-    }
+    boolean visitEnter(Node node);
 
-    public abstract boolean visit(ExpressionNode node);
+    boolean visit(Node node);
 
-    public abstract boolean visit(ExpressionsNode node);
+    // Concrete visit methods
 
-    public abstract boolean visit(MultipleLineCommentNode node);
+    boolean visit(ExpressionNode node);
 
-    public abstract boolean visitEnter(PropertyNode node);
+    boolean visit(ExpressionsNode node);
 
-    public abstract boolean visit(PropertyNode node);
+    boolean visit(MultipleLineCommentNode node);
 
-    public abstract boolean visitEnter(RuleSetNode node);
+    boolean visitEnter(PropertyNode node);
 
-    public abstract boolean visit(RuleSetNode node);
+    boolean visit(PropertyNode node);
 
-    public abstract boolean visitEnter(ScopeNode node);
+    boolean visitEnter(RuleSetNode node);
 
-    public abstract boolean visit(ScopeNode node);
+    boolean visit(RuleSetNode node);
 
-    public abstract boolean visit(SelectorNode node);
+    boolean visitEnter(ScopeNode node);
 
-    public abstract boolean visit(SelectorGroupNode node);
+    boolean visit(ScopeNode node);
 
-    public abstract boolean visit(SelectorSegmentNode node);
+    boolean visit(SelectorNode node);
 
-    public abstract boolean visit(SimpleNode node);
+    boolean visit(SelectorGroupNode node);
 
-    public abstract boolean visit(SingleLineCommentNode node);
+    boolean visit(SelectorSegmentNode node);
+
+    boolean visit(SimpleNode node);
+
+    boolean visit(SingleLineCommentNode node);
 }
