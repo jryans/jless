@@ -79,7 +79,17 @@ public abstract class BaseNodeVisitor implements NodeVisitor {
     }
 
     @Override
+    public boolean visitEnter(SelectorNode node) {
+        return true;
+    }
+
+    @Override
     public boolean visit(SelectorNode node) {
+        return true;
+    }
+
+    @Override
+    public boolean visitEnter(SelectorGroupNode node) {
         return true;
     }
 

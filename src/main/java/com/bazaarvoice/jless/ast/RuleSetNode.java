@@ -6,8 +6,18 @@ import java.util.ListIterator;
 
 public class RuleSetNode extends Node {
 
+    private boolean _visible = true;
+
     public RuleSetNode(Node child) {
         super(child);
+    }
+
+    public boolean isVisible() {
+        return _visible;
+    }
+
+    public void setVisible(boolean visible) {
+        _visible = visible;
     }
 
     @Override

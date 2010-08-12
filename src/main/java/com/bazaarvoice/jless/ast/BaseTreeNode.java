@@ -32,8 +32,8 @@ import java.util.Stack;
  */
 public abstract class BaseTreeNode<T extends BaseTreeNode<T>> implements MutableTreeNode<T>, Cloneable {
 
-    private final List<T> _children = new ArrayList<T>();
-    private final List<T> _childrenView = Collections.unmodifiableList(_children);
+    private List<T> _children = new ArrayList<T>();
+    private List<T> _childrenView = Collections.unmodifiableList(_children);
     private Stack<MutableChildIterator> _childIteratorStack = new Stack<MutableChildIterator>();
     private T _parent;
 
@@ -140,12 +140,24 @@ public abstract class BaseTreeNode<T extends BaseTreeNode<T>> implements Mutable
      * Clones fields and child nodes, but ignores the iterator stack (since the new nodes are not attached
      * to the tree and so should not be part of any kind of iteration).
      */
-    @SuppressWarnings ({"unchecked"})
+    @SuppressWarnings ({"unchecked", "CloneDoesntDeclareCloneNotSupportedException"})
     @Override
-    public T clone()
-            throws CloneNotSupportedException {
-        T node = (T) super.clone();
+    public T clone() {
+        T node;
+        try {
+            // Clone any primitive fields
+            node = (T) super.clone();
+        } catch (CloneNotSupportedException e) {
+            throw new IllegalStateException("Object is marked Cloneable.");
+        }
 
+        // Reset internal state
+        node._children = new ArrayList<T>();
+        node._childrenView = Collections.unmodifiableList(node._children);
+        node._childIteratorStack = new Stack<MutableChildIterator>();
+        node._parent = null;
+
+        // Copy all children
         for (T child : _children) {
             TreeUtils.addChild(node, child.clone());
         }

@@ -45,7 +45,11 @@ public interface NodeVisitor {
 
     boolean visit(ScopeNode node);
 
+    boolean visitEnter(SelectorNode node);
+
     boolean visit(SelectorNode node);
+
+    boolean visitEnter(SelectorGroupNode node);
 
     boolean visit(SelectorGroupNode node);
 
