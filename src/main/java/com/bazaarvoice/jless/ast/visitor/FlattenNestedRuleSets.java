@@ -18,28 +18,26 @@ public class FlattenNestedRuleSets extends BaseNodeVisitor {
 
     @Override
     public boolean visitEnter(RuleSetNode node) {
-        if (_ruleSetStack.empty()) {
-            _ruleSetStack.push(node);
-            return true;
-        }
-
-        /*NodeVisitor getSelectorGroupNode = new NodeVisitor() {
-
-        }*/
-
-        // Get this node's current selecto
-
-        // There is a parent rule set, move this rule set up to be a sibling of its parent with comments that describe it.
-        MutableTreeUtils.addSiblingAfter(_ruleSetStack.peek(), surroundWithContext(node));
-            
         _ruleSetStack.push(node);
-        return false; // Don't need to descend, rule set will be revisited in new location
+        return true;
     }
 
     @Override
     public boolean visit(RuleSetNode node) {
         _ruleSetStack.pop();
+
+        if (!_ruleSetStack.empty()) {
+            // There is a parent rule set, move this rule set up to be a sibling of its parent with comments that describe it.
+            MutableTreeUtils.addSiblingAfter(_ruleSetStack.peek(), surroundWithContext(node));
+        }
+
         return true;
+    }
+
+    @Override
+    public boolean visitEnter(ScopeNode node) {
+        // Don't enter the scope of a nested rule set
+        return _ruleSetStack.size() <= 1;
     }
 
     private Node[] surroundWithContext(RuleSetNode node) {

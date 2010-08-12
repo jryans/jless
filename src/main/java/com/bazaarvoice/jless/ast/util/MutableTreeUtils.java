@@ -7,7 +7,7 @@ import com.google.common.base.Preconditions;
 /**
  * TODO: Fix naming scheme
  *
- * Utils for BaseTreeNode nodes? Maybe just for vistors?
+ * Utils for BaseTreeNode nodes? Maybe just for visitors?
  */
 public final class MutableTreeUtils {
 

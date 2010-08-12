@@ -30,7 +30,7 @@ import java.util.Stack;
  *
  * @param <T> the actual implementation type of this MutableTreeNodeImpl
  */
-public class BaseTreeNode<T extends BaseTreeNode<T>> implements MutableTreeNode<T> {
+public abstract class BaseTreeNode<T extends BaseTreeNode<T>> implements MutableTreeNode<T>, Cloneable {
 
     private final List<T> _children = new ArrayList<T>();
     private final List<T> _childrenView = Collections.unmodifiableList(_children);
@@ -136,9 +136,26 @@ public class BaseTreeNode<T extends BaseTreeNode<T>> implements MutableTreeNode<
         _childIteratorStack.pop();
     }
 
-    private class MutableChildIterator implements RandomAccessListIterator<T> {
-        private int _cursor;
+    /**
+     * Clones fields and child nodes, but ignores the iterator stack (since the new nodes are not attached
+     * to the tree and so should not be part of any kind of iteration).
+     */
+    @SuppressWarnings ({"unchecked"})
+    @Override
+    public T clone()
+            throws CloneNotSupportedException {
+        T node = (T) super.clone();
 
+        for (T child : _children) {
+            TreeUtils.addChild(node, child.clone());
+        }
+
+        return node;
+    }
+
+    private class MutableChildIterator implements RandomAccessListIterator<T> {
+
+        private int _cursor;
         private int _lastReturned = -1;
 
         public MutableChildIterator() {
