@@ -107,9 +107,9 @@ public class ParsingTest {
         runTestFor("whitespace");
     }
 
-    /*public void testBazaarvoiceDisplayShared() {
+    public void testBazaarvoiceDisplayShared() {
         runTestFor("bazaarvoiceDisplayShared");
-    }*/
+    }
 
     @AfterMethod
     public void flushOutput() {

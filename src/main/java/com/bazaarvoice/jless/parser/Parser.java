@@ -31,7 +31,7 @@ public class Parser extends BaseParser<Node> {
     }
 
     public Rule Document() {
-        return Sequence(Scope(), Eoi());
+        return Sequence(Scope(), EOI);
     }
 
     public Rule Scope() {
@@ -56,7 +56,7 @@ public class Parser extends BaseParser<Node> {
      */
     Rule SingleLineComment() {
         return Sequence(
-                Ws0(), "//", ZeroOrMore(Sequence(TestNot('\n'), Any())),
+                Ws0(), "//", ZeroOrMore(Sequence(TestNot('\n'), ANY)),
                 push(new SingleLineCommentNode(match())),
                 '\n', Ws0()
         );
@@ -67,7 +67,7 @@ public class Parser extends BaseParser<Node> {
      */
     Rule MultipleLineComment() {
         return Sequence(
-                Ws0(), "/*", ZeroOrMore(Sequence(TestNot("*/"), Any())),
+                Ws0(), "/*", ZeroOrMore(Sequence(TestNot("*/"), ANY)),
                 push(new MultipleLineCommentNode(match())),
                 "*/", Ws0()
         );
@@ -134,7 +134,7 @@ public class Parser extends BaseParser<Node> {
      */
     Rule Combinator() {
         return FirstOf(
-                Sequence(Sp0(), CharSet("+>~"), Sp0()),
+                Sequence(Sp0(), FirstOf("+>~"), Sp0()),
                 Sp1()
         );
     }
@@ -162,7 +162,7 @@ public class Parser extends BaseParser<Node> {
                 '[', Sp0(),
                 Ident(), Sp0(),
                 Optional(Sequence(
-                        Optional(CharSet("~|^$*")),
+                        Optional(FirstOf("~|^$*")),
                         '=', Sp0(),
                         FirstOf(Ident(), String()), Sp0()
                 )),
@@ -180,7 +180,7 @@ public class Parser extends BaseParser<Node> {
 
     // TODO: Use Number in place of Digit
     Rule PseudoExpression() {
-        return OneOrMore(Sequence(FirstOf(CharSet("+-"), Dimension(), Digit(), String(), Ident()), Sp0()));
+        return OneOrMore(Sequence(FirstOf(FirstOf("+-"), Dimension(), Digit(), String(), Ident()), Sp0()));
     }
 
     Rule Negation() {
@@ -203,7 +203,7 @@ public class Parser extends BaseParser<Node> {
         return FirstOf(
                 Sequence(
                         Ws0(),
-                        /*FirstOf(*/Ident()/*, Variable())*/, push(new PropertyNode(match())),
+                        /*FirstOf(*/PropertyName()/*, Variable())*/, push(new PropertyNode(match())),
                         Sp0(), ':', Ws0(),
                         Expressions(), peek(1).addChild(pop()),
                         ZeroOrMore(
@@ -249,6 +249,12 @@ public class Parser extends BaseParser<Node> {
         return Sequence(Sp0(), '!', Sp0(), "important", push(new SimpleNode("!important")));
     }
 
+    // ********** Browser Hack Workarounds **********
+
+    Rule PropertyName() {
+        return Sequence(Optional(FirstOf("*_")), Ident());
+    }
+
     // ********** CSS Entities **********
 
     Rule ElementName() {
@@ -282,7 +288,7 @@ public class Parser extends BaseParser<Node> {
      */
     Rule Function() {
         return Sequence(
-                OneOrMore(FirstOf(CharSet("-_"), Alpha())),
+                OneOrMore(FirstOf(FirstOf("-_"), Alpha())),
                 Arguments()
         );
     }
@@ -330,7 +336,7 @@ public class Parser extends BaseParser<Node> {
                 "url(",
                 FirstOf(
                         String(),
-                        OneOrMore(FirstOf(CharSet("-_%$/.&=:;#+?"), Alphanumeric()))
+                        OneOrMore(FirstOf(FirstOf("-_%$/.&=:;#+?"), Alphanumeric()))
                 ),
                 ')'
         );
@@ -367,8 +373,8 @@ public class Parser extends BaseParser<Node> {
      */
     Rule String() {
         return FirstOf(
-                Sequence('\'', ZeroOrMore(Sequence(TestNot('\''), Any())), '\''),
-                Sequence('"', ZeroOrMore(Sequence(TestNot('"'), Any())), '"')
+                Sequence('\'', ZeroOrMore(Sequence(TestNot('\''), ANY)), '\''),
+                Sequence('"', ZeroOrMore(Sequence(TestNot('"'), ANY)), '"')
         );
     }
 
@@ -475,15 +481,15 @@ public class Parser extends BaseParser<Node> {
     }
 
     Rule Nd() {
-        return Sequence(TestNot(Delimiter()), Any());
+        return Sequence(TestNot(Delimiter()), ANY);
     }
 
     Rule Whitespace() {
-        return CharSet(" \n");
+        return FirstOf(" \n");
     }
 
     Rule Delimiter() {
-        return CharSet(" ;,!})\n");
+        return FirstOf(" ;,!})\n");
     }
 
     Rule NameStart() {
@@ -491,6 +497,6 @@ public class Parser extends BaseParser<Node> {
     }
 
     Rule NameCharacter() {
-        return FirstOf(CharSet("-_"), Alphanumeric());
+        return FirstOf(FirstOf("-_"), Alphanumeric());
     }
 }
