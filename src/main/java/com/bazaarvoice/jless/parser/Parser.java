@@ -18,10 +18,22 @@ import org.parboiled.Rule;
 import org.parboiled.support.Var;
 
 /**
- * Transcribed from the <a href="http://github.com/cloudhead/less/blob/master/lib/less/engine/grammar">LESS Treetop grammar</a>
- * by Alexis Sellier into Parboiled.
+ * Initially transcribed into Parboiled from the
+ * <a href="http://github.com/cloudhead/less/blob/master/lib/less/engine/grammar">LESS Treetop grammar</a>
+ * that was created by Alexis Sellier as part of the LESS Ruby implementation.
  *
- * @author J. Ryan Stinnett
+ * From there, the parser has been modified to more closely support Parboiled style and a modified set of requirements.
+ * Differences from the LESS Ruby parser include:
+ * <ul>
+ *   <li>Selector parsing was rewritten using the <a href="http://www.w3.org/TR/css3-selectors/#grammar">CSS 3 selector grammar</a></li> 
+ *   <li>Numbers in attribute selectors must be quoted (as per the CSS spec)</li>
+ *   <li>Case-sensitivity was removed</li>
+ * </ul>
+ *
+ * This list only notes changes in the <em>parsing</em> stage. See {@link com.bazaarvoice.jless.LessTranslator} for details on any changes
+ * to the <em>translation</em> stage.
+ *
+ * @see com.bazaarvoice.jless.LessTranslator
  */
 //@BuildParseTree
 public class Parser extends BaseParser<Node> {
@@ -322,7 +334,7 @@ public class Parser extends BaseParser<Node> {
      */
     Rule Entity() {
         return Sequence(
-                FirstOf(URL(), /*AlphaFilter(), */Function(), /*Accessor(), */Keyword(), /*Variable(), */Literal(), Font()),
+                FirstOf(URL(), AlphaFilter(), Function(), /*Accessor(), */Keyword(), /*Variable(), */Literal(), Font()),
                 push(new SimpleNode(match()))
         );
     }
@@ -340,6 +352,13 @@ public class Parser extends BaseParser<Node> {
                 ),
                 ')'
         );
+    }
+
+    /**
+     * 'alpha(opacity=' Digit1 ' )
+     */
+    Rule AlphaFilter() {
+        return Sequence("alpha(opacity=", Digit1(), ')');
     }
 
     /**
