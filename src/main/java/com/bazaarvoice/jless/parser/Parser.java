@@ -15,7 +15,6 @@ import com.bazaarvoice.jless.ast.SingleLineCommentNode;
 import org.parboiled.BaseParser;
 import org.parboiled.Context;
 import org.parboiled.Rule;
-import org.parboiled.annotations.BuildParseTree;
 import org.parboiled.support.Var;
 
 /**
@@ -24,7 +23,7 @@ import org.parboiled.support.Var;
  *
  * @author J. Ryan Stinnett
  */
-@BuildParseTree
+//@BuildParseTree
 public class Parser extends BaseParser<Node> {
 
     boolean debug(Context context) {

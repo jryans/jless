@@ -1,10 +1,8 @@
 package com.bazaarvoice.jless;
 
 import com.bazaarvoice.jless.ast.Node;
-import com.bazaarvoice.jless.ast.visitor.FlattenNestedRuleSets;
 import com.bazaarvoice.jless.ast.visitor.Printer;
 import org.apache.commons.io.IOUtils;
-import org.parboiled.ReportingParseRunner;
 import org.parboiled.errors.ErrorUtils;
 import org.parboiled.support.ParsingResult;
 import org.testng.Assert;
@@ -17,13 +15,11 @@ import java.io.InputStream;
 @Test
 public class ParsingTest {
 
-    private LessTranslator _transformer = new LessTranslator();
-
     protected ParsingResult<Node> parseLess(String fileName) {
-        return parseLess(fileName, true);
+        return parse(fileName, true);
     }
 
-    protected ParsingResult<Node> parseLess(String fileName, boolean alwaysPrintStatus) {
+    protected ParsingResult<Node> parse(String fileName, boolean alwaysPrintStatus) {
         InputStream lessStream = getClass().getResourceAsStream("/less/" + fileName + ".less");
         String lessInput = "";
         
@@ -46,7 +42,11 @@ public class ParsingTest {
     }
 
     protected ParsingResult<Node> runParser(String lessInput) {
-        return ReportingParseRunner.run(_transformer.getParser().Document(), lessInput);
+        return LessTranslator.parse(lessInput);
+    }
+    
+    protected void runTranslator(ParsingResult<Node> parseResult) {
+        LessTranslator.translate(parseResult.resultValue);
     }
 
     private String getResultStatus(ParsingResult<Node> result) {
@@ -63,10 +63,6 @@ public class ParsingTest {
         if (result.resultValue != null) {
 //            sb.append("Input AST:\n").append(GraphUtils.printTree(result.resultValue, new ToStringFormatter<Node>(null))).append('\n');
 
-            result.resultValue.accept(new FlattenNestedRuleSets());
-
-//            sb.append("Output AST:\n").append(GraphUtils.printTree(result.resultValue, new ToStringFormatter<Node>(null))).append('\n');
-            
             sb.append(printResult(result));
         }
 
@@ -93,6 +89,10 @@ public class ParsingTest {
 
     public void testCss3() {
         runTestFor("css-3");
+    }
+
+    public void testRuleSets() {
+        runTestFor("rulesets");
     }
 
     public void testSelectors() {

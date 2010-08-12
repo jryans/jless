@@ -5,6 +5,8 @@ import difflib.DiffUtils;
 import difflib.Patch;
 import org.apache.commons.io.IOUtils;
 import org.parboiled.support.ParsingResult;
+import org.parboiled.support.ToStringFormatter;
+import org.parboiled.trees.GraphUtils;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
@@ -19,6 +21,12 @@ public class TranslatedDiffTest extends ParsingTest {
     @Override
     protected void runTestFor(String fileName) {
         ParsingResult<Node> result = parseLess(fileName);
+
+        LessTranslator.translate(result.resultValue);
+
+        TestUtils.getLog().println("Output AST:");
+        TestUtils.getLog().println(GraphUtils.printTree(result.resultValue, new ToStringFormatter<Node>(null)));
+
         diffOutput(fileName, result);
     }
 
