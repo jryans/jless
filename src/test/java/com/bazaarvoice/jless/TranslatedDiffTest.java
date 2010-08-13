@@ -24,8 +24,8 @@ public class TranslatedDiffTest extends ParsingTest {
 
         LessTranslator.translate(result.resultValue);
 
-        TestUtils.getLog().println("Output AST:");
-        TestUtils.getLog().println(GraphUtils.printTree(result.resultValue, new ToStringFormatter<Node>(null)));
+//        TestUtils.getLog().println("Output AST:");
+//        TestUtils.getLog().println(GraphUtils.printTree(result.resultValue, new ToStringFormatter<Node>(null)));
 
         diffOutput(fileName, result);
     }

@@ -78,7 +78,7 @@ public class Printer extends BaseNodeVisitor {
             } else if (children.size() == 1 && children.get(0) instanceof RuleSetNode) {
                 addIndent().printLine().printIndent();
             } else {
-                print(' ');
+//                print(' ');
             }
         }
         return true;
@@ -93,11 +93,11 @@ public class Printer extends BaseNodeVisitor {
             } else if (children.size() == 1 && children.get(0) instanceof RuleSetNode) {
                 removeIndent().printLine().printIndent();
             } else {
-                print(' ');
+//                print(' ');
             }
             print('}');
             if (node.getParent().getParent().getLatestChildIterator().hasNext()) {
-                printLine().printIndent();
+//                printLine().printIndent();
             }
         }
         return true;

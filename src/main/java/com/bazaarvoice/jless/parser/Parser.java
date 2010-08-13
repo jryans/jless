@@ -2,8 +2,8 @@ package com.bazaarvoice.jless.parser;
 
 import com.bazaarvoice.jless.ast.ExpressionNode;
 import com.bazaarvoice.jless.ast.ExpressionsNode;
-import com.bazaarvoice.jless.ast.MultipleLineCommentNode;
 import com.bazaarvoice.jless.ast.Node;
+import com.bazaarvoice.jless.ast.PlaceholderNode;
 import com.bazaarvoice.jless.ast.PropertyNode;
 import com.bazaarvoice.jless.ast.RuleSetNode;
 import com.bazaarvoice.jless.ast.ScopeNode;
@@ -11,7 +11,7 @@ import com.bazaarvoice.jless.ast.SelectorGroupNode;
 import com.bazaarvoice.jless.ast.SelectorNode;
 import com.bazaarvoice.jless.ast.SelectorSegmentNode;
 import com.bazaarvoice.jless.ast.SimpleNode;
-import com.bazaarvoice.jless.ast.SingleLineCommentNode;
+import com.bazaarvoice.jless.ast.SpacingNode;
 import org.parboiled.BaseParser;
 import org.parboiled.Context;
 import org.parboiled.Rule;
@@ -28,10 +28,20 @@ import org.parboiled.support.Var;
  *   <li>Selector parsing was rewritten using the <a href="http://www.w3.org/TR/css3-selectors/#grammar">CSS 3 selector grammar</a></li> 
  *   <li>Numbers in attribute selectors must be quoted (as per the CSS spec)</li>
  *   <li>Case-sensitivity was removed</li>
+ *   <li>Line breaks can be used in all places where spaces are accepted</li>
+ * </ul>
+ *
+ * This parser attempts to track enough input whitespace and comments to cause the input and output files to have the same number of lines
+ * (which is helpful when referencing styles via browser tools like Firebug). However, to avoid filling the AST with spacing nodes, a
+ * simplifying assumption has been made:
+ * <ul>
+ *   <li>A rule set may not span multiple lines</li>
  * </ul>
  *
  * This list only notes changes in the <em>parsing</em> stage. See {@link com.bazaarvoice.jless.LessTranslator} for details on any changes
  * to the <em>translation</em> stage.
+ *
+ * TODO: Improve rule set line ending capture
  *
  * @see com.bazaarvoice.jless.LessTranslator
  */
@@ -51,7 +61,7 @@ public class Parser extends BaseParser<Node> {
                 push(new ScopeNode()),
                 ZeroOrMore(Sequence(
 //                        debug(getContext()),
-                        FirstOf(/*Import(), */Declaration(), RuleSet(), /*Mixin(), */Comment()),
+                        FirstOf(/*Import(), */Declaration(), RuleSet()/*, Mixin()*/, Comment()),
                         debug(getContext()),
                         peek(1).addChild(pop())//,
 //                        debug(getContext())
@@ -60,7 +70,7 @@ public class Parser extends BaseParser<Node> {
     }
 
     Rule Comment() {
-        return /*Sequence(debug(getContext()), */FirstOf(MultipleLineComment(), SingleLineComment())/*, debug(getContext()))*/;
+        return /*Sequence(debug(getContext()), */Sequence(FirstOf(MultipleLineComment(), SingleLineComment()), push(new SpacingNode(match())))/*, debug(getContext()))*/;
     }
 
     /**
@@ -69,7 +79,6 @@ public class Parser extends BaseParser<Node> {
     Rule SingleLineComment() {
         return Sequence(
                 Ws0(), "//", ZeroOrMore(Sequence(TestNot('\n'), ANY)),
-                push(new SingleLineCommentNode(match())),
                 '\n', Ws0()
         );
     }
@@ -80,7 +89,6 @@ public class Parser extends BaseParser<Node> {
     Rule MultipleLineComment() {
         return Sequence(
                 Ws0(), "/*", ZeroOrMore(Sequence(TestNot("*/"), ANY)),
-                push(new MultipleLineCommentNode(match())),
                 "*/", Ws0()
         );
     }
@@ -88,7 +96,7 @@ public class Parser extends BaseParser<Node> {
     // ********** CSS Rule Sets **********
 
     /**
-     * Selectors '{' Ws0 Primary Ws0 '}' Sp0 ';'? Ws0
+     * Selectors '{' Ws0 Primary Ws0 '}' Ws0 ';'? Ws0
      *
      * TODO: What is hide for? Add mixin.
      *
@@ -96,11 +104,12 @@ public class Parser extends BaseParser<Node> {
      */
     Rule RuleSet() {
         return Sequence(
-//                debug(getContext()),
+                debug(getContext()),
+//                Ws0(),
                 SelectorGroup(), push(new RuleSetNode(pop())),
 //                debug(getContext()),
                 '{', Ws0(), Scope(), peek(1).addChild(pop()), Ws0(), '}',
-                Sp0(), Optional(';'), Ws0()//,
+                Ws0(), peek().addChild(new SpacingNode(match())), Optional(';'), Ws0(), peek().addChild(new SpacingNode(match()))//,
 //                debug(getContext())
         );
     }
@@ -112,9 +121,9 @@ public class Parser extends BaseParser<Node> {
      */
     Rule SelectorGroup() {
         return Sequence(
-                Ws0(),
+                Ws0(), peek().addChild(new SpacingNode(match())), 
                 Selector(), push(new SelectorGroupNode(pop())),
-                ZeroOrMore(Sequence(Sp0(), ',', Ws0(), Selector(), peek(1).addChild(pop()))),
+                ZeroOrMore(Sequence(Ws0(), ',', Ws0(), Selector(), peek(1).addChild(pop()))),
                 Ws0()
         );
     }
@@ -142,12 +151,12 @@ public class Parser extends BaseParser<Node> {
     }
 
     /**
-     * [+>~] Sp0 / Sp1
+     * Ws0 [+>~] Ws0 / Ws1
      */
     Rule Combinator() {
         return FirstOf(
-                Sequence(Sp0(), FirstOf("+>~"), Sp0()),
-                Sp1()
+                Sequence(Ws0(), FirstOf("+>~"), Ws0()),
+                Ws1()
         );
     }
 
@@ -171,12 +180,12 @@ public class Parser extends BaseParser<Node> {
 
     Rule Attribute() {
         return Sequence(
-                '[', Sp0(),
-                Ident(), Sp0(),
+                '[', Ws0(),
+                Ident(), Ws0(),
                 Optional(Sequence(
                         Optional(FirstOf("~|^$*")),
-                        '=', Sp0(),
-                        FirstOf(Ident(), String()), Sp0()
+                        '=', Ws0(),
+                        FirstOf(Ident(), String()), Ws0()
                 )),
                 ']'
         );
@@ -187,16 +196,16 @@ public class Parser extends BaseParser<Node> {
     }
 
     Rule FunctionalPseudo() {
-        return Sequence(Ident(), '(', Sp0(), PseudoExpression(), ')');
+        return Sequence(Ident(), '(', Ws0(), PseudoExpression(), ')');
     }
 
     // TODO: Use Number in place of Digit
     Rule PseudoExpression() {
-        return OneOrMore(Sequence(FirstOf(FirstOf("+-"), Dimension(), Digit(), String(), Ident()), Sp0()));
+        return OneOrMore(Sequence(FirstOf(FirstOf("+-"), Dimension(), Digit(), String(), Ident()), Ws0()));
     }
 
     Rule Negation() {
-        return Sequence(":not(", Sp0(), NegationArgument(), Sp0(), ')');
+        return Sequence(":not(", Ws0(), NegationArgument(), Ws0(), ')');
     }
 
     Rule NegationArgument() {
@@ -206,8 +215,8 @@ public class Parser extends BaseParser<Node> {
     // ********** Variables & Expressions **********
 
     /**
-     * Ws0 (Ident / Variable) Sp0 ':' Ws0 Expressions (Ws0 ',' Ws0 Expressions)* Sp0 (';' / Ws0 &'}') Ws0
-     * / Ws0 Ident Sp0 ':' Sp0 ';' Ws0
+     * Ws0 (Ident / Variable) Ws0 ':' Ws0 Expressions (Ws0 ',' Ws0 Expressions)* Sp0 (';' / Ws0 &'}') Ws0
+     * / Ws0 Ident Ws0 ':' Ws0 ';' Ws0
      *
      * Ex: @my-var: 12px; height: 100%;
      */
@@ -216,15 +225,15 @@ public class Parser extends BaseParser<Node> {
                 Sequence(
                         Ws0(),
                         /*FirstOf(*/PropertyName()/*, Variable())*/, push(new PropertyNode(match())),
-                        Sp0(), ':', Ws0(),
+                        Ws0(), ':', Ws0(),
                         Expressions(), peek(1).addChild(pop()),
                         ZeroOrMore(
                                 Sequence(Ws0(), ',', Ws0(), Expressions(), peek(1).addChild(pop()))
                         ),
-                        Sp0(), FirstOf(';', Sequence(Ws0(), Test('}'))), Ws0()
+                        Sp0(), /*drop(), *//*peek(1).addChild(pop()), */FirstOf(';', Sequence(Ws0(), Test('}'))), Ws0()
                 ),
                 // Empty rules are ignored (TODO: Remove?)
-                Sequence(Ws0(), Ident(), push(null), /*push(new PropertyNode(match())), */Sp0(), ':', Sp0(), ';', Ws0())
+                Sequence(Ws0(), Ident(), push(new PlaceholderNode()), /*push(new PropertyNode(match())), */Ws0(), ':', Ws0(), ';', Ws0())
         );
     }
 
@@ -238,7 +247,7 @@ public class Parser extends BaseParser<Node> {
                 // Space-separated expressions
                 Sequence(
                         Expression(), push(new ExpressionsNode(pop())),
-                        debug(getContext()),
+//                        debug(getContext()),
                         ZeroOrMore(Sequence(Ws1(), Expression(), peek(1).addChild(pop()))),
                         Optional(Sequence(Important(), peek(1).addChild(pop())))
                 ),
@@ -247,7 +256,7 @@ public class Parser extends BaseParser<Node> {
     }
 
     /**
-     * '(' Sp0 Expressions Sp0 ')' TODO: Add later
+     * '(' Ws0 Expressions Ws0 ')' TODO: Add later
      * / Entity
      */
     Rule Expression() {
@@ -255,10 +264,10 @@ public class Parser extends BaseParser<Node> {
     }
 
     /**
-     * Sp0 '!' Sp0 'important'
+     * Ws0 '!' Ws0 'important'
      */
     Rule Important() {
-        return Sequence(Sp0(), '!', Sp0(), "important", push(new SimpleNode("!important")));
+        return Sequence(Ws0(), '!', Ws0(), "important", push(new SimpleNode("!important")));
     }
 
     // ********** Browser Hack Workarounds **********
@@ -306,22 +315,22 @@ public class Parser extends BaseParser<Node> {
     }
 
     /**
-     * '(' Sp0 Expressions Sp0 (',' Sp0 Expressions Sp0)* ')' / '(' Sp0 ')'
+     * '(' Ws0 Expressions Ws0 (',' Ws0 Expressions Ws0)* ')' / '(' Ws0 ')'
      */
     Rule Arguments() {
         return FirstOf(
                 Sequence(
-                        '(', Sp0(),
-                        Expressions(), pop() != null, //push(new ArgumentsNode(pop())),
-                        Sp0(),
+                        '(', Ws0(),
+                        Expressions(), drop(), //push(new ArgumentsNode(pop())),
+                        Ws0(),
                         ZeroOrMore(Sequence(
-                                ',', Sp0(),
-                                Expressions(), pop() != null, //peek(1).addChild(pop()),
-                                Sp0()
+                                ',', Ws0(),
+                                Expressions(), drop(), //peek(1).addChild(pop()),
+                                Ws0()
                         )),
                         ')'
                 ),
-                Sequence('(', Sp0(), ')')//, push(null))
+                Sequence('(', Ws0(), ')')//, push(null))
         );
     }
 
@@ -483,13 +492,7 @@ public class Parser extends BaseParser<Node> {
         return FirstOf(CharRange('a', 'f'), CharRange('A', 'F'), Digit());
     }
 
-    Rule Sp0() {
-        return ZeroOrMore(' ');
-    }
-
-    Rule Sp1() {
-        return OneOrMore(' ');
-    }
+    // Avoid storing whitespace / spacing in the AST whenever possible
 
     Rule Ws0() {
         return ZeroOrMore(Whitespace());
@@ -499,12 +502,24 @@ public class Parser extends BaseParser<Node> {
         return OneOrMore(Whitespace());
     }
 
-    Rule Nd() {
-        return Sequence(TestNot(Delimiter()), ANY);
-    }
-
     Rule Whitespace() {
         return FirstOf(" \n");
+    }
+
+    Rule Sp0() {
+        return ZeroOrMore(Spacing());
+    }
+
+    Rule Sp1() {
+        return OneOrMore(Spacing());
+    }
+
+    Rule Spacing() {
+        return FirstOf(Whitespace(), Sequence(Comment(), drop()));
+    }
+
+    Rule Nd() {
+        return Sequence(TestNot(Delimiter()), ANY);
     }
 
     Rule Delimiter() {

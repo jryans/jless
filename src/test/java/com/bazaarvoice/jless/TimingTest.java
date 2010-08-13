@@ -9,7 +9,8 @@ import org.testng.annotations.Test;
 public class TimingTest extends ParsingTest {
 
     private static final int RUNS_PER_TIMED_SET = 50;
-    private static final String[] CACHE_FILES = {"css", "css-3", "strings", "whitespace"};
+    private static final String[] CACHE_FILES = {"bazaarvoiceDisplayShared", "css", "css-3", "strings", "whitespace"};
+//    private static final ProfilingParseRunner<Node> _sParseRunner = new ProfilingParseRunner<Node>(Parboiled.createParser(Parser.class).Document());
 
     private float _currentTime;
     private boolean _cached = false;
@@ -33,6 +34,8 @@ public class TimingTest extends ParsingTest {
                 parse(fileName, false);
             }
         }
+//        TestUtils.getLog().println(_sParseRunner.getReport().print());
+//        TestUtils.flushLog();
         _cached = true;
     }
 
@@ -95,6 +98,7 @@ public class TimingTest extends ParsingTest {
     @Override
     protected ParsingResult<Node> runParser(String lessInput) {
         long startTime = System.nanoTime();
+//        ParsingResult<Node> result = _sParseRunner.run(lessInput);
         ParsingResult<Node> result = super.runParser(lessInput);
         _currentTime = System.nanoTime() - startTime;
          _currentTime /= 1000000;
