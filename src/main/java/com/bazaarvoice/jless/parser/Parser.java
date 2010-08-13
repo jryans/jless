@@ -15,6 +15,7 @@ import com.bazaarvoice.jless.ast.SpacingNode;
 import org.parboiled.BaseParser;
 import org.parboiled.Context;
 import org.parboiled.Rule;
+import org.parboiled.annotations.MemoMismatches;
 import org.parboiled.support.Var;
 
 /**
@@ -135,12 +136,12 @@ public class Parser extends BaseParser<Node> {
         Var<SelectorSegmentNode> selectorSegmentNode = new Var<SelectorSegmentNode>();
         return Sequence(
                 push(new SelectorNode()),
-                // First selector segment has no combinator
-                selectorSegmentNode.set(new SelectorSegmentNode("")),
+                // First selector segment may have a combinator (with nested rule sets)
+                Optional(SymbolCombinator()), selectorSegmentNode.set(new SelectorSegmentNode(match())),
                 SimpleSelector(selectorSegmentNode), selectorSegmentNode.get().setSimpleSelector(match()),
                 peek().addChild(selectorSegmentNode.getAndClear()),
 //                debug(getContext()),
-                // Additional selector segments include a combinator
+                // Additional selector segments must have a combinator
                 ZeroOrMore(Sequence(
                         Combinator(), selectorSegmentNode.set(new SelectorSegmentNode(match())),
                         SimpleSelector(selectorSegmentNode), selectorSegmentNode.get().setSimpleSelector(match()),
@@ -155,9 +156,17 @@ public class Parser extends BaseParser<Node> {
      */
     Rule Combinator() {
         return FirstOf(
-                Sequence(Ws0(), FirstOf("+>~"), Ws0()),
-                Ws1()
+                SymbolCombinator(),
+                DescendantCombinator()
         );
+    }
+
+    Rule SymbolCombinator() {
+        return Sequence(Ws0(), AnyOf("+>~"), Ws0());
+    }
+
+    Rule DescendantCombinator() {
+        return Ws1();
     }
 
     Rule SimpleSelector(Var<SelectorSegmentNode> selectorSegmentNode) {
@@ -183,7 +192,7 @@ public class Parser extends BaseParser<Node> {
                 '[', Ws0(),
                 Ident(), Ws0(),
                 Optional(Sequence(
-                        Optional(FirstOf("~|^$*")),
+                        Optional(AnyOf("~|^$*")),
                         '=', Ws0(),
                         FirstOf(Ident(), String()), Ws0()
                 )),
@@ -201,7 +210,7 @@ public class Parser extends BaseParser<Node> {
 
     // TODO: Use Number in place of Digit
     Rule PseudoExpression() {
-        return OneOrMore(Sequence(FirstOf(FirstOf("+-"), Dimension(), Digit(), String(), Ident()), Ws0()));
+        return OneOrMore(Sequence(FirstOf(AnyOf("+-"), Dimension(), Digit(), String(), Ident()), Ws0()));
     }
 
     Rule Negation() {
@@ -237,21 +246,22 @@ public class Parser extends BaseParser<Node> {
         );
     }
 
+    /*Rule Variable() {
+        return true;
+    }*/
+
     /**
      * Expression (Operator Expression)+ TODO: Add me?
      * / Expression (Ws1 Expression)* Important?
-     * / [-_.&*\/=:,+? []()#%Alphanumeric]+ TODO: What does this catch?
+     * / [-_.&*\/=:,+? []()#%Alphanumeric]+ TODO: What does this catch? Removed for now...
      */
     Rule Expressions() {
-        return FirstOf(
-                // Space-separated expressions
-                Sequence(
-                        Expression(), push(new ExpressionsNode(pop())),
+        // Space-separated expressions
+        return Sequence(
+                Expression(), push(new ExpressionsNode(pop())),
 //                        debug(getContext()),
-                        ZeroOrMore(Sequence(Ws1(), Expression(), peek(1).addChild(pop()))),
-                        Optional(Sequence(Important(), peek(1).addChild(pop())))
-                ),
-                false //Sequence(OneOrMore(FirstOf(CharSet("-_.&*/=:,+? []()#%"), Alphanumeric())), push(new CatchAllNode(match())))
+                ZeroOrMore(Sequence(Ws1(), Expression(), peek(1).addChild(pop()))),
+                Optional(Sequence(Important(), peek(1).addChild(pop())))
         );
     }
 
@@ -273,7 +283,7 @@ public class Parser extends BaseParser<Node> {
     // ********** Browser Hack Workarounds **********
 
     Rule PropertyName() {
-        return Sequence(Optional(FirstOf("*_")), Ident());
+        return Sequence(Optional(AnyOf("*_")), Ident());
     }
 
     // ********** CSS Entities **********
@@ -294,6 +304,7 @@ public class Parser extends BaseParser<Node> {
         return Sequence('.', Ident());
     }
 
+    @MemoMismatches
     Rule Ident() {
         return Sequence(Optional('-'), NameStart(), ZeroOrMore(NameCharacter()));
     }
@@ -309,7 +320,7 @@ public class Parser extends BaseParser<Node> {
      */
     Rule Function() {
         return Sequence(
-                OneOrMore(FirstOf(FirstOf("-_"), Alpha())),
+                OneOrMore(FirstOf(AnyOf("-_"), Alpha())),
                 Arguments()
         );
     }
@@ -343,7 +354,8 @@ public class Parser extends BaseParser<Node> {
      */
     Rule Entity() {
         return Sequence(
-                FirstOf(URL(), AlphaFilter(), Function(), /*Accessor(), */Keyword(), /*Variable(), */Literal(), Font()),
+                /*FirstOf(URL(), AlphaFilter(), Function(), Accessor(), Keyword(), Variable(), Literal(), Font()),*/
+                FirstOf(Keyword(), Literal(), URL(), AlphaFilter(), Function(), /*Accessor(),  Variable(), */Font()),
                 push(new SimpleNode(match()))
         );
     }
@@ -357,7 +369,7 @@ public class Parser extends BaseParser<Node> {
                 "url(",
                 FirstOf(
                         String(),
-                        OneOrMore(FirstOf(FirstOf("-_%$/.&=:;#+?"), Alphanumeric()))
+                        OneOrMore(FirstOf(AnyOf("-_%$/.&=:;#+?"), Alphanumeric()))
                 ),
                 ')'
         );
@@ -425,6 +437,7 @@ public class Parser extends BaseParser<Node> {
     /**
      * Number Unit
      */
+    @MemoMismatches
     Rule Dimension() {
         return Sequence(Number(), Unit());
     }
@@ -503,7 +516,7 @@ public class Parser extends BaseParser<Node> {
     }
 
     Rule Whitespace() {
-        return FirstOf(" \n");
+        return AnyOf(" \n");
     }
 
     Rule Sp0() {
@@ -523,14 +536,15 @@ public class Parser extends BaseParser<Node> {
     }
 
     Rule Delimiter() {
-        return FirstOf(" ;,!})\n");
+        return AnyOf(" ;,!})\n");
     }
 
+//    @MemoMismatches
     Rule NameStart() {
         return FirstOf('-', Alpha());
     }
 
     Rule NameCharacter() {
-        return FirstOf(FirstOf("-_"), Alphanumeric());
+        return FirstOf(AnyOf("-_"), Alphanumeric());
     }
 }

@@ -95,6 +95,10 @@ public class ParsingTest {
         runTestFor("rulesets");
     }
 
+    /*public void testScope() {
+        runTestFor("scope");
+    }*/
+
     public void testSelectors() {
         runTestFor("selectors");
     }
