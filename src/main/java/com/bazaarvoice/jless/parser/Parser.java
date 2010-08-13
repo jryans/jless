@@ -12,6 +12,7 @@ import com.bazaarvoice.jless.ast.SelectorNode;
 import com.bazaarvoice.jless.ast.SelectorSegmentNode;
 import com.bazaarvoice.jless.ast.SimpleNode;
 import com.bazaarvoice.jless.ast.SpacingNode;
+import com.bazaarvoice.jless.ast.VariableDefinitionNode;
 import org.parboiled.BaseParser;
 import org.parboiled.Context;
 import org.parboiled.Rule;
@@ -43,6 +44,7 @@ import org.parboiled.support.Var;
  * to the <em>translation</em> stage.
  *
  * TODO: Improve rule set line ending capture
+ * TODO: Only capture whitespace *after* terminals
  *
  * @see com.bazaarvoice.jless.LessTranslator
  */
@@ -57,12 +59,16 @@ public class Parser extends BaseParser<Node> {
         return Sequence(Scope(), EOI);
     }
 
+    /**
+     * This is the high-level rule at some scope (either the root document or within a rule set / mixin).
+     * Future: Imports
+     */
     public Rule Scope() {
         return Sequence(
                 push(new ScopeNode()),
                 ZeroOrMore(Sequence(
 //                        debug(getContext()),
-                        FirstOf(/*Import(), */Declaration(), RuleSet()/*, Mixin()*/, Comment()),
+                        FirstOf(Declaration(), RuleSet(), MixinReference(), Comment()),
                         debug(getContext()),
                         peek(1).addChild(pop())//,
 //                        debug(getContext())
@@ -94,24 +100,67 @@ public class Parser extends BaseParser<Node> {
         );
     }
 
-    // ********** CSS Rule Sets **********
+    // ********** CSS Rule Sets & Mixins **********
 
     /**
-     * Selectors '{' Ws0 Primary Ws0 '}' Ws0 ';'? Ws0
-     *
-     * TODO: What is hide for? Add mixin.
+     * (Selectors '{' Ws0 / Class Ws0 Parameters Ws0 '{' Ws0) Scope Ws0 '}' Ws0
      *
      * Ex: div, .class, body > p {...}
+     *
+     * Future: Hidden
      */
     Rule RuleSet() {
         return Sequence(
-                debug(getContext()),
-//                Ws0(),
-                SelectorGroup(), push(new RuleSetNode(pop())),
-//                debug(getContext()),
-                '{', Ws0(), Scope(), peek(1).addChild(pop()), Ws0(), '}',
-                Ws0(), peek().addChild(new SpacingNode(match())), Optional(';'), Ws0(), peek().addChild(new SpacingNode(match()))//,
-//                debug(getContext())
+                FirstOf(
+                        // Standard CSS rule set
+                        Sequence(
+                                SelectorGroup(), push(new RuleSetNode(pop())),
+                                '{', Ws0()
+                        ),
+                        // Mixin rule set, with possible arguments
+                        Sequence(
+                                Class(), push(new RuleSetNode(pop())), Ws0(),
+                                Parameters(), Ws0(),
+                                '{', Ws0()
+                        )
+                ),
+                Scope(), peek(1).addChild(pop()), Ws0(),
+                '}', Ws0(), peek().addChild(new SpacingNode(match()))
+        );
+    }
+
+    /**
+     * '(' Parameter Ws0 (',' Ws0 Parameter)* ')'
+     */
+    Rule Parameters() {
+        return Sequence(
+                '(', Parameter(), Ws0(),
+                ZeroOrMore(
+                        ',', Ws0(), Parameter()
+                ),
+                ')'
+        );
+    }
+
+    /**
+     * Variable Ws0 ':' Ws0 Expressions
+     */
+    Rule Parameter() {
+        return Sequence(Variable(), Ws0(), ':', Ws0(), Expressions());
+    }
+
+    /**
+     * Ws0 SelectorGroup ';' Ws0
+     * / Class Arguments Ws0 ';' Ws0
+     * TODO: Capture whitespace?
+     * TODO: Mixin name validation
+     */
+    Rule MixinReference() {
+        return FirstOf(
+                // No arguments, reference an existing rule set's properties
+                Sequence(Ws0(), SelectorGroup(), ';', Ws0()),
+                // Call a mixin, passing along some arguments
+                Sequence(Class(), Arguments(), Ws0(), ';', Ws0())
         );
     }
 
@@ -173,7 +222,7 @@ public class Parser extends BaseParser<Node> {
         return FirstOf(
                 Sequence(
 //                        debug(getContext()),
-                        FirstOf(ElementName(), Universal()),
+                        FirstOf(ElementName(), UniversalHtml(), Universal()),
 //                        debug(getContext()),
                         ZeroOrMore(FirstOf(Hash(), Class(), Attribute(), Negation(), Pseudo()))
 //                        debug(getContext())
@@ -233,27 +282,29 @@ public class Parser extends BaseParser<Node> {
         return FirstOf(
                 Sequence(
                         Ws0(),
-                        /*FirstOf(*/PropertyName()/*, Variable())*/, push(new PropertyNode(match())),
+                        FirstOf(
+                                Sequence(PropertyName(), push(new PropertyNode(match()))),
+                                Sequence(Variable(), push(new VariableDefinitionNode(match())))
+                        ),
                         Ws0(), ':', Ws0(),
                         Expressions(), peek(1).addChild(pop()),
                         ZeroOrMore(
                                 Sequence(Ws0(), ',', Ws0(), Expressions(), peek(1).addChild(pop()))
                         ),
-                        Sp0(), /*drop(), *//*peek(1).addChild(pop()), */FirstOf(';', Sequence(Ws0(), Test('}'))), Ws0()
+                        Sp0(), FirstOf(';', Sequence(Ws0(), Test('}'))), Ws0()
                 ),
                 // Empty rules are ignored (TODO: Remove?)
                 Sequence(Ws0(), Ident(), push(new PlaceholderNode()), /*push(new PropertyNode(match())), */Ws0(), ':', Ws0(), ';', Ws0())
         );
     }
 
-    /*Rule Variable() {
-        return true;
-    }*/
+    Rule Variable() {
+        return Sequence('@', Ident());
+    }
 
     /**
-     * Expression (Operator Expression)+ TODO: Add me?
+     * Expression (Operator Expression)+ Future: Operations
      * / Expression (Ws1 Expression)* Important?
-     * / [-_.&*\/=:,+? []()#%Alphanumeric]+ TODO: What does this catch? Removed for now...
      */
     Rule Expressions() {
         // Space-separated expressions
@@ -266,7 +317,7 @@ public class Parser extends BaseParser<Node> {
     }
 
     /**
-     * '(' Ws0 Expressions Ws0 ')' TODO: Add later
+     * '(' Ws0 Expressions Ws0 ')' Future: Operations
      * / Entity
      */
     Rule Expression() {
@@ -284,6 +335,10 @@ public class Parser extends BaseParser<Node> {
 
     Rule PropertyName() {
         return Sequence(Optional(AnyOf("*_")), Ident());
+    }
+
+    Rule UniversalHtml() {
+        return Sequence(Universal(), "html");
     }
 
     // ********** CSS Entities **********
@@ -355,7 +410,7 @@ public class Parser extends BaseParser<Node> {
     Rule Entity() {
         return Sequence(
                 /*FirstOf(URL(), AlphaFilter(), Function(), Accessor(), Keyword(), Variable(), Literal(), Font()),*/
-                FirstOf(Keyword(), Literal(), URL(), AlphaFilter(), Function(), /*Accessor(),  Variable(), */Font()),
+                FirstOf(Keyword(), Literal(), URL(), AlphaFilter(), Function(), /*Accessor(), */Variable(), Font()),
                 push(new SimpleNode(match()))
         );
     }

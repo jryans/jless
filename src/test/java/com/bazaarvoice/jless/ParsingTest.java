@@ -83,6 +83,18 @@ public class ParsingTest {
         parseLess(fileName);
     }
 
+    public void testBazaarvoice() {
+        runTestFor("bazaarvoice");
+    }
+
+    public void testBazaarvoiceDisplayShared() {
+        runTestFor("bazaarvoiceDisplayShared");
+    }
+
+    public void testComments() {
+        runTestFor("comments");
+    }
+
     public void testCss() {
         runTestFor("css");
     }
@@ -91,13 +103,25 @@ public class ParsingTest {
         runTestFor("css-3");
     }
 
+    public void testLazyEval() {
+        runTestFor("lazy-eval");
+    }
+
+    public void testLessBright() {
+        runTestFor("less-bright");
+    }
+
+    public void testMixins() {
+        runTestFor("mixins");
+    }
+
     public void testRuleSets() {
         runTestFor("rulesets");
     }
 
-    /*public void testScope() {
+    public void testScope() {
         runTestFor("scope");
-    }*/
+    }
 
     public void testSelectors() {
         runTestFor("selectors");
@@ -109,10 +133,6 @@ public class ParsingTest {
 
     public void testWhitespace() {
         runTestFor("whitespace");
-    }
-
-    public void testBazaarvoiceDisplayShared() {
-        runTestFor("bazaarvoiceDisplayShared");
     }
 
     @AfterMethod
