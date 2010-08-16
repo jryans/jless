@@ -2,6 +2,7 @@ package com.bazaarvoice.jless.ast.visitor;
 
 import com.bazaarvoice.jless.ast.ExpressionNode;
 import com.bazaarvoice.jless.ast.ExpressionsNode;
+import com.bazaarvoice.jless.ast.LineBreakNode;
 import com.bazaarvoice.jless.ast.MultipleLineCommentNode;
 import com.bazaarvoice.jless.ast.Node;
 import com.bazaarvoice.jless.ast.PropertyNode;
@@ -30,6 +31,8 @@ public interface NodeVisitor {
     boolean visit(ExpressionNode node);
 
     boolean visit(ExpressionsNode node);
+
+    boolean visit(LineBreakNode node);
 
     boolean visit(MultipleLineCommentNode node);
 

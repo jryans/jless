@@ -2,6 +2,7 @@ package com.bazaarvoice.jless.ast.visitor;
 
 import com.bazaarvoice.jless.ast.ExpressionNode;
 import com.bazaarvoice.jless.ast.ExpressionsNode;
+import com.bazaarvoice.jless.ast.LineBreakNode;
 import com.bazaarvoice.jless.ast.MultipleLineCommentNode;
 import com.bazaarvoice.jless.ast.Node;
 import com.bazaarvoice.jless.ast.PropertyNode;
@@ -38,6 +39,14 @@ public class Printer extends BaseNodeVisitor {
     public boolean visit(ExpressionsNode node) {
         if (GraphUtils.getLastChild(node.getParent()) != node) {
             print(", ");
+        }
+        return true;
+    }
+
+    @Override
+    public boolean visit(LineBreakNode node) {
+        for (int i = 0; i < node.getLineBreaks(); i++) {
+            printLine();
         }
         return true;
     }

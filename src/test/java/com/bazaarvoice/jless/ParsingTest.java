@@ -63,7 +63,7 @@ public class ParsingTest {
         if (result.resultValue != null) {
 //            sb.append("Input AST:\n").append(GraphUtils.printTree(result.resultValue, new ToStringFormatter<Node>(null))).append('\n');
 
-//            sb.append(printResult(result));
+            sb.append(printResult(result));
         }
 
         return sb.toString();

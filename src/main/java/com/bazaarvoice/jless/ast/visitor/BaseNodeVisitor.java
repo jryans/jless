@@ -2,6 +2,7 @@ package com.bazaarvoice.jless.ast.visitor;
 
 import com.bazaarvoice.jless.ast.ExpressionNode;
 import com.bazaarvoice.jless.ast.ExpressionsNode;
+import com.bazaarvoice.jless.ast.LineBreakNode;
 import com.bazaarvoice.jless.ast.MultipleLineCommentNode;
 import com.bazaarvoice.jless.ast.Node;
 import com.bazaarvoice.jless.ast.PropertyNode;
@@ -40,6 +41,11 @@ public abstract class BaseNodeVisitor implements NodeVisitor {
 
     @Override
     public boolean visit(ExpressionsNode node) {
+        return true;
+    }
+
+    @Override
+    public boolean visit(LineBreakNode node) {
         return true;
     }
 
