@@ -103,6 +103,10 @@ public class ParsingTest {
         runTestFor("css-3");
     }
 
+    public void testDashPrefix() {
+        runTestFor("dash-prefix");
+    }
+
     public void testLazyEval() {
         runTestFor("lazy-eval");
     }

@@ -6,6 +6,14 @@ import java.util.ListIterator;
 
 public class PlaceholderNode extends Node {
 
+    public PlaceholderNode() {
+        super();
+    }
+
+    public PlaceholderNode(Node child) {
+        super(child);
+    }
+
     @Override
     public boolean accept(NodeVisitor visitor) {
         if (visitor.visitEnter(this)) {

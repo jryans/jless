@@ -6,6 +6,14 @@ import java.util.ListIterator;
 
 public class SelectorNode extends Node {
 
+    public SelectorNode() {
+        super();
+    }
+
+    public SelectorNode(Node child) {
+        super(child);
+    }
+
     @Override
     public boolean accept(NodeVisitor visitor) {
         if (visitor.visitEnter(this)) {

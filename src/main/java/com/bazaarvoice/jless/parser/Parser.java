@@ -119,7 +119,7 @@ public class Parser extends BaseParser<Node> {
                         ),
                         // Mixin rule set, with possible arguments
                         Sequence(
-                                Class(), push(new RuleSetNode(pop())), Ws0(),
+                                ClassSelectorGroup(), push(new RuleSetNode(pop())), Ws0(),
                                 Parameters(), Ws0(),
                                 '{', Ws0()
                         )
@@ -146,21 +146,21 @@ public class Parser extends BaseParser<Node> {
      * Variable Ws0 ':' Ws0 Expressions
      */
     Rule Parameter() {
-        return Sequence(Variable(), Ws0(), ':', Ws0(), Expressions());
+        return Sequence(Variable(), Ws0(), ':', Ws0(), Expressions(), drop());
     }
 
     /**
      * Ws0 SelectorGroup ';' Ws0
      * / Class Arguments Ws0 ';' Ws0
      * TODO: Capture whitespace?
-     * TODO: Mixin name validation
+     * TODO: Mixin name validation?
      */
     Rule MixinReference() {
         return FirstOf(
                 // No arguments, reference an existing rule set's properties
-                Sequence(Ws0(), SelectorGroup(), ';', Ws0()),
+                Sequence(Ws0(), SelectorGroup(), ';', Ws0(), push(new PlaceholderNode(pop()))),
                 // Call a mixin, passing along some arguments
-                Sequence(Class(), Arguments(), Ws0(), ';', Ws0())
+                Sequence(Class(), Arguments(), Ws0(), ';', Ws0(), push(new PlaceholderNode()))
         );
     }
 
@@ -175,6 +175,16 @@ public class Parser extends BaseParser<Node> {
                 Selector(), push(new SelectorGroupNode(pop())),
                 ZeroOrMore(Sequence(Ws0(), ',', Ws0(), Selector(), peek(1).addChild(pop()))),
                 Ws0()
+        );
+    }
+
+    /**
+     * Special case rule that builds a selector for only a single class
+     */
+    Rule ClassSelectorGroup() {
+        return Sequence(
+                Class(),
+                push(new SelectorGroupNode(new SelectorNode(new SelectorSegmentNode("", match()))))
         );
     }
 
