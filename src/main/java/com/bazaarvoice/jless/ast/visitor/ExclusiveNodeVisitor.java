@@ -1,10 +1,10 @@
 package com.bazaarvoice.jless.ast.visitor;
 
+import com.bazaarvoice.jless.ast.ExpressionGroupNode;
 import com.bazaarvoice.jless.ast.ExpressionNode;
 import com.bazaarvoice.jless.ast.ExpressionsNode;
 import com.bazaarvoice.jless.ast.LineBreakNode;
 import com.bazaarvoice.jless.ast.MultipleLineCommentNode;
-import com.bazaarvoice.jless.ast.Node;
 import com.bazaarvoice.jless.ast.PropertyNode;
 import com.bazaarvoice.jless.ast.RuleSetNode;
 import com.bazaarvoice.jless.ast.ScopeNode;
@@ -13,16 +13,17 @@ import com.bazaarvoice.jless.ast.SelectorNode;
 import com.bazaarvoice.jless.ast.SelectorSegmentNode;
 import com.bazaarvoice.jless.ast.SimpleNode;
 import com.bazaarvoice.jless.ast.SingleLineCommentNode;
+import com.bazaarvoice.jless.ast.VariableDefinitionNode;
 
 /**
  * Defaults to visiting no nodes.
  */
-public abstract class ExclusiveNodeVisitor implements NodeVisitor {
+public class ExclusiveNodeVisitor implements NodeVisitor {
 
     // Base visit methods
     // These eliminate the need for visit methods that no visitor uses
 
-    @Override
+  /*  @Override
     public boolean visitEnter(Node node) {
         return false;
     }
@@ -30,9 +31,19 @@ public abstract class ExclusiveNodeVisitor implements NodeVisitor {
     @Override
     public boolean visit(Node node) {
         return false;
-    }
+    }*/
 
     // Concrete visit methods
+
+    @Override
+    public boolean visitEnter(ExpressionGroupNode node) {
+        return false;
+    }
+
+    @Override
+    public boolean visit(ExpressionGroupNode node) {
+        return false;
+    }
 
     @Override
     public boolean visit(ExpressionNode node) {
@@ -116,6 +127,16 @@ public abstract class ExclusiveNodeVisitor implements NodeVisitor {
 
     @Override
     public boolean visit(SingleLineCommentNode node) {
+        return false;
+    }
+
+    @Override
+    public boolean visitEnter(VariableDefinitionNode node) {
+        return false;
+    }
+
+    @Override
+    public boolean visit(VariableDefinitionNode node) {
         return false;
     }
 }

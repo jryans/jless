@@ -1,5 +1,6 @@
 package com.bazaarvoice.jless.ast.visitor;
 
+import com.bazaarvoice.jless.ast.ExpressionGroupNode;
 import com.bazaarvoice.jless.ast.ExpressionNode;
 import com.bazaarvoice.jless.ast.ExpressionsNode;
 import com.bazaarvoice.jless.ast.LineBreakNode;
@@ -13,11 +14,12 @@ import com.bazaarvoice.jless.ast.SelectorNode;
 import com.bazaarvoice.jless.ast.SelectorSegmentNode;
 import com.bazaarvoice.jless.ast.SimpleNode;
 import com.bazaarvoice.jless.ast.SingleLineCommentNode;
+import com.bazaarvoice.jless.ast.VariableDefinitionNode;
 
 /**
  * Defaults to visiting every node.
  */
-public abstract class InclusiveNodeVisitor implements NodeVisitor {
+public class InclusiveNodeVisitor implements NodeVisitor {
 
     // Base visit methods
     // These eliminate the need for visit methods that no visitor uses
@@ -33,6 +35,16 @@ public abstract class InclusiveNodeVisitor implements NodeVisitor {
     }
 
     // Concrete visit methods
+
+    @Override
+    public boolean visitEnter(ExpressionGroupNode node) {
+        return true;
+    }
+
+    @Override
+    public boolean visit(ExpressionGroupNode node) {
+        return true;
+    }
 
     @Override
     public boolean visit(ExpressionNode node) {
@@ -116,6 +128,16 @@ public abstract class InclusiveNodeVisitor implements NodeVisitor {
 
     @Override
     public boolean visit(SingleLineCommentNode node) {
+        return true;
+    }
+
+    @Override
+    public boolean visitEnter(VariableDefinitionNode node) {
+        return true;
+    }
+
+    @Override
+    public boolean visit(VariableDefinitionNode node) {
         return true;
     }
 }

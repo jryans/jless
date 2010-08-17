@@ -13,12 +13,12 @@ import com.bazaarvoice.jless.ast.SelectorNode;
 import com.bazaarvoice.jless.ast.SelectorSegmentNode;
 import com.bazaarvoice.jless.ast.SimpleNode;
 import com.bazaarvoice.jless.ast.SingleLineCommentNode;
+import com.bazaarvoice.jless.ast.VariableDefinitionNode;
 import com.bazaarvoice.jless.ast.util.MutableTreeUtils;
 import org.parboiled.trees.GraphUtils;
 
 import java.util.List;
 
-// TODO: Add all input new lines to AST and don't add any of my own
 public class Printer extends InclusiveNodeVisitor {
 
     private static final int INDENT_STEP = 4;
@@ -89,10 +89,6 @@ public class Printer extends InclusiveNodeVisitor {
             List<Node> children = node.getChildren();
             if (children.isEmpty()) {
                 // do nothing
-/*
-            } else if (children.size() == 1 && children.get(0) instanceof RuleSetNode) {
-                addIndent().printLine().printIndent();
-*/
             } else {
                 addIndent();
 //                print(' ');
@@ -107,10 +103,6 @@ public class Printer extends InclusiveNodeVisitor {
             List<Node> children = node.getChildren();
             if (children.isEmpty()) {
                 // do nothing
-/*
-            } else if (children.size() == 1 && children.get(0) instanceof RuleSetNode) {
-                removeIndent().printLine().printIndent();
-*/
             } else {
                 removeIndent();
 //                print(' ');
@@ -149,6 +141,21 @@ public class Printer extends InclusiveNodeVisitor {
     @Override
     public boolean visit(SingleLineCommentNode node) {
         print("//").print(node.getValue()).print('\n');
+        return true;
+    }
+
+    @Override
+    public boolean visitEnter(VariableDefinitionNode node) {
+        print(node.getName()).print(": ");
+        return true;
+    }
+
+    @Override
+    public boolean visit(VariableDefinitionNode node) {
+        print(";");
+        if (node.getParent().getChildren().size() > 1 && MutableTreeUtils.parentHasNext(node)) {
+            print(' ');
+        }
         return true;
     }
 

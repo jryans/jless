@@ -2,6 +2,7 @@ package com.bazaarvoice.jless.ast.util;
 
 import com.bazaarvoice.jless.ast.Node;
 import com.bazaarvoice.jless.ast.RandomAccessListIterator;
+import com.bazaarvoice.jless.ast.ScopeNode;
 import com.google.common.base.Preconditions;
 
 /**
@@ -53,4 +54,13 @@ public final class MutableTreeUtils {
         return node.getParent().getLatestChildIterator().hasNext();
     }
 
+    public static ScopeNode getNearestScope(Node node) {
+        for (Node current = node.getParent(); current != null; current = node.getParent()) {
+            if (current instanceof ScopeNode) {
+                return (ScopeNode) current;
+            }
+        }
+
+        return null;
+    }
 }

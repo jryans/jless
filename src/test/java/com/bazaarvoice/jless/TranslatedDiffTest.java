@@ -1,9 +1,12 @@
 package com.bazaarvoice.jless;
 
 import com.bazaarvoice.jless.ast.Node;
+import com.bazaarvoice.jless.parser.Parser;
 import difflib.DiffUtils;
 import difflib.Patch;
 import org.apache.commons.io.IOUtils;
+import org.parboiled.Parboiled;
+import org.parboiled.ReportingParseRunner;
 import org.parboiled.support.ParsingResult;
 import org.testng.Assert;
 import org.testng.annotations.Test;
@@ -26,6 +29,10 @@ public class TranslatedDiffTest extends ParsingTest {
 //        TestUtils.getLog().println(GraphUtils.printTree(result.resultValue, new ToStringFormatter<Node>(null)));
 
         diffOutput(fileName, result);
+    }
+
+    protected ParsingResult<Node> runParser(String lessInput) {
+        return ReportingParseRunner.run(Parboiled.createParser(Parser.class, true).Document(), lessInput);
     }
 
     private void diffOutput(String fileName, ParsingResult<Node> parsingResult) {

@@ -1,5 +1,6 @@
 package com.bazaarvoice.jless.parser;
 
+import com.bazaarvoice.jless.ast.ExpressionGroupNode;
 import com.bazaarvoice.jless.ast.ExpressionNode;
 import com.bazaarvoice.jless.ast.ExpressionsNode;
 import com.bazaarvoice.jless.ast.LineBreakNode;
@@ -33,12 +34,8 @@ import org.parboiled.support.Var;
  *   <li>Line breaks can be used in all places where spaces are accepted</li>
  * </ul>
  *
- * This parser attempts to track enough input whitespace and comments to cause the input and output files to have the same number of lines
- * (which is helpful when referencing styles via browser tools like Firebug). However, to avoid filling the AST with spacing nodes, a
- * simplifying assumption has been made:
- * <ul>
- *   <li>A rule set may not span multiple lines</li>
- * </ul>
+ * This parser attempts to track line breaks so that the input and output files can have the same number of lines
+ * (which is helpful when referencing styles via browser tools like Firebug).
  *
  * This list only notes changes in the <em>parsing</em> stage. See {@link com.bazaarvoice.jless.LessTranslator} for details on any changes
  * to the <em>translation</em> stage.
@@ -48,6 +45,18 @@ import org.parboiled.support.Var;
  * @see com.bazaarvoice.jless.LessTranslator
  */
 public class Parser extends BaseParser<Node> {
+
+    private boolean _parserTranslationEnabled = false;
+
+    public Parser(Boolean parserTranslationEnabled) {
+        _parserTranslationEnabled = parserTranslationEnabled;
+    }
+
+    public boolean isParserTranslationEnabled() {
+        return _parserTranslationEnabled;
+    }
+
+    // ********** Document **********
 
     public Rule Document() {
         return Sequence(Scope(), EOI);
@@ -123,7 +132,6 @@ public class Parser extends BaseParser<Node> {
                                 '{'
                         )
                 ),
-//                Ws0(), peek().addChild(new LineBreakNode(match())),
                 Scope(), peek(1).addChild(pop()), Ws0(),
                 '}', Ws0(), peek().addChild(new LineBreakNode(match()))
         );
@@ -289,8 +297,8 @@ public class Parser extends BaseParser<Node> {
     // ********** Variables & Expressions **********
 
     /**
-     * (Ident / Variable) Ws0 ':' Ws0 Expressions (Ws0 ',' Ws0 Expressions)* Sp0 (';' / Ws0 &'}') Ws0
-     * / Ident Ws0 ':' Ws0 ';' Ws0
+     * (Ident / Variable) Ws0 ':' Ws0 Expressions (Ws0 ',' Ws0 Expressions)* Sp0 (';' / Ws0 &'}')
+     * / Ident Ws0 ':' Ws0 ';'
      *
      * Ex: @my-var: 12px; height: 100%;
      */
@@ -302,18 +310,19 @@ public class Parser extends BaseParser<Node> {
                                 Sequence(Variable(), push(new VariableDefinitionNode(match())))
                         ), Ws0(),
                         ':', Ws0(),
+                        push(new ExpressionGroupNode()),
                         Expressions(), peek(1).addChild(pop()),
                         ZeroOrMore(
                                 Ws0(), ',', Ws0(), Expressions(), peek(1).addChild(pop())
                         ),
-                        Sp0(), FirstOf(';', Sequence(Ws0(), Test('}')))/*,
-                        Ws0(), peek().addChild(new LineBreakNode(match()))*/
+                        Sp0(), FirstOf(';', Sequence(Ws0(), Test('}'))),
+                        peek(1).addChild(pop())
                 ),
                 // Empty rules are ignored (TODO: Remove?)
                 Sequence(
                         Ident(), push(new PlaceholderNode()), Ws0(),
                         ':', Ws0(),
-                        ';'/*, Ws0(), peek().addChild(new LineBreakNode(match()))*/
+                        ';'
                 )
         );
     }
@@ -341,7 +350,7 @@ public class Parser extends BaseParser<Node> {
      * / Entity
      */
     Rule Expression() {
-        return Sequence(Entity(), push(new ExpressionNode(pop())));
+        return Sequence(Value(), push(new ExpressionNode(pop())));
     }
 
     /**
@@ -426,15 +435,38 @@ public class Parser extends BaseParser<Node> {
     // TODO: Check use of !Nd
 
     /**
-     * Any whitespace delimited token (??)
+     * Any token used as a value in an expression
+     * Future: Accessors
      */
-    Rule Entity() {
-        return Sequence(
-                /*FirstOf(URL(), AlphaFilter(), Function(), Accessor(), Keyword(), Variable(), Literal(), Font()),*/
-                FirstOf(Keyword(), Literal(), URL(), AlphaFilter(), Function(), /*Accessor(), */Variable(), Font()),
-                push(new SimpleNode(match()))
+    Rule Value() {
+        return FirstOf(
+                Sequence(
+                        FirstOf(
+                                Keyword(),
+                                Literal(),
+                                URL(),
+                                AlphaFilter(),
+                                Function(),
+                                Font()
+                        ),
+                        push(new SimpleNode(match()))
+                ),
+                VariableReference()
         );
     }
+
+    /**
+     *
+     */
+    Rule VariableReference() {
+        return Sequence(
+                Variable(),
+               /* _parserTranslationEnabled
+                        ? push(new SimpleNode())
+                        : */push(new SimpleNode(match()))
+        );
+    }
+
 
     /**
      * 'url(' (String / [-_%$/.&=:;#+?Alphanumeric]+) ')'
@@ -621,6 +653,22 @@ public class Parser extends BaseParser<Node> {
 
     Rule NameCharacter() {
         return FirstOf(AnyOf("-_"), Alphanumeric());
+    }
+
+    // ********** Stack Traversal **********
+
+    /**
+     * Find the instance of ScopeNode that is closest to the top of the stack.
+     */
+    private ScopeNode getNearestScope() {
+        for (int i = 0; i < getContext().getValueStack().size(); i++) {
+            Node node = peek(i);
+            if (node instanceof ScopeNode) {
+                return (ScopeNode) node;
+            }
+        }
+
+        throw new IllegalStateException("No scope node was found on the stack!");
     }
 
     // ********** Debugging **********

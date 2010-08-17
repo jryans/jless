@@ -2,9 +2,13 @@ package com.bazaarvoice.jless.ast;
 
 import com.bazaarvoice.jless.ast.visitor.NodeVisitor;
 
+import java.util.HashMap;
 import java.util.ListIterator;
+import java.util.Map;
 
 public class ScopeNode extends Node {
+
+    private Map<String, ExpressionGroupNode> _variables = new HashMap<String, ExpressionGroupNode>();
 
     @Override
     public boolean accept(NodeVisitor visitor) {

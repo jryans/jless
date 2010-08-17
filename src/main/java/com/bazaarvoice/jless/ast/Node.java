@@ -1,7 +1,6 @@
 package com.bazaarvoice.jless.ast;
 
 import com.bazaarvoice.jless.ast.visitor.NodeVisitor;
-import org.parboiled.trees.TreeUtils;
 
 // TODO: Combine into BTN
 public abstract class Node extends BaseTreeNode<Node> {
@@ -16,7 +15,7 @@ public abstract class Node extends BaseTreeNode<Node> {
 
     public boolean addChild(Node child) {
         if (child != null && child.hasData()) {
-            TreeUtils.addChild(this, child);
+            addChild(getChildren().size(), child);
         }
         return true;
     }

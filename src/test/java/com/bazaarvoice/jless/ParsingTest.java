@@ -2,7 +2,10 @@ package com.bazaarvoice.jless;
 
 import com.bazaarvoice.jless.ast.Node;
 import com.bazaarvoice.jless.ast.visitor.Printer;
+import com.bazaarvoice.jless.parser.Parser;
 import org.apache.commons.io.IOUtils;
+import org.parboiled.Parboiled;
+import org.parboiled.ReportingParseRunner;
 import org.parboiled.errors.ErrorUtils;
 import org.parboiled.support.ParsingResult;
 import org.testng.Assert;
@@ -45,7 +48,7 @@ public class ParsingTest {
     }
 
     protected ParsingResult<Node> runParser(String lessInput) {
-        return LessTranslator.parse(lessInput);
+        return ReportingParseRunner.run(Parboiled.createParser(Parser.class, false).Document(), lessInput);
     }
     
     protected void runTranslator(ParsingResult<Node> parseResult) {

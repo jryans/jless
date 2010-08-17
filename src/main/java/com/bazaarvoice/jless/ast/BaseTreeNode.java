@@ -36,8 +36,8 @@ public abstract class BaseTreeNode<T extends BaseTreeNode<T>> implements Mutable
 
     private List<T> _children = new ArrayList<T>();
     private List<T> _childrenView = Collections.unmodifiableList(_children);
-    private Stack<MutableChildIterator> _childIteratorStack = new Stack<MutableChildIterator>();
     private T _parent;
+    private Stack<MutableChildIterator> _childIteratorStack = new Stack<MutableChildIterator>();
 
     @Override
     public T getParent() {
