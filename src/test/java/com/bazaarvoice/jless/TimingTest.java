@@ -8,7 +8,7 @@ import org.testng.annotations.Test;
 public class TimingTest extends ParsingTest {
 
     private static final int RUNS_PER_TIMED_SET = 20;
-    private static final String[] CACHE_FILES = {"bazaarvoiceDisplayShared", "css", "css-3", "strings", "whitespace"};
+    private static final String[] CACHE_FILES = {"bazaarvoice", "bazaarvoiceDisplayShared", "css", "css-3", "strings", "whitespace"};
 //    private static final ProfilingParseRunner<Node> _sParseRunner = new ProfilingParseRunner<Node>(Parboiled.createParser(Parser.class).Document());
 
     private float _currentTime;

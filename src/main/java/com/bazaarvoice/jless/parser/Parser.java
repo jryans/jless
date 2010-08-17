@@ -123,7 +123,7 @@ public class Parser extends BaseParser<Node> {
                                 '{'
                         )
                 ),
-                Ws0(), peek().addChild(new LineBreakNode(match())),
+//                Ws0(), peek().addChild(new LineBreakNode(match())),
                 Scope(), peek(1).addChild(pop()), Ws0(),
                 '}', Ws0(), peek().addChild(new LineBreakNode(match()))
         );
@@ -169,6 +169,7 @@ public class Parser extends BaseParser<Node> {
     /**
      * Selector Ws0 (',' Ws0 Selector)* Ws0
      */
+    @MemoMismatches
     Rule SelectorGroup() {
         return Sequence(
                 Selector(), push(new SelectorGroupNode(pop())), Ws0(),
@@ -176,7 +177,7 @@ public class Parser extends BaseParser<Node> {
                         ',', Ws0(), peek().addChild(new LineBreakNode(match())),
                         Selector(), peek(1).addChild(pop())
                 ),
-                Ws0()
+                Ws0(), peek().addChild(new LineBreakNode(match()))
         );
     }
 
@@ -217,13 +218,13 @@ public class Parser extends BaseParser<Node> {
      */
     Rule Combinator() {
         return FirstOf(
-                SymbolCombinator(),
+                Sequence(Ws0(), SymbolCombinator()),
                 DescendantCombinator()
         );
     }
 
     Rule SymbolCombinator() {
-        return Sequence(Ws0(), AnyOf("+>~"), Ws0());
+        return Sequence(AnyOf("+>~"), Ws0());
     }
 
     Rule DescendantCombinator() {
@@ -299,16 +300,21 @@ public class Parser extends BaseParser<Node> {
                         FirstOf(
                                 Sequence(PropertyName(), push(new PropertyNode(match()))),
                                 Sequence(Variable(), push(new VariableDefinitionNode(match())))
-                        ),
-                        Ws0(), ':', Ws0(),
+                        ), Ws0(),
+                        ':', Ws0(),
                         Expressions(), peek(1).addChild(pop()),
                         ZeroOrMore(
                                 Ws0(), ',', Ws0(), Expressions(), peek(1).addChild(pop())
                         ),
-                        Sp0(), FirstOf(';', Sequence(Ws0(), Test('}'))), Ws0()
+                        Sp0(), FirstOf(';', Sequence(Ws0(), Test('}')))/*,
+                        Ws0(), peek().addChild(new LineBreakNode(match()))*/
                 ),
                 // Empty rules are ignored (TODO: Remove?)
-                Sequence(Ident(), push(new PlaceholderNode()), /*push(new PropertyNode(match())), */Ws0(), ':', Ws0(), ';', Ws0())
+                Sequence(
+                        Ident(), push(new PlaceholderNode()), Ws0(),
+                        ':', Ws0(),
+                        ';'/*, Ws0(), peek().addChild(new LineBreakNode(match()))*/
+                )
         );
     }
 
@@ -369,6 +375,7 @@ public class Parser extends BaseParser<Node> {
         return Sequence('#', Name());
     }
 
+    @MemoMismatches
     Rule Class() {
         return Sequence('.', Ident());
     }

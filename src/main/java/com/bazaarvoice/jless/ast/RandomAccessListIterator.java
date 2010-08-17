@@ -14,4 +14,8 @@ public interface RandomAccessListIterator<T> extends ListIterator<T> {
     void set(int index, T child);
 
     void add(int index, T child);
+
+    T peekNext();
+
+    T peekPrevious();
 }

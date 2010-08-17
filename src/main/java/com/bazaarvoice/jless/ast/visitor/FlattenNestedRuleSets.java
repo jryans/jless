@@ -1,6 +1,7 @@
 package com.bazaarvoice.jless.ast.visitor;
 
 import com.bazaarvoice.jless.ast.Node;
+import com.bazaarvoice.jless.ast.PropertyNode;
 import com.bazaarvoice.jless.ast.RuleSetNode;
 import com.bazaarvoice.jless.ast.ScopeNode;
 import com.bazaarvoice.jless.ast.SelectorGroupNode;
@@ -16,12 +17,17 @@ import java.util.Stack;
 /**
  *
  */
-public class FlattenNestedRuleSets extends BaseNodeVisitor {
+public class FlattenNestedRuleSets extends InclusiveNodeVisitor {
 
     private Stack<RuleSetNode> _ruleSetStack = new Stack<RuleSetNode>();
 
     private List<Node> _updatedSelectors;
     private List<Node> _selectorWorkingSet;
+
+    @Override
+    public boolean visitEnter(PropertyNode node) {
+        return false;
+    }
 
     @Override
     public boolean visitEnter(RuleSetNode node) {
@@ -39,7 +45,7 @@ public class FlattenNestedRuleSets extends BaseNodeVisitor {
             MutableTreeUtils.addSiblingAfter(parentRuleSet, surroundWithContext(node));
 
             // If the parent rule set's scope is now empty, mark it as invisible
-            parentRuleSet.accept(new BaseNodeVisitor() {
+            parentRuleSet.accept(new InclusiveNodeVisitor() {
                 @Override
                 public boolean visitEnter(SelectorGroupNode node) {
                     return false; // Not interested in selectors
@@ -102,7 +108,7 @@ public class FlattenNestedRuleSets extends BaseNodeVisitor {
         _selectorWorkingSet = new ArrayList<Node>();
 
         // Visit the parent rule set and clone its selector nodes
-        _ruleSetStack.get(0).accept(new BaseNodeVisitor() {
+        _ruleSetStack.get(0).accept(new InclusiveNodeVisitor() {
             @Override
             public boolean visitEnter(ScopeNode node) {
                 return false; // Don't need to touch the parent's scope

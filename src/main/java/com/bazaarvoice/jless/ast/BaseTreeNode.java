@@ -28,6 +28,8 @@ import java.util.Stack;
 /**
  * A base implementation of the {@link org.parboiled.trees.MutableTreeNode}.
  *
+ * TODO: Add leaf node class
+ *
  * @param <T> the actual implementation type of this MutableTreeNodeImpl
  */
 public abstract class BaseTreeNode<T extends BaseTreeNode<T>> implements MutableTreeNode<T>, Cloneable {
@@ -193,6 +195,11 @@ public abstract class BaseTreeNode<T extends BaseTreeNode<T>> implements Mutable
         }
 
         @Override
+        public T peekNext() {
+            return _children.get(_cursor);
+        }
+
+        @Override
         public boolean hasPrevious() {
             return _cursor != 0;
         }
@@ -204,6 +211,11 @@ public abstract class BaseTreeNode<T extends BaseTreeNode<T>> implements Mutable
             _lastReturned = --_cursor;
 
             return _children.get(_cursor);
+        }
+
+        @Override
+        public T peekPrevious() {
+            return _children.get(_cursor - 1);
         }
 
         @Override

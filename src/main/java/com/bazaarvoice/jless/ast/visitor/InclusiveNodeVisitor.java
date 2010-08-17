@@ -15,9 +15,9 @@ import com.bazaarvoice.jless.ast.SimpleNode;
 import com.bazaarvoice.jless.ast.SingleLineCommentNode;
 
 /**
- * Visitors default to visiting every node.
+ * Defaults to visiting every node.
  */
-public abstract class BaseNodeVisitor implements NodeVisitor {
+public abstract class InclusiveNodeVisitor implements NodeVisitor {
 
     // Base visit methods
     // These eliminate the need for visit methods that no visitor uses

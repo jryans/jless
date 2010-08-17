@@ -5,8 +5,6 @@ import difflib.DiffUtils;
 import difflib.Patch;
 import org.apache.commons.io.IOUtils;
 import org.parboiled.support.ParsingResult;
-import org.parboiled.support.ToStringFormatter;
-import org.parboiled.trees.GraphUtils;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
@@ -31,7 +29,7 @@ public class TranslatedDiffTest extends ParsingTest {
     }
 
     private void diffOutput(String fileName, ParsingResult<Node> parsingResult) {
-        InputStream referenceStream = getClass().getResourceAsStream("/java/" + fileName + ".css");
+        InputStream referenceStream = getClass().getResourceAsStream("/expected/" + fileName + ".css");
         List<String> referenceLines = null;
 
         try {
@@ -42,7 +40,7 @@ public class TranslatedDiffTest extends ParsingTest {
             e.printStackTrace();
         }
 
-        List<String> outputLines = Arrays.asList(printResult(parsingResult).split("\n"));
+        List<String> outputLines = Arrays.asList(printResult(fileName, parsingResult).split("\n"));
 
         Patch diff = DiffUtils.diff(referenceLines, outputLines);
 
@@ -55,5 +53,15 @@ public class TranslatedDiffTest extends ParsingTest {
         }
 
         Assert.assertEquals(diff.getDeltas().size(), 0);
+    }
+
+    @Override
+    protected String getGeneratedDirName() {
+        return "translated";
+    }
+
+    @Override
+    protected String getGeneratedFileExtension() {
+        return ".css";
     }
 }

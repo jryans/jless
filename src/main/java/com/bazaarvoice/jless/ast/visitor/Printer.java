@@ -13,23 +13,25 @@ import com.bazaarvoice.jless.ast.SelectorNode;
 import com.bazaarvoice.jless.ast.SelectorSegmentNode;
 import com.bazaarvoice.jless.ast.SimpleNode;
 import com.bazaarvoice.jless.ast.SingleLineCommentNode;
+import com.bazaarvoice.jless.ast.util.MutableTreeUtils;
 import org.parboiled.trees.GraphUtils;
 
 import java.util.List;
 
 // TODO: Add all input new lines to AST and don't add any of my own
-public class Printer extends BaseNodeVisitor {
+public class Printer extends InclusiveNodeVisitor {
 
-    private static final int INDENT_STEP = 2;
+    private static final int INDENT_STEP = 4;
 
     private StringBuilder _sb = new StringBuilder();
     private int _indent = 0;
+    private boolean _lastPrintedIndent = false;
 
     // Node output
 
     @Override
     public boolean visit(ExpressionNode node) {
-        if (GraphUtils.getLastChild(node.getParent()) != node) {
+        if (MutableTreeUtils.parentHasNext(node)) {
             print(' ');
         }
         return true;
@@ -37,7 +39,7 @@ public class Printer extends BaseNodeVisitor {
 
     @Override
     public boolean visit(ExpressionsNode node) {
-        if (GraphUtils.getLastChild(node.getParent()) != node) {
+        if (MutableTreeUtils.parentHasNext(node)) {
             print(", ");
         }
         return true;
@@ -47,6 +49,9 @@ public class Printer extends BaseNodeVisitor {
     public boolean visit(LineBreakNode node) {
         for (int i = 0; i < node.getLineBreaks(); i++) {
             printLine();
+        }
+        if (node.getLineBreaks() > 0) {
+            printIndent();
         }
         return true;
     }
@@ -66,7 +71,7 @@ public class Printer extends BaseNodeVisitor {
     @Override
     public boolean visit(PropertyNode node) {
         print(";");
-        if (node.getParent().getChildren().size() > 1 && node.getParent().getLatestChildIterator().hasNext()) {
+        if (node.getParent().getChildren().size() > 1 && MutableTreeUtils.parentHasNext(node)) {
             print(' ');
         }
         return true;
@@ -84,9 +89,12 @@ public class Printer extends BaseNodeVisitor {
             List<Node> children = node.getChildren();
             if (children.isEmpty()) {
                 // do nothing
+/*
             } else if (children.size() == 1 && children.get(0) instanceof RuleSetNode) {
                 addIndent().printLine().printIndent();
+*/
             } else {
+                addIndent();
 //                print(' ');
             }
         }
@@ -99,15 +107,15 @@ public class Printer extends BaseNodeVisitor {
             List<Node> children = node.getChildren();
             if (children.isEmpty()) {
                 // do nothing
+/*
             } else if (children.size() == 1 && children.get(0) instanceof RuleSetNode) {
                 removeIndent().printLine().printIndent();
+*/
             } else {
+                removeIndent();
 //                print(' ');
             }
-            print('}');
-            if (node.getParent().getParent().getLatestChildIterator().hasNext()) {
-//                printLine().printIndent();
-            }
+            deleteIndent().print('}');
         }
         return true;
     }
@@ -148,11 +156,13 @@ public class Printer extends BaseNodeVisitor {
 
     private Printer print(String s) {
         _sb.append(s);
+        _lastPrintedIndent = false;
         return this;
     }
 
     private Printer print(Character c) {
         _sb.append(c);
+        _lastPrintedIndent = false;
         return this;
     }
 
@@ -160,11 +170,13 @@ public class Printer extends BaseNodeVisitor {
         for (int i = 0; i < _indent; i++) {
             _sb.append(' ');
         }
+        _lastPrintedIndent = true;
         return this;
     }
 
     private Printer printLine() {
         _sb.append('\n');
+        _lastPrintedIndent = false;
         return this;
     }
 
@@ -175,6 +187,13 @@ public class Printer extends BaseNodeVisitor {
 
     private Printer removeIndent() {
         _indent -= INDENT_STEP;
+        return this;
+    }
+
+    private Printer deleteIndent() {
+        if (_lastPrintedIndent) {
+            _sb.delete(_sb.length() - INDENT_STEP, _sb.length());
+        }
         return this;
     }
 

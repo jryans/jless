@@ -9,8 +9,11 @@ import org.testng.Assert;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.Test;
 
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.PrintStream;
 
 @Test
 public class ParsingTest {
@@ -33,10 +36,10 @@ public class ParsingTest {
         ParsingResult<Node> result = runParser(lessInput);
 
         if (alwaysPrintStatus) {
-            TestUtils.getLog().print(getResultStatus(result));
+            TestUtils.getLog().print(getResultStatus(fileName, result));
         }
 
-        Assert.assertFalse(result.hasErrors(), getResultStatus(result));
+        Assert.assertFalse(result.hasErrors(), getResultStatus(fileName, result));
 
         return result;
     }
@@ -49,7 +52,7 @@ public class ParsingTest {
         LessTranslator.translate(parseResult.resultValue);
     }
 
-    private String getResultStatus(ParsingResult<Node> result) {
+    private String getResultStatus(String fileName, ParsingResult<Node> result) {
         StringBuilder sb = new StringBuilder();
 
         if (result.hasErrors()) {
@@ -63,16 +66,43 @@ public class ParsingTest {
         if (result.resultValue != null) {
 //            sb.append("Input AST:\n").append(GraphUtils.printTree(result.resultValue, new ToStringFormatter<Node>(null))).append('\n');
 
-            sb.append(printResult(result));
+            printResult(fileName, result);
         }
 
         return sb.toString();
     }
 
-    protected String printResult(ParsingResult<Node> result) {
-        return printResult(result.resultValue);
+    protected String printResult(String fileName, ParsingResult<Node> result) {
+        String output = printResult(result.resultValue);
+
+        try {
+            File generatedDir = new File("test-output/generated/" + getGeneratedDirName());
+            if (!generatedDir.exists()) {
+                generatedDir.mkdirs();
+            }
+
+            PrintStream generatedOutput = new PrintStream(new FileOutputStream(new File(generatedDir, fileName + ".out" + getGeneratedFileExtension())));
+            generatedOutput.println(output);
+            generatedOutput.close();
+        } catch (IOException e) {
+            System.err.println(e);
+            e.printStackTrace();
+        }
+
+        return output;
     }
 
+    protected String getGeneratedDirName() {
+        return "parsed";
+    }
+
+    protected String getGeneratedFileExtension() {
+        return ".less";
+    }
+
+    /**
+     * Utility method that can be run from within the debugger to look at the resulting output file.
+     */
     public static String printResult(Node root) {
         Printer p = new Printer();
         root.accept(p);

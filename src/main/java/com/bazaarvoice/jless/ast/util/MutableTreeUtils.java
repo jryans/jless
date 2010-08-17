@@ -49,4 +49,8 @@ public final class MutableTreeUtils {
         }
     }
 
+    public static boolean parentHasNext(Node node) {
+        return node.getParent().getLatestChildIterator().hasNext();
+    }
+
 }
