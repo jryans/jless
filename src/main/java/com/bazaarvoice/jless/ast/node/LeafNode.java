@@ -2,15 +2,13 @@ package com.bazaarvoice.jless.ast.node;
 
 import com.bazaarvoice.jless.ast.visitor.NodeTraversalVisitor;
 
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.util.Collections;
 import java.util.List;
 
 /**
  *
  */
-public class LeafNode extends Node {
+public abstract class LeafNode extends Node {
 
     @Override
     public boolean addChild(Node child) {
@@ -38,25 +36,12 @@ public class LeafNode extends Node {
     }
 
     @Override
-    public boolean traverse(NodeTraversalVisitor visitor) {
+    public boolean filter(NodeTraversalVisitor visitor) {
         return visitor.visit(this);
     }
 
-    public boolean acceptReflect(NodeTraversalVisitor visitor) {
-        try {
-            Method visitMethod = visitor.getClass().getMethod("visit", getClass());
-
-            try {
-                visitMethod.setAccessible(true);
-                return (Boolean) visitMethod.invoke(visitor, this);
-            } catch (InvocationTargetException e) {
-                throw new IllegalStateException("Visit method invocation failed!", e);
-            } catch (IllegalAccessException e) {
-                throw new IllegalStateException("Visit method access failed!", e);
-            }
-
-        } catch (NoSuchMethodException e) {
-            throw new IllegalStateException("Visit method could not be found!", e);
-        }
+    @Override
+    public boolean traverse(NodeTraversalVisitor visitor) {
+        return visitor.visit(this);
     }
 }

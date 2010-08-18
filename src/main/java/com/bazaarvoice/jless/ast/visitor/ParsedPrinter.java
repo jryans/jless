@@ -19,7 +19,7 @@ import org.parboiled.trees.GraphUtils;
 
 import java.util.List;
 
-public class Printer extends InclusiveNodeVisitor {
+public class ParsedPrinter extends InclusiveNodeVisitor {
 
     private static final int INDENT_STEP = 4;
 
@@ -161,19 +161,19 @@ public class Printer extends InclusiveNodeVisitor {
 
     // Printing methods
 
-    private Printer print(String s) {
+    private ParsedPrinter print(String s) {
         _sb.append(s);
         _lastPrintedIndent = false;
         return this;
     }
 
-    private Printer print(Character c) {
+    private ParsedPrinter print(Character c) {
         _sb.append(c);
         _lastPrintedIndent = false;
         return this;
     }
 
-    private Printer printIndent() {
+    private ParsedPrinter printIndent() {
         for (int i = 0; i < _indent; i++) {
             _sb.append(' ');
         }
@@ -181,23 +181,23 @@ public class Printer extends InclusiveNodeVisitor {
         return this;
     }
 
-    private Printer printLine() {
+    private ParsedPrinter printLine() {
         _sb.append('\n');
         _lastPrintedIndent = false;
         return this;
     }
 
-    private Printer addIndent() {
+    private ParsedPrinter addIndent() {
         _indent += INDENT_STEP;
         return this;
     }
 
-    private Printer removeIndent() {
+    private ParsedPrinter removeIndent() {
         _indent -= INDENT_STEP;
         return this;
     }
 
-    private Printer deleteIndent() {
+    private ParsedPrinter deleteIndent() {
         if (_lastPrintedIndent) {
             _sb.delete(_sb.length() - INDENT_STEP, _sb.length());
         }

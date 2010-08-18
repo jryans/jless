@@ -21,6 +21,22 @@ public class ArgumentsNode extends InternalNode {
     }
 
     @Override
+    public boolean filter(NodeTraversalVisitor visitor) {
+        if (visitor.enter(this)) {
+            ListIterator<Node> it = pushChildIterator();
+            while (it.hasNext()) {
+                Node child = it.next();
+                if (!child.filter(visitor)) {
+                    it.remove();
+                }
+            }
+            popChildIterator();
+        }
+
+        return visitor.visit(this);
+    }
+
+    @Override
     public boolean traverse(NodeTraversalVisitor visitor) {
         if (visitor.enter(this)) {
             ListIterator<Node> it = pushChildIterator();

@@ -1,5 +1,6 @@
 package com.bazaarvoice.jless.ast.node;
 
+import com.bazaarvoice.jless.ast.visitor.NodeAdditionVisitor;
 import com.bazaarvoice.jless.ast.visitor.NodeTraversalVisitor;
 import org.apache.commons.lang.StringUtils;
 
@@ -21,6 +22,16 @@ public class LineBreakNode extends LeafNode {
 
     public int getLineBreaks() {
         return _lineBreaks;
+    }
+
+    @Override
+    public boolean add(NodeAdditionVisitor visitor) {
+        return visitor.add(this);
+    }
+
+    @Override
+    public boolean filter(NodeTraversalVisitor visitor) {
+        return visitor.visit(this);
     }
 
     @Override

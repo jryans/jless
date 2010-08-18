@@ -1,7 +1,7 @@
 package com.bazaarvoice.jless;
 
 import com.bazaarvoice.jless.ast.node.Node;
-import com.bazaarvoice.jless.ast.visitor.Printer;
+import com.bazaarvoice.jless.ast.visitor.ParsedPrinter;
 import com.bazaarvoice.jless.parser.Parser;
 import org.apache.commons.io.IOUtils;
 import org.parboiled.Parboiled;
@@ -21,7 +21,7 @@ import java.io.PrintStream;
 @Test
 public class ParsingTest {
 
-    protected ParsingResult<Node> parseLess(String fileName) {
+    protected ParsingResult<Node> parse(String fileName) {
         return parse(fileName, true);
     }
 
@@ -38,11 +38,13 @@ public class ParsingTest {
 
         ParsingResult<Node> result = runParser(lessInput);
 
+        String status = getStatus(fileName, result);
+
         if (alwaysPrintStatus) {
-            TestUtils.getLog().print(getResultStatus(fileName, result));
+            TestUtils.getLog().print(status);
         }
 
-        Assert.assertFalse(result.hasErrors(), getResultStatus(fileName, result));
+        Assert.assertFalse(result.hasErrors(), status);
 
         return result;
     }
@@ -55,7 +57,7 @@ public class ParsingTest {
         LessTranslator.translate(parseResult.resultValue);
     }
 
-    private String getResultStatus(String fileName, ParsingResult<Node> result) {
+    private String getStatus(String fileName, ParsingResult<Node> result) {
         StringBuilder sb = new StringBuilder();
 
         if (result.hasErrors()) {
@@ -68,8 +70,6 @@ public class ParsingTest {
 
         if (result.resultValue != null) {
 //            sb.append("Input AST:\n").append(GraphUtils.printTree(result.resultValue, new ToStringFormatter<Node>(null))).append('\n');
-
-            printResult(fileName, result);
         }
 
         return sb.toString();
@@ -103,17 +103,19 @@ public class ParsingTest {
         return ".less";
     }
 
-    /**
-     * Utility method that can be run from within the debugger to look at the resulting output file.
-     */
-    public static String printResult(Node root) {
-        Printer p = new Printer();
+    public String printResult(Node root) {
+        ParsedPrinter p = createPrinter();
         root.traverse(p);
         return p.toString();
     }
-    
+
+    protected ParsedPrinter createPrinter() {
+        return new ParsedPrinter();
+    }
+
     protected void runTestFor(String fileName) {
-        parseLess(fileName);
+        ParsingResult<Node> result = parse(fileName);
+        printResult(fileName, result);
     }
 
     public void testBazaarvoice() {

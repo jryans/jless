@@ -1,5 +1,7 @@
 package com.bazaarvoice.jless.ast.visitor;
 
+import com.bazaarvoice.jless.ast.node.LineBreakNode;
+import com.bazaarvoice.jless.ast.node.MultipleLineCommentNode;
 import com.bazaarvoice.jless.ast.node.Node;
 import com.bazaarvoice.jless.ast.node.PropertyNode;
 import com.bazaarvoice.jless.ast.node.RuleSetNode;
@@ -7,8 +9,8 @@ import com.bazaarvoice.jless.ast.node.ScopeNode;
 import com.bazaarvoice.jless.ast.node.SelectorGroupNode;
 import com.bazaarvoice.jless.ast.node.SelectorNode;
 import com.bazaarvoice.jless.ast.node.SelectorSegmentNode;
-import com.bazaarvoice.jless.ast.node.SingleLineCommentNode;
 import com.bazaarvoice.jless.ast.util.MutableTreeUtils;
+import org.parboiled.trees.GraphUtils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -42,23 +44,14 @@ public class FlattenNestedRuleSets extends InclusiveNodeVisitor {
         if (!_ruleSetStack.empty()) {
             // Move this rule set up to be a sibling of its parent with comments that describe the parent
             final RuleSetNode parentRuleSet = _ruleSetStack.get(0);
-            MutableTreeUtils.addSiblingAfter(parentRuleSet, surroundWithContext(node));
+            MutableTreeUtils.addSiblingAfter(parentRuleSet, surroundWithContext(parentRuleSet, node));
 
-            // If the parent rule set's scope is now empty, mark it as invisible
-            parentRuleSet.traverse(new InclusiveNodeVisitor() {
-                @Override
-                public boolean enter(SelectorGroupNode node) {
-                    return false; // Not interested in selectors
-                }
-
-                @Override
-                public boolean visit(ScopeNode scope) {
-                    if (scope.getChildren().size() == 0) {
-                        parentRuleSet.setVisible(false);
-                    }
-                    return false; // Don't go anywhere else
-                }
-            });
+            // If the parent rule set's scope is contains no meaningful content, mark it as invisible
+            ScopeNode scope = MutableTreeUtils.getFirstChild(parentRuleSet, ScopeNode.class);
+            int scopeChildCount = scope.getChildren().size();
+            if (scopeChildCount == 0 || scopeChildCount == MutableTreeUtils.getChildren(scope, LineBreakNode.class).size()) {
+                parentRuleSet.setVisible(false);
+            }
         }
 
         return true;
@@ -149,26 +142,32 @@ public class FlattenNestedRuleSets extends InclusiveNodeVisitor {
         return true;
     }
 
-    private Node[] surroundWithContext(RuleSetNode node) {
-        Printer contextPrinter = new Printer() {
-            @Override
-            public boolean enter(ScopeNode node) {
-                return false; // Don't process children of the rule set
-            }
+    private Node[] surroundWithContext(RuleSetNode parent, RuleSetNode node) {
+        String parentSelector = MutableTreeUtils.getFirstChild(parent, SelectorGroupNode.class).toString();
 
-            @Override
-            public boolean visit(ScopeNode node) {
-                return false;
-            }
-        };
+        List<Node> nodeList = new ArrayList<Node>();
 
-        _ruleSetStack.get(0).traverse(contextPrinter);
-        String parentSelector = contextPrinter.toString();
+        // Add rule set header comment
+        nodeList.add(new MultipleLineCommentNode(" " + parentSelector + "{ "));
 
-        return new Node[] {
-                new SingleLineCommentNode(" " + parentSelector + "{"),
-                node,
-                new SingleLineCommentNode(" } " + parentSelector)
-        };
+        // Grab line breaks just inside the parent rule set's scope, if any
+        Node enterScopeLineBreak = MutableTreeUtils.getFirstChild(parent, ScopeNode.class).getChildren().get(0);
+        if (enterScopeLineBreak instanceof LineBreakNode) {
+            nodeList.add(enterScopeLineBreak.clone());
+        }
+
+        // Add rule set itself
+        nodeList.add(node);
+
+        // Add rule set footer comment
+        nodeList.add(new MultipleLineCommentNode(" } " + parentSelector));
+
+        // Grab line breaks just at the end of the parent rule set, if any
+        Node exitScopeLineBreak = GraphUtils.getLastChild((Node) parent);
+        if (exitScopeLineBreak instanceof LineBreakNode) {
+            nodeList.add(exitScopeLineBreak.clone());
+        }
+
+        return nodeList.toArray(new Node[nodeList.size()]);
     }
 }

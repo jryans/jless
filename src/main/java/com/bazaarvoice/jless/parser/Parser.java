@@ -14,6 +14,8 @@ import com.bazaarvoice.jless.ast.node.SelectorNode;
 import com.bazaarvoice.jless.ast.node.SelectorSegmentNode;
 import com.bazaarvoice.jless.ast.node.SimpleNode;
 import com.bazaarvoice.jless.ast.node.VariableDefinitionNode;
+import com.bazaarvoice.jless.ast.util.MutableTreeUtils;
+import com.bazaarvoice.jless.ast.visitor.InclusiveNodeVisitor;
 import com.bazaarvoice.jless.exception.UndefinedVariableException;
 import org.parboiled.Action;
 import org.parboiled.BaseParser;
@@ -41,8 +43,6 @@ import org.parboiled.support.Var;
  *
  * This list only notes changes in the <em>parsing</em> stage. See {@link com.bazaarvoice.jless.LessTranslator} for details on any changes
  * to the <em>translation</em> stage.
- *
- * TODO: Improve rule set line ending capture
  *
  * @see com.bazaarvoice.jless.LessTranslator
  */
@@ -168,7 +168,10 @@ public class Parser extends BaseParser<Node> {
     Rule MixinReference() {
         return FirstOf(
                 // No arguments, reference an existing rule set's properties
-                Sequence(SelectorGroup(), ';', Ws0(), push(new PlaceholderNode(pop()))),
+                Sequence(
+                        SelectorGroup(), ';', Ws0(),
+                        ACTION(resolveMixinReference(pop().toString()).run(getContext()))
+                ),
                 // Call a mixin, passing along some arguments
                 Sequence(Class(), Arguments(), Ws0(), ';', Ws0(), push(new PlaceholderNode()))
         );
@@ -315,7 +318,8 @@ public class Parser extends BaseParser<Node> {
                         push(new ExpressionGroupNode()),
                         Expressions(), peek(1).addChild(pop()),
                         ZeroOrMore(
-                                Ws0(), ',', Ws0(), Expressions(), peek(1).addChild(pop())
+                                Ws0(), ',', Ws0(), peek().addChild(new LineBreakNode(match())),
+                                Expressions(), peek(1).addChild(pop())
                         ),
                         Sp0(), FirstOf(';', Sequence(Ws0(), Test('}'))),
                         peek(1).addChild(pop())
@@ -464,9 +468,7 @@ public class Parser extends BaseParser<Node> {
     Rule VariableReference() {
         return Sequence(
                 Variable(),
-                debug(getContext()),
-//                isParserTranslationEnabled() ? push(getNearestScope().resolveVariable(match())) : push(new SimpleNode(match()))
-                ACTION(resolveVariable(match()).run(getContext()))
+                ACTION(resolveVariableReference(match()).run(getContext()))
         );
     }
 
@@ -659,7 +661,50 @@ public class Parser extends BaseParser<Node> {
     }
 
     // ********** Translation Actions **********
-    Action<Node> resolveVariable(final String name) {
+
+    Action<Node> resolveMixinReference(final String selectorGroup) {
+        return new Action<Node>() {
+            @Override
+            public boolean run(Context context) {
+                if (!isParserTranslationEnabled()) {
+                    return push(new SimpleNode(selectorGroup));
+                }
+
+                for (int i = 0; i < getContext().getValueStack().size(); i++) {
+                    Node node = peek(i);
+                    if (!(node instanceof ScopeNode)) {
+                        continue;
+                    }
+
+                    ScopeNode scope = (ScopeNode) node;
+                    RuleSetNode ruleSet = scope.getRuleSet(selectorGroup);
+
+                    if (ruleSet == null) {
+                        continue;
+                    }
+
+                    // Copy the scope of the rule set we located, but filter out any line breaks
+                    ScopeNode ruleSetScope = MutableTreeUtils.getFirstChild(ruleSet, ScopeNode.class);
+                    ruleSetScope.filter(new InclusiveNodeVisitor() {
+                        @Override
+                        public boolean visit(LineBreakNode node) {
+                            return false;
+                        }
+                    });
+
+                    // Mark original rule set as hidden once it has been referenced as a mixin
+//                    ruleSet.setVisible(false);
+
+                    return push(ruleSetScope);
+                }
+
+                // Record error location
+                throw new UndefinedVariableException(selectorGroup);
+            }
+        };
+    }
+
+    Action<Node> resolveVariableReference(final String name) {
         return new Action<Node>() {
             @Override
             public boolean run(Context context) {
@@ -674,11 +719,13 @@ public class Parser extends BaseParser<Node> {
                     }
 
                     ScopeNode scope = (ScopeNode) node;
-                    ExpressionGroupNode value = scope.resolveVariable(name);
+                    ExpressionGroupNode value = scope.getVariable(name);
 
-                    if (value != null) {
-                        return push(value);
+                    if (value == null) {
+                        continue;
                     }
+
+                    return push(value.clone());
                 }
 
                 // Record error location

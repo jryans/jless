@@ -3,10 +3,10 @@ package com.bazaarvoice.jless.ast.util;
 import com.bazaarvoice.jless.ast.node.InternalNode;
 import com.bazaarvoice.jless.ast.node.Node;
 import com.bazaarvoice.jless.ast.node.ScopeNode;
-import com.google.common.base.Preconditions;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.ListIterator;
 
 /**
  * TODO: Fix naming scheme
@@ -23,8 +23,6 @@ public final class MutableTreeUtils {
     public static void addSiblingAfter(Node node, Node sibling) {
         InternalNode parent = node.getParent();
 
-        Preconditions.checkNotNull(parent);
-
         // Add the sibling node after the current node
         RandomAccessListIterator<Node> childIterator = parent.getLatestChildIterator();
         childIterator.add(sibling);
@@ -38,8 +36,6 @@ public final class MutableTreeUtils {
      */
     public static void addSiblingAfter(Node node, Node... siblings) {
         InternalNode parent = node.getParent();
-
-        Preconditions.checkNotNull(parent);
 
         // Add the sibling nodes after the current node (also the parent iterator's current node)
         RandomAccessListIterator<Node> childIterator = parent.getLatestChildIterator();
@@ -89,5 +85,14 @@ public final class MutableTreeUtils {
         }
 
         return null;
+    }
+
+    public static void moveChildren(InternalNode source, InternalNode destination) {
+        ListIterator<Node> it = source.pushChildIterator();
+        while (it.hasNext()) {
+            Node child = it.next();
+            destination.addChild(child);
+        }
+        source.popChildIterator();
     }
 }

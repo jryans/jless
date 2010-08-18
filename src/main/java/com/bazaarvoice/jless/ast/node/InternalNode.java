@@ -157,6 +157,22 @@ public abstract class InternalNode extends Node {
     }
 
     @Override
+    public boolean filter(NodeTraversalVisitor visitor) {
+        if (visitor.enter(this)) {
+            ListIterator<Node> it = pushChildIterator();
+            while (it.hasNext()) {
+                Node child = it.next();
+                if (!child.filter(visitor)) {
+                    it.remove();
+                }
+            }
+            popChildIterator();
+        }
+
+        return visitor.visit(this);
+    }
+
+    @Override
     public boolean traverse(NodeTraversalVisitor visitor) {
         if (visitor.enter(this)) {
             ListIterator<Node> it = pushChildIterator();
@@ -176,10 +192,8 @@ public abstract class InternalNode extends Node {
      * Clones fields and child nodes, but ignores the iterator stack (since the new nodes are not attached
      * to the tree and so should not be part of any kind of iteration).
      */
-    @SuppressWarnings ({"unchecked", "CloneDoesntDeclareCloneNotSupportedException"})
     @Override
     public InternalNode clone() {
-        // Clone any primitive fields
         InternalNode node = (InternalNode) super.clone();
 
         // Reset internal state

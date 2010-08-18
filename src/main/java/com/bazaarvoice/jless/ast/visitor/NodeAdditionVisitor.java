@@ -1,6 +1,8 @@
 package com.bazaarvoice.jless.ast.visitor;
 
 import com.bazaarvoice.jless.ast.node.Node;
+import com.bazaarvoice.jless.ast.node.RuleSetNode;
+import com.bazaarvoice.jless.ast.node.ScopeNode;
 import com.bazaarvoice.jless.ast.node.VariableDefinitionNode;
 
 /**
@@ -15,5 +17,9 @@ public interface NodeAdditionVisitor {
 
     // Concrete visitor methods
 
-    boolean add(VariableDefinitionNode node);    
+    boolean add(RuleSetNode node);
+
+    boolean add(ScopeNode node);
+
+    boolean add(VariableDefinitionNode node);
 }

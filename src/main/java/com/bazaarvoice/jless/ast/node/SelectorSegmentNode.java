@@ -1,5 +1,6 @@
 package com.bazaarvoice.jless.ast.node;
 
+import com.bazaarvoice.jless.ast.visitor.NodeAdditionVisitor;
 import com.bazaarvoice.jless.ast.visitor.NodeTraversalVisitor;
 
 public class SelectorSegmentNode extends LeafNode {
@@ -45,6 +46,16 @@ public class SelectorSegmentNode extends LeafNode {
     public boolean setSubElementSelector(boolean subElementSelector) {
         _subElementSelector = subElementSelector;
         return true;
+    }
+
+    @Override
+    public boolean add(NodeAdditionVisitor visitor) {
+        return visitor.add(this);
+    }
+
+    @Override
+    public boolean filter(NodeTraversalVisitor visitor) {
+        return visitor.visit(this);
     }
 
     @Override

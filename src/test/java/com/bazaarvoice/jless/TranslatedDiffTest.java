@@ -5,6 +5,7 @@ import com.bazaarvoice.jless.parser.Parser;
 import difflib.DiffUtils;
 import difflib.Patch;
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang.StringUtils;
 import org.parboiled.Parboiled;
 import org.parboiled.ReportingParseRunner;
 import org.parboiled.support.ParsingResult;
@@ -21,16 +22,19 @@ public class TranslatedDiffTest extends ParsingTest {
 
     @Override
     protected void runTestFor(String fileName) {
-        ParsingResult<Node> result = parseLess(fileName);
+        ParsingResult<Node> result = parse(fileName);
 
         LessTranslator.translate(result.resultValue);
 
 //        TestUtils.getLog().println("Output AST:");
 //        TestUtils.getLog().println(GraphUtils.printTree(result.resultValue, new ToStringFormatter<Node>(null)));
 
+        printResult(fileName, result);
+
         diffOutput(fileName, result);
     }
 
+    @Override
     protected ParsingResult<Node> runParser(String lessInput) {
         return ReportingParseRunner.run(Parboiled.createParser(Parser.class, true).Document(), lessInput);
     }
@@ -47,7 +51,7 @@ public class TranslatedDiffTest extends ParsingTest {
             e.printStackTrace();
         }
 
-        List<String> outputLines = Arrays.asList(printResult(fileName, parsingResult).split("\n"));
+        List<String> outputLines = Arrays.asList(StringUtils.splitPreserveAllTokens(printResult(fileName, parsingResult), '\n'));
 
         Patch diff = DiffUtils.diff(referenceLines, outputLines);
 
@@ -71,4 +75,9 @@ public class TranslatedDiffTest extends ParsingTest {
     protected String getGeneratedFileExtension() {
         return ".css";
     }
+
+    /*@Override
+    protected ParsedPrinter createPrinter() {
+        return new TranslatedPrinter();
+    }*/
 }
