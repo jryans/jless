@@ -1,4 +1,4 @@
-package com.bazaarvoice.jless.ast;
+package com.bazaarvoice.jless.ast.util;
 
 import java.util.ListIterator;
 

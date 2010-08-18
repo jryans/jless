@@ -1,13 +1,13 @@
 package com.bazaarvoice.jless.ast.visitor;
 
-import com.bazaarvoice.jless.ast.Node;
-import com.bazaarvoice.jless.ast.PropertyNode;
-import com.bazaarvoice.jless.ast.RuleSetNode;
-import com.bazaarvoice.jless.ast.ScopeNode;
-import com.bazaarvoice.jless.ast.SelectorGroupNode;
-import com.bazaarvoice.jless.ast.SelectorNode;
-import com.bazaarvoice.jless.ast.SelectorSegmentNode;
-import com.bazaarvoice.jless.ast.SingleLineCommentNode;
+import com.bazaarvoice.jless.ast.node.Node;
+import com.bazaarvoice.jless.ast.node.PropertyNode;
+import com.bazaarvoice.jless.ast.node.RuleSetNode;
+import com.bazaarvoice.jless.ast.node.ScopeNode;
+import com.bazaarvoice.jless.ast.node.SelectorGroupNode;
+import com.bazaarvoice.jless.ast.node.SelectorNode;
+import com.bazaarvoice.jless.ast.node.SelectorSegmentNode;
+import com.bazaarvoice.jless.ast.node.SingleLineCommentNode;
 import com.bazaarvoice.jless.ast.util.MutableTreeUtils;
 
 import java.util.ArrayList;
@@ -25,12 +25,12 @@ public class FlattenNestedRuleSets extends InclusiveNodeVisitor {
     private List<Node> _selectorWorkingSet;
 
     @Override
-    public boolean visitEnter(PropertyNode node) {
+    public boolean enter(PropertyNode node) {
         return false;
     }
 
     @Override
-    public boolean visitEnter(RuleSetNode node) {
+    public boolean enter(RuleSetNode node) {
         _ruleSetStack.push(node);
         return true;
     }
@@ -47,7 +47,7 @@ public class FlattenNestedRuleSets extends InclusiveNodeVisitor {
             // If the parent rule set's scope is now empty, mark it as invisible
             parentRuleSet.accept(new InclusiveNodeVisitor() {
                 @Override
-                public boolean visitEnter(SelectorGroupNode node) {
+                public boolean enter(SelectorGroupNode node) {
                     return false; // Not interested in selectors
                 }
 
@@ -65,13 +65,13 @@ public class FlattenNestedRuleSets extends InclusiveNodeVisitor {
     }
 
     @Override
-    public boolean visitEnter(ScopeNode node) {
+    public boolean enter(ScopeNode node) {
         // Don't enter the scope of a nested rule set
         return _ruleSetStack.size() <= 1;
     }
 
     @Override
-    public boolean visitEnter(SelectorGroupNode node) {
+    public boolean enter(SelectorGroupNode node) {
         if (_ruleSetStack.size() > 1) {
             // In a nested rule set, reset the list of updated selector nodes and enter
             _updatedSelectors = new ArrayList<Node>();
@@ -103,14 +103,14 @@ public class FlattenNestedRuleSets extends InclusiveNodeVisitor {
     }
 
     @Override
-    public boolean visitEnter(SelectorNode node) {
+    public boolean enter(SelectorNode node) {
         // We've reached a selector in a nested rule set, clear the selector working set
         _selectorWorkingSet = new ArrayList<Node>();
 
         // Visit the parent rule set and clone its selector nodes
         _ruleSetStack.get(0).accept(new InclusiveNodeVisitor() {
             @Override
-            public boolean visitEnter(ScopeNode node) {
+            public boolean enter(ScopeNode node) {
                 return false; // Don't need to touch the parent's scope
             }
 
@@ -152,7 +152,7 @@ public class FlattenNestedRuleSets extends InclusiveNodeVisitor {
     private Node[] surroundWithContext(RuleSetNode node) {
         Printer contextPrinter = new Printer() {
             @Override
-            public boolean visitEnter(ScopeNode node) {
+            public boolean enter(ScopeNode node) {
                 return false; // Don't process children of the rule set
             }
 

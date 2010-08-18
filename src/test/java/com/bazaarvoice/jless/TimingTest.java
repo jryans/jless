@@ -1,6 +1,6 @@
 package com.bazaarvoice.jless;
 
-import com.bazaarvoice.jless.ast.Node;
+import com.bazaarvoice.jless.ast.node.Node;
 import org.parboiled.support.ParsingResult;
 import org.testng.annotations.Test;
 

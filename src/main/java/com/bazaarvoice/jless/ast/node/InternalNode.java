@@ -14,9 +14,12 @@
  * limitations under the License.
  */
 
-package com.bazaarvoice.jless.ast;
+package com.bazaarvoice.jless.ast.node;
 
-import com.bazaarvoice.jless.ast.visitor.NodeVisitor;
+import com.bazaarvoice.jless.ast.util.RandomAccessListIterator;
+import com.bazaarvoice.jless.ast.visitor.InclusiveNodeVisitor;
+import com.bazaarvoice.jless.ast.visitor.NodeAdditionVisitor;
+import com.bazaarvoice.jless.ast.visitor.NodeTraversalVisitor;
 import com.google.common.base.Preconditions;
 import org.parboiled.trees.TreeUtils;
 
@@ -29,7 +32,7 @@ import java.util.Stack;
 /**
  * A base implementation of the {@link org.parboiled.trees.MutableTreeNode}.
  *
- * TODO: Add leaf node class
+ * TODO: Rewrite this!
  *
  * @param <T> the actual implementation type of this MutableTreeNodeImpl
  */
@@ -38,6 +41,7 @@ public abstract class InternalNode extends Node {
     private List<Node> _children = new ArrayList<Node>();
     private List<Node> _childrenView = Collections.unmodifiableList(_children);
     private Stack<MutableChildIterator> _childIteratorStack = new Stack<MutableChildIterator>();
+    protected NodeAdditionVisitor _additionVisitor = InclusiveNodeVisitor.getInstance();
 
     public InternalNode() {
     }
@@ -87,6 +91,11 @@ public abstract class InternalNode extends Node {
 
         // ignore empty nodes
         if (child == null || !child.hasData()) {
+            return;
+        }
+
+        // check addition visitor
+        if (!_additionVisitor.add(child)) {
             return;
         }
 
@@ -172,8 +181,8 @@ public abstract class InternalNode extends Node {
     }
 
     @Override
-    public boolean accept(NodeVisitor visitor) {
-        if (visitor.visitEnter(this)) {
+    public boolean accept(NodeTraversalVisitor visitor) {
+        if (visitor.enter(this)) {
             ListIterator<Node> it = pushChildIterator();
             while (it.hasNext()) {
                 Node child = it.next();

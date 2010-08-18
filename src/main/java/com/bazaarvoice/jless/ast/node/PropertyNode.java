@@ -1,21 +1,24 @@
-package com.bazaarvoice.jless.ast;
+package com.bazaarvoice.jless.ast.node;
 
-import com.bazaarvoice.jless.ast.visitor.NodeVisitor;
+import com.bazaarvoice.jless.ast.visitor.NodeTraversalVisitor;
 
 import java.util.ListIterator;
 
-public class SelectorNode extends InternalNode {
+public class PropertyNode extends InternalNode {
 
-    public SelectorNode() {
+    private String _name;
+
+    public PropertyNode(String name) {
+        _name = name;
     }
 
-    public SelectorNode(Node child) {
-        super(child);
+    public String getName() {
+        return _name;
     }
 
     @Override
-    public boolean accept(NodeVisitor visitor) {
-        if (visitor.visitEnter(this)) {
+    public boolean accept(NodeTraversalVisitor visitor) {
+        if (visitor.enter(this)) {
             ListIterator<Node> it = pushChildIterator();
             while (it.hasNext()) {
                 Node child = it.next();

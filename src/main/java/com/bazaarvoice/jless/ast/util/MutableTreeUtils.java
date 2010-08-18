@@ -1,9 +1,8 @@
 package com.bazaarvoice.jless.ast.util;
 
-import com.bazaarvoice.jless.ast.Node;
-import com.bazaarvoice.jless.ast.InternalNode;
-import com.bazaarvoice.jless.ast.RandomAccessListIterator;
-import com.bazaarvoice.jless.ast.ScopeNode;
+import com.bazaarvoice.jless.ast.node.Node;
+import com.bazaarvoice.jless.ast.node.InternalNode;
+import com.bazaarvoice.jless.ast.node.ScopeNode;
 import com.google.common.base.Preconditions;
 
 /**

@@ -1,24 +1,22 @@
-package com.bazaarvoice.jless.ast;
+package com.bazaarvoice.jless.ast.node;
 
-import com.bazaarvoice.jless.ast.visitor.NodeVisitor;
+import com.bazaarvoice.jless.ast.visitor.NodeTraversalVisitor;
 
 import java.util.ListIterator;
 
-public class VariableDefinitionNode extends InternalNode {
+public class ArgumentsNode extends InternalNode {
 
-    private String _name;
-
-    public VariableDefinitionNode(String name) {
-        _name = name;
+    public ArgumentsNode() {
+        super();
     }
 
-    public String getName() {
-        return _name;
+    public ArgumentsNode(Node child) {
+        super(child);
     }
 
     @Override
-    public boolean accept(NodeVisitor visitor) {
-        if (visitor.visitEnter(this)) {
+    public boolean accept(NodeTraversalVisitor visitor) {
+        if (visitor.enter(this)) {
             ListIterator<Node> it = pushChildIterator();
             while (it.hasNext()) {
                 Node child = it.next();

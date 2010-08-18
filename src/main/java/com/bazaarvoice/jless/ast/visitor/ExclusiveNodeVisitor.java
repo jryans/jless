@@ -1,31 +1,42 @@
 package com.bazaarvoice.jless.ast.visitor;
 
-import com.bazaarvoice.jless.ast.Node;
-import com.bazaarvoice.jless.ast.ExpressionGroupNode;
-import com.bazaarvoice.jless.ast.ExpressionNode;
-import com.bazaarvoice.jless.ast.ExpressionsNode;
-import com.bazaarvoice.jless.ast.LineBreakNode;
-import com.bazaarvoice.jless.ast.MultipleLineCommentNode;
-import com.bazaarvoice.jless.ast.PropertyNode;
-import com.bazaarvoice.jless.ast.RuleSetNode;
-import com.bazaarvoice.jless.ast.ScopeNode;
-import com.bazaarvoice.jless.ast.SelectorGroupNode;
-import com.bazaarvoice.jless.ast.SelectorNode;
-import com.bazaarvoice.jless.ast.SelectorSegmentNode;
-import com.bazaarvoice.jless.ast.SimpleNode;
-import com.bazaarvoice.jless.ast.SingleLineCommentNode;
-import com.bazaarvoice.jless.ast.VariableDefinitionNode;
+import com.bazaarvoice.jless.ast.node.MultipleLineCommentNode;
+import com.bazaarvoice.jless.ast.node.Node;
+import com.bazaarvoice.jless.ast.node.ExpressionGroupNode;
+import com.bazaarvoice.jless.ast.node.ExpressionNode;
+import com.bazaarvoice.jless.ast.node.ExpressionsNode;
+import com.bazaarvoice.jless.ast.node.LineBreakNode;
+import com.bazaarvoice.jless.ast.node.PropertyNode;
+import com.bazaarvoice.jless.ast.node.RuleSetNode;
+import com.bazaarvoice.jless.ast.node.ScopeNode;
+import com.bazaarvoice.jless.ast.node.SelectorGroupNode;
+import com.bazaarvoice.jless.ast.node.SelectorNode;
+import com.bazaarvoice.jless.ast.node.SelectorSegmentNode;
+import com.bazaarvoice.jless.ast.node.SimpleNode;
+import com.bazaarvoice.jless.ast.node.SingleLineCommentNode;
+import com.bazaarvoice.jless.ast.node.VariableDefinitionNode;
 
 /**
  * Defaults to visiting no nodes.
  */
-public class ExclusiveNodeVisitor implements NodeVisitor {
+public class ExclusiveNodeVisitor implements NodeAdditionVisitor, NodeTraversalVisitor {
+
+    private static final ExclusiveNodeVisitor SINGLETON = new ExclusiveNodeVisitor();
+
+    public static ExclusiveNodeVisitor getInstance() {
+        return SINGLETON;
+    }
 
     // Base visit methods
     // These eliminate the need for visit methods that no visitor uses
 
     @Override
-    public boolean visitEnter(Node node) {
+    public boolean add(Node node) {
+        return false;
+    }
+
+    @Override
+    public boolean enter(Node node) {
         return false;
     }
 
@@ -33,11 +44,16 @@ public class ExclusiveNodeVisitor implements NodeVisitor {
     public boolean visit(Node node) {
         return false;
     }
-
-    // Concrete visit methods
+    
+    // Concrete visit methods (NodeAdditionVisitor)
+    
+    @Override
+    public boolean add(VariableDefinitionNode node) {
+        return false;
+    }
 
     @Override
-    public boolean visitEnter(ExpressionGroupNode node) {
+    public boolean enter(ExpressionGroupNode node) {
         return false;
     }
 
@@ -67,7 +83,7 @@ public class ExclusiveNodeVisitor implements NodeVisitor {
     }
 
     @Override
-    public boolean visitEnter(PropertyNode node) {
+    public boolean enter(PropertyNode node) {
         return false;
     }
 
@@ -77,7 +93,7 @@ public class ExclusiveNodeVisitor implements NodeVisitor {
     }
 
     @Override
-    public boolean visitEnter(RuleSetNode node) {
+    public boolean enter(RuleSetNode node) {
         return false;
     }
 
@@ -87,7 +103,7 @@ public class ExclusiveNodeVisitor implements NodeVisitor {
     }
 
     @Override
-    public boolean visitEnter(ScopeNode node) {
+    public boolean enter(ScopeNode node) {
         return false;
     }
 
@@ -97,7 +113,7 @@ public class ExclusiveNodeVisitor implements NodeVisitor {
     }
 
     @Override
-    public boolean visitEnter(SelectorNode node) {
+    public boolean enter(SelectorNode node) {
         return false;
     }
 
@@ -107,7 +123,7 @@ public class ExclusiveNodeVisitor implements NodeVisitor {
     }
 
     @Override
-    public boolean visitEnter(SelectorGroupNode node) {
+    public boolean enter(SelectorGroupNode node) {
         return false;
     }
 
@@ -132,7 +148,7 @@ public class ExclusiveNodeVisitor implements NodeVisitor {
     }
 
     @Override
-    public boolean visitEnter(VariableDefinitionNode node) {
+    public boolean enter(VariableDefinitionNode node) {
         return false;
     }
 

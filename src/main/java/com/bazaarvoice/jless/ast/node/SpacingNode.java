@@ -1,6 +1,6 @@
-package com.bazaarvoice.jless.ast;
+package com.bazaarvoice.jless.ast.node;
 
-import com.bazaarvoice.jless.ast.visitor.NodeVisitor;
+import com.bazaarvoice.jless.ast.visitor.NodeTraversalVisitor;
 
 public class SpacingNode extends SimpleNode {
 
@@ -14,7 +14,7 @@ public class SpacingNode extends SimpleNode {
     }
 
     @Override
-    public boolean accept(NodeVisitor visitor) {
+    public boolean accept(NodeTraversalVisitor visitor) {
         return visitor.visit(this);
     }
 }

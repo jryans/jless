@@ -1,6 +1,6 @@
-package com.bazaarvoice.jless.ast;
+package com.bazaarvoice.jless.ast.node;
 
-import com.bazaarvoice.jless.ast.visitor.NodeVisitor;
+import com.bazaarvoice.jless.ast.visitor.NodeTraversalVisitor;
 import org.parboiled.trees.MutableTreeNode;
 
 /**
@@ -29,7 +29,7 @@ public abstract class Node implements MutableTreeNode<Node>, Cloneable {
 
     public abstract boolean addChild(Node child);
 
-    public abstract boolean accept(NodeVisitor visitor);
+    public abstract boolean accept(NodeTraversalVisitor visitor);
 
     @SuppressWarnings ({"unchecked", "CloneDoesntDeclareCloneNotSupportedException"})
     @Override
@@ -46,5 +46,9 @@ public abstract class Node implements MutableTreeNode<Node>, Cloneable {
         node._parent = null;
 
         return node;
+    }
+
+    public boolean acceptReflect(NodeTraversalVisitor visitor) {
+        return true;
     }
 }

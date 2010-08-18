@@ -1,6 +1,6 @@
-package com.bazaarvoice.jless.ast;
+package com.bazaarvoice.jless.ast.node;
 
-import com.bazaarvoice.jless.ast.visitor.NodeVisitor;
+import com.bazaarvoice.jless.ast.visitor.NodeTraversalVisitor;
 
 import java.util.ListIterator;
 
@@ -21,8 +21,8 @@ public class RuleSetNode extends InternalNode {
     }
 
     @Override
-    public boolean accept(NodeVisitor visitor) {
-        if (visitor.visitEnter(this)) {
+    public boolean accept(NodeTraversalVisitor visitor) {
+        if (visitor.enter(this)) {
             ListIterator<Node> it = pushChildIterator();
             while (it.hasNext()) {
                 Node child = it.next();

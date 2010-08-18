@@ -1,19 +1,19 @@
 package com.bazaarvoice.jless.ast.visitor;
 
-import com.bazaarvoice.jless.ast.Node;
-import com.bazaarvoice.jless.ast.ExpressionNode;
-import com.bazaarvoice.jless.ast.ExpressionsNode;
-import com.bazaarvoice.jless.ast.LineBreakNode;
-import com.bazaarvoice.jless.ast.MultipleLineCommentNode;
-import com.bazaarvoice.jless.ast.PropertyNode;
-import com.bazaarvoice.jless.ast.RuleSetNode;
-import com.bazaarvoice.jless.ast.ScopeNode;
-import com.bazaarvoice.jless.ast.SelectorGroupNode;
-import com.bazaarvoice.jless.ast.SelectorNode;
-import com.bazaarvoice.jless.ast.SelectorSegmentNode;
-import com.bazaarvoice.jless.ast.SimpleNode;
-import com.bazaarvoice.jless.ast.SingleLineCommentNode;
-import com.bazaarvoice.jless.ast.VariableDefinitionNode;
+import com.bazaarvoice.jless.ast.node.ExpressionsNode;
+import com.bazaarvoice.jless.ast.node.Node;
+import com.bazaarvoice.jless.ast.node.ExpressionNode;
+import com.bazaarvoice.jless.ast.node.LineBreakNode;
+import com.bazaarvoice.jless.ast.node.MultipleLineCommentNode;
+import com.bazaarvoice.jless.ast.node.PropertyNode;
+import com.bazaarvoice.jless.ast.node.RuleSetNode;
+import com.bazaarvoice.jless.ast.node.ScopeNode;
+import com.bazaarvoice.jless.ast.node.SelectorGroupNode;
+import com.bazaarvoice.jless.ast.node.SelectorNode;
+import com.bazaarvoice.jless.ast.node.SelectorSegmentNode;
+import com.bazaarvoice.jless.ast.node.SimpleNode;
+import com.bazaarvoice.jless.ast.node.SingleLineCommentNode;
+import com.bazaarvoice.jless.ast.node.VariableDefinitionNode;
 import com.bazaarvoice.jless.ast.util.MutableTreeUtils;
 import org.parboiled.trees.GraphUtils;
 
@@ -63,7 +63,7 @@ public class Printer extends InclusiveNodeVisitor {
     }
 
     @Override
-    public boolean visitEnter(PropertyNode node) {
+    public boolean enter(PropertyNode node) {
         print(node.getName()).print(": ");
         return true;
     }
@@ -78,12 +78,12 @@ public class Printer extends InclusiveNodeVisitor {
     }
 
     @Override
-    public boolean visitEnter(RuleSetNode node) {
+    public boolean enter(RuleSetNode node) {
         return node.isVisible();
     }
 
     @Override
-    public boolean visitEnter(ScopeNode node) {
+    public boolean enter(ScopeNode node) {
         if (node.getParent() != null) {
             print("{");
             List<Node> children = node.getChildren();
@@ -145,7 +145,7 @@ public class Printer extends InclusiveNodeVisitor {
     }
 
     @Override
-    public boolean visitEnter(VariableDefinitionNode node) {
+    public boolean enter(VariableDefinitionNode node) {
         print(node.getName()).print(": ");
         return true;
     }
