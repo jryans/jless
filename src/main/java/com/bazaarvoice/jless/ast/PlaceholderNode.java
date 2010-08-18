@@ -4,10 +4,9 @@ import com.bazaarvoice.jless.ast.visitor.NodeVisitor;
 
 import java.util.ListIterator;
 
-public class PlaceholderNode extends Node {
+public class PlaceholderNode extends InternalNode {
 
     public PlaceholderNode() {
-        super();
     }
 
     public PlaceholderNode(Node child) {

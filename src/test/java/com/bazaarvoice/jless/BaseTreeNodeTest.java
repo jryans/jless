@@ -1,6 +1,7 @@
 package com.bazaarvoice.jless;
 
-import com.bazaarvoice.jless.ast.Node;
+import com.bazaarvoice.jless.ast.InternalNode;
+import com.bazaarvoice.jless.ast.PlaceholderNode;
 import com.bazaarvoice.jless.ast.RandomAccessListIterator;
 import com.bazaarvoice.jless.ast.SimpleNode;
 import org.testng.Assert;
@@ -13,7 +14,7 @@ import org.testng.annotations.Test;
 public class BaseTreeNodeTest {
 
     public void testChildIterators() {
-        Node p = new SimpleNode("p");
+        InternalNode p = new PlaceholderNode();
         p.addChild(new SimpleNode("c1"));
         p.addChild(new SimpleNode("c2"));
         p.addChild(new SimpleNode("c3"));

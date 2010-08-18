@@ -4,10 +4,9 @@ import com.bazaarvoice.jless.ast.visitor.NodeVisitor;
 
 import java.util.ListIterator;
 
-public class ArgumentsNode extends Node {
+public class ArgumentsNode extends InternalNode {
 
     public ArgumentsNode() {
-        super();
     }
 
     public ArgumentsNode(Node child) {

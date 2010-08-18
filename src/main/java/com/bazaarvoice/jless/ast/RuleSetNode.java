@@ -4,7 +4,7 @@ import com.bazaarvoice.jless.ast.visitor.NodeVisitor;
 
 import java.util.ListIterator;
 
-public class RuleSetNode extends Node {
+public class RuleSetNode extends InternalNode {
 
     private boolean _visible = true;
 

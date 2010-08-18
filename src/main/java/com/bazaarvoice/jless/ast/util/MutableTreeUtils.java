@@ -1,6 +1,7 @@
 package com.bazaarvoice.jless.ast.util;
 
 import com.bazaarvoice.jless.ast.Node;
+import com.bazaarvoice.jless.ast.InternalNode;
 import com.bazaarvoice.jless.ast.RandomAccessListIterator;
 import com.bazaarvoice.jless.ast.ScopeNode;
 import com.google.common.base.Preconditions;
@@ -18,7 +19,7 @@ public final class MutableTreeUtils {
      * Add the input node after the current node in its parent's list of children.
      */
     public static void addSiblingAfter(Node node, Node sibling) {
-        Node parent = node.getParent();
+        InternalNode parent = node.getParent();
 
         Preconditions.checkNotNull(parent);
 
@@ -34,7 +35,7 @@ public final class MutableTreeUtils {
      * Add the input nodes after the current node in its parent's list of children.
      */
     public static void addSiblingAfter(Node node, Node... siblings) {
-        Node parent = node.getParent();
+        InternalNode parent = node.getParent();
 
         Preconditions.checkNotNull(parent);
 

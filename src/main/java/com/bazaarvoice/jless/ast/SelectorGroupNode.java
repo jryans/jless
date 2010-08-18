@@ -4,7 +4,7 @@ import com.bazaarvoice.jless.ast.visitor.NodeVisitor;
 
 import java.util.ListIterator;
 
-public class SelectorGroupNode extends Node {
+public class SelectorGroupNode extends InternalNode {
 
     public SelectorGroupNode(Node child) {
         super(child);

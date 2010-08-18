@@ -9,7 +9,7 @@ public class TimingTest extends ParsingTest {
 
     private static final int RUNS_PER_TIMED_SET = 20;
     private static final String[] CACHE_FILES = {"bazaarvoice", "bazaarvoiceDisplayShared", "css", "css-3", "strings", "whitespace"};
-//    private static final ProfilingParseRunner<Node> _sParseRunner = new ProfilingParseRunner<Node>(Parboiled.createParser(Parser.class).Document());
+//    private static final ProfilingParseRunner<BaseTreeNode> _sParseRunner = new ProfilingParseRunner<BaseTreeNode>(Parboiled.createParser(Parser.class).Document());
 
     private float _currentTime;
     private boolean _cached = false;
@@ -97,7 +97,7 @@ public class TimingTest extends ParsingTest {
     @Override
     protected ParsingResult<Node> runParser(String lessInput) {
         long startTime = System.nanoTime();
-//        ParsingResult<Node> result = _sParseRunner.run(lessInput);
+//        ParsingResult<BaseTreeNode> result = _sParseRunner.run(lessInput);
         ParsingResult<Node> result = super.runParser(lessInput);
         _currentTime = System.nanoTime() - startTime;
          _currentTime /= 1000000;

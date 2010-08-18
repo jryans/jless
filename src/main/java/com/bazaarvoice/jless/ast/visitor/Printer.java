@@ -1,10 +1,10 @@
 package com.bazaarvoice.jless.ast.visitor;
 
+import com.bazaarvoice.jless.ast.Node;
 import com.bazaarvoice.jless.ast.ExpressionNode;
 import com.bazaarvoice.jless.ast.ExpressionsNode;
 import com.bazaarvoice.jless.ast.LineBreakNode;
 import com.bazaarvoice.jless.ast.MultipleLineCommentNode;
-import com.bazaarvoice.jless.ast.Node;
 import com.bazaarvoice.jless.ast.PropertyNode;
 import com.bazaarvoice.jless.ast.RuleSetNode;
 import com.bazaarvoice.jless.ast.ScopeNode;
@@ -114,7 +114,7 @@ public class Printer extends InclusiveNodeVisitor {
 
     @Override
     public boolean visit(SelectorNode node) {
-        if (GraphUtils.getLastChild(node.getParent()) != node) {
+        if (GraphUtils.getLastChild((Node) node.getParent()) != node) {
             print(", ");
         }
         return true;

@@ -1,10 +1,10 @@
 package com.bazaarvoice.jless.parser;
 
+import com.bazaarvoice.jless.ast.Node;
 import com.bazaarvoice.jless.ast.ExpressionGroupNode;
 import com.bazaarvoice.jless.ast.ExpressionNode;
 import com.bazaarvoice.jless.ast.ExpressionsNode;
 import com.bazaarvoice.jless.ast.LineBreakNode;
-import com.bazaarvoice.jless.ast.Node;
 import com.bazaarvoice.jless.ast.PlaceholderNode;
 import com.bazaarvoice.jless.ast.PropertyNode;
 import com.bazaarvoice.jless.ast.RuleSetNode;
@@ -660,7 +660,7 @@ public class Parser extends BaseParser<Node> {
     /**
      * Find the instance of ScopeNode that is closest to the top of the stack.
      */
-    private ScopeNode getNearestScope() {
+    /*private ScopeNode getNearestScope() {
         for (int i = 0; i < getContext().getValueStack().size(); i++) {
             Node node = peek(i);
             if (node instanceof ScopeNode) {
@@ -669,7 +669,7 @@ public class Parser extends BaseParser<Node> {
         }
 
         throw new IllegalStateException("No scope node was found on the stack!");
-    }
+    }*/
 
     // ********** Debugging **********
 

@@ -4,10 +4,9 @@ import com.bazaarvoice.jless.ast.visitor.NodeVisitor;
 
 import java.util.ListIterator;
 
-public class SelectorNode extends Node {
+public class SelectorNode extends InternalNode {
 
     public SelectorNode() {
-        super();
     }
 
     public SelectorNode(Node child) {

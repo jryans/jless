@@ -16,13 +16,14 @@
 
 package com.bazaarvoice.jless.ast;
 
+import com.bazaarvoice.jless.ast.visitor.NodeVisitor;
 import com.google.common.base.Preconditions;
-import org.parboiled.trees.MutableTreeNode;
 import org.parboiled.trees.TreeUtils;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.ListIterator;
 import java.util.Stack;
 
 /**
@@ -32,38 +33,72 @@ import java.util.Stack;
  *
  * @param <T> the actual implementation type of this MutableTreeNodeImpl
  */
-public abstract class BaseTreeNode<T extends BaseTreeNode<T>> implements MutableTreeNode<T>, Cloneable {
+public abstract class InternalNode extends Node {
 
-    private List<T> _children = new ArrayList<T>();
-    private List<T> _childrenView = Collections.unmodifiableList(_children);
-    private T _parent;
+    private List<Node> _children = new ArrayList<Node>();
+    private List<Node> _childrenView = Collections.unmodifiableList(_children);
     private Stack<MutableChildIterator> _childIteratorStack = new Stack<MutableChildIterator>();
 
-    @Override
-    public T getParent() {
-        return _parent;
+    public InternalNode() {
+    }
+
+    public InternalNode(Node node) {
+        addChild(node);
     }
 
     @Override
-    public List<T> getChildren() {
+    public List<Node> getChildren() {
         return _childrenView;
     }
 
+    /*public <R extends T> List<R> getChildren(Class<R> clazz) {
+        List<R> filteredChildren = new ArrayList<R>();
+
+        for (T child : _childrenView) {
+            if (clazz.isInstance(child)) {
+                //noinspection unchecked
+                filteredChildren.add((R) child);
+            }
+        }
+
+        return filteredChildren;
+    }
+
+    public <R extends T> R getFirstChild(Class<R> clazz) {
+        for (T child : _childrenView) {
+            if (clazz.isInstance(child)) {
+                //noinspection unchecked
+                return (R) child;
+            }
+        }
+
+        return null;
+    }*/
+
     @Override
-    public void addChild(int index, T child) {
+    public boolean addChild(Node child) {
+        addChild(_children.size(), child);
+        return true;
+    }
+
+    @Override
+    public void addChild(int index, Node child) {
         Preconditions.checkElementIndex(index, _children.size() + 1);
 
+        // ignore empty nodes
+        if (child == null || !child.hasData()) {
+            return;
+        }
+
         // detach new child from old parent
-        if (child != null) {
-            if (child.getParent() == BaseTreeNode.this) return;
-            if (child.getParent() != null) {
-                TreeUtils.removeChild(child.getParent(), child);
-            }
+        if (child.getParent() == this) return;
+        if (child.getParent() != null) {
+            TreeUtils.removeChild(child.getParent(), child);
         }
 
         // attach new child
         _children.add(index, child);
-        setParent(child, BaseTreeNode.this);
+        child.setParent(this);
 
         // notify iterators
         for (MutableChildIterator it : _childIteratorStack) {
@@ -72,30 +107,35 @@ public abstract class BaseTreeNode<T extends BaseTreeNode<T>> implements Mutable
     }
 
     @Override
-    public void setChild(int index, T child) {
+    public void setChild(int index, Node child) {
         Preconditions.checkElementIndex(index, _children.size());
 
+        // ignore empty nodes
+        if (child == null || !child.hasData()) {
+            return;
+        }
+
         // detach old child
-        T old = _children.get(index);
+        Node old = _children.get(index);
         if (old == child) return;
-        setParent(old, null);
+        old.setParent(null);
 
         // detach new child from old parent
-        if (child != null && child.getParent() != BaseTreeNode.this) {
+        if (child.getParent() != this) {
             TreeUtils.removeChild(child.getParent(), child);
         }
 
         // attach new child
         _children.set(index, child);
-        setParent(child, BaseTreeNode.this);
+        child.setParent(this);
     }
 
     @Override
-    public T removeChild(int index) {
+    public Node removeChild(int index) {
         // remove and detach child
         Preconditions.checkElementIndex(index, _children.size());
-        T removed = _children.remove(index);
-        setParent(removed, null);
+        Node removed = _children.remove(index);
+        removed.setParent(null);
 
         // notify iterators
         for (MutableChildIterator it : _childIteratorStack) {
@@ -105,20 +145,13 @@ public abstract class BaseTreeNode<T extends BaseTreeNode<T>> implements Mutable
         return removed;
     }
 
-    @SuppressWarnings("unchecked")
-    private static <T extends BaseTreeNode<T>> void setParent(T node, BaseTreeNode<T> parent) {
-        if (node != null) {
-            ((BaseTreeNode) node)._parent = parent;
-        }
-    }
-
-    public RandomAccessListIterator<T> getLatestChildIterator() {
+    public RandomAccessListIterator<Node> getLatestChildIterator() {
         Preconditions.checkState(!_childIteratorStack.isEmpty(), "There are no child iterators.");
 
         return _childIteratorStack.peek();
     }
 
-    public RandomAccessListIterator<T> pushChildIterator() {
+    public RandomAccessListIterator<Node> pushChildIterator() {
         MutableChildIterator it = new MutableChildIterator();
 
         _childIteratorStack.push(it);
@@ -126,7 +159,7 @@ public abstract class BaseTreeNode<T extends BaseTreeNode<T>> implements Mutable
         return it;
     }
 
-    public RandomAccessListIterator<T> pushChildIterator(int startPosition) {
+    public RandomAccessListIterator<Node> pushChildIterator(int startPosition) {
         MutableChildIterator it = new MutableChildIterator(startPosition);
 
         _childIteratorStack.push(it);
@@ -138,36 +171,46 @@ public abstract class BaseTreeNode<T extends BaseTreeNode<T>> implements Mutable
         _childIteratorStack.pop();
     }
 
+    @Override
+    public boolean accept(NodeVisitor visitor) {
+        if (visitor.visitEnter(this)) {
+            ListIterator<Node> it = pushChildIterator();
+            while (it.hasNext()) {
+                Node child = it.next();
+                if (!child.accept(visitor)) {
+                    break;
+                }
+            }
+            popChildIterator();
+        }
+
+        return visitor.visit(this);
+    }
+
     /**
      * Clones fields and child nodes, but ignores the iterator stack (since the new nodes are not attached
      * to the tree and so should not be part of any kind of iteration).
      */
     @SuppressWarnings ({"unchecked", "CloneDoesntDeclareCloneNotSupportedException"})
     @Override
-    public T clone() {
-        T node;
-        try {
-            // Clone any primitive fields
-            node = (T) super.clone();
-        } catch (CloneNotSupportedException e) {
-            throw new IllegalStateException("Object is marked Cloneable.");
-        }
+    public InternalNode clone() {
+        // Clone any primitive fields
+        InternalNode node = (InternalNode) super.clone();
 
         // Reset internal state
-        node._children = new ArrayList<T>();
+        node._children = new ArrayList<Node>();
         node._childrenView = Collections.unmodifiableList(node._children);
         node._childIteratorStack = new Stack<MutableChildIterator>();
-        node._parent = null;
 
         // Copy all children
-        for (T child : _children) {
+        for (Node child : _children) {
             TreeUtils.addChild(node, child.clone());
         }
 
         return node;
     }
 
-    private class MutableChildIterator implements RandomAccessListIterator<T> {
+    private class MutableChildIterator implements RandomAccessListIterator<Node> {
 
         private int _cursor;
         private int _lastReturned = -1;
@@ -186,7 +229,7 @@ public abstract class BaseTreeNode<T extends BaseTreeNode<T>> implements Mutable
         }
 
         @Override
-        public T next() {
+        public Node next() {
             Preconditions.checkPositionIndex(_cursor + 1, _children.size());
 
             _lastReturned = _cursor;
@@ -195,7 +238,7 @@ public abstract class BaseTreeNode<T extends BaseTreeNode<T>> implements Mutable
         }
 
         @Override
-        public T peekNext() {
+        public Node peekNext() {
             return _children.get(_cursor);
         }
 
@@ -205,7 +248,7 @@ public abstract class BaseTreeNode<T extends BaseTreeNode<T>> implements Mutable
         }
 
         @Override
-        public T previous() {
+        public Node previous() {
             Preconditions.checkPositionIndex(_cursor - 1, _children.size());
 
             _lastReturned = --_cursor;
@@ -214,7 +257,7 @@ public abstract class BaseTreeNode<T extends BaseTreeNode<T>> implements Mutable
         }
 
         @Override
-        public T peekPrevious() {
+        public Node peekPrevious() {
             return _children.get(_cursor - 1);
         }
 
@@ -234,7 +277,7 @@ public abstract class BaseTreeNode<T extends BaseTreeNode<T>> implements Mutable
         }
 
         @Override
-        public T remove(int index) {
+        public Node remove(int index) {
             return removeChild(index);
         }
 
@@ -247,26 +290,26 @@ public abstract class BaseTreeNode<T extends BaseTreeNode<T>> implements Mutable
         }
 
         @Override
-        public void set(T child) {
+        public void set(Node child) {
             setChild(_lastReturned, child);
         }
 
         @Override
-        public void set(int index, T child) {
+        public void set(int index, Node child) {
             setChild(index, child);
         }
 
         @Override
-        public void add(T child) {
+        public void add(Node child) {
             addChild(_cursor, child);
         }
 
         @Override
-        public void add(int index, T child) {
+        public void add(int index, Node child) {
             addChild(index, child);
-        }
+        }   
 
-        private void addEvent(int index, T child) {
+        private void addEvent(int index, Node child) {
             // update cursor
             if (index <= _cursor) {
                 _cursor++;

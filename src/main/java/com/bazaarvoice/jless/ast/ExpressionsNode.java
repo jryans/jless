@@ -4,7 +4,7 @@ import com.bazaarvoice.jless.ast.visitor.NodeVisitor;
 
 import java.util.ListIterator;
 
-public class ExpressionsNode extends Node {
+public class ExpressionsNode extends InternalNode {
 
     public ExpressionsNode(Node child) {
         super(child);

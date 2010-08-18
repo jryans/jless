@@ -4,7 +4,7 @@ import com.bazaarvoice.jless.ast.visitor.NodeVisitor;
 
 import java.util.ListIterator;
 
-public class ExpressionGroupNode extends Node {
+public class ExpressionGroupNode extends InternalNode {
 
     @Override
     public boolean accept(NodeVisitor visitor) {

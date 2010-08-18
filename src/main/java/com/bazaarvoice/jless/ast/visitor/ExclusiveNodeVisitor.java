@@ -1,5 +1,6 @@
 package com.bazaarvoice.jless.ast.visitor;
 
+import com.bazaarvoice.jless.ast.Node;
 import com.bazaarvoice.jless.ast.ExpressionGroupNode;
 import com.bazaarvoice.jless.ast.ExpressionNode;
 import com.bazaarvoice.jless.ast.ExpressionsNode;
@@ -23,7 +24,7 @@ public class ExclusiveNodeVisitor implements NodeVisitor {
     // Base visit methods
     // These eliminate the need for visit methods that no visitor uses
 
-  /*  @Override
+    @Override
     public boolean visitEnter(Node node) {
         return false;
     }
@@ -31,7 +32,7 @@ public class ExclusiveNodeVisitor implements NodeVisitor {
     @Override
     public boolean visit(Node node) {
         return false;
-    }*/
+    }
 
     // Concrete visit methods
 

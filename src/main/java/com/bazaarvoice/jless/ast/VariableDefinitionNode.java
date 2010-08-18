@@ -4,7 +4,7 @@ import com.bazaarvoice.jless.ast.visitor.NodeVisitor;
 
 import java.util.ListIterator;
 
-public class VariableDefinitionNode extends Node {
+public class VariableDefinitionNode extends InternalNode {
 
     private String _name;
 

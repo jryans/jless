@@ -6,7 +6,7 @@ import java.util.HashMap;
 import java.util.ListIterator;
 import java.util.Map;
 
-public class ScopeNode extends Node {
+public class ScopeNode extends InternalNode {
 
     private Map<String, ExpressionGroupNode> _variables = new HashMap<String, ExpressionGroupNode>();
 
