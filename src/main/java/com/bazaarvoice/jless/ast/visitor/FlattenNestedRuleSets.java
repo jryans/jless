@@ -45,7 +45,7 @@ public class FlattenNestedRuleSets extends InclusiveNodeVisitor {
             MutableTreeUtils.addSiblingAfter(parentRuleSet, surroundWithContext(node));
 
             // If the parent rule set's scope is now empty, mark it as invisible
-            parentRuleSet.accept(new InclusiveNodeVisitor() {
+            parentRuleSet.traverse(new InclusiveNodeVisitor() {
                 @Override
                 public boolean enter(SelectorGroupNode node) {
                     return false; // Not interested in selectors
@@ -108,7 +108,7 @@ public class FlattenNestedRuleSets extends InclusiveNodeVisitor {
         _selectorWorkingSet = new ArrayList<Node>();
 
         // Visit the parent rule set and clone its selector nodes
-        _ruleSetStack.get(0).accept(new InclusiveNodeVisitor() {
+        _ruleSetStack.get(0).traverse(new InclusiveNodeVisitor() {
             @Override
             public boolean enter(ScopeNode node) {
                 return false; // Don't need to touch the parent's scope
@@ -162,7 +162,7 @@ public class FlattenNestedRuleSets extends InclusiveNodeVisitor {
             }
         };
 
-        _ruleSetStack.get(0).accept(contextPrinter);
+        _ruleSetStack.get(0).traverse(contextPrinter);
         String parentSelector = contextPrinter.toString();
 
         return new Node[] {

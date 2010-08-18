@@ -55,30 +55,6 @@ public abstract class InternalNode extends Node {
         return _childrenView;
     }
 
-    /*public <R extends T> List<R> getChildren(Class<R> clazz) {
-        List<R> filteredChildren = new ArrayList<R>();
-
-        for (T child : _childrenView) {
-            if (clazz.isInstance(child)) {
-                //noinspection unchecked
-                filteredChildren.add((R) child);
-            }
-        }
-
-        return filteredChildren;
-    }
-
-    public <R extends T> R getFirstChild(Class<R> clazz) {
-        for (T child : _childrenView) {
-            if (clazz.isInstance(child)) {
-                //noinspection unchecked
-                return (R) child;
-            }
-        }
-
-        return null;
-    }*/
-
     @Override
     public boolean addChild(Node child) {
         addChild(_children.size(), child);
@@ -95,7 +71,7 @@ public abstract class InternalNode extends Node {
         }
 
         // check addition visitor
-        if (!_additionVisitor.add(child)) {
+        if (!child.add(_additionVisitor)) {
             return;
         }
 
@@ -181,12 +157,12 @@ public abstract class InternalNode extends Node {
     }
 
     @Override
-    public boolean accept(NodeTraversalVisitor visitor) {
+    public boolean traverse(NodeTraversalVisitor visitor) {
         if (visitor.enter(this)) {
             ListIterator<Node> it = pushChildIterator();
             while (it.hasNext()) {
                 Node child = it.next();
-                if (!child.accept(visitor)) {
+                if (!child.traverse(visitor)) {
                     break;
                 }
             }

@@ -108,7 +108,7 @@ public class ParsingTest {
      */
     public static String printResult(Node root) {
         Printer p = new Printer();
-        root.accept(p);
+        root.traverse(p);
         return p.toString();
     }
     

@@ -9,13 +9,13 @@ import org.parboiled.support.ParsingResult;
 
 public class LessTranslator {
 
-    private static Parser _parser = Parboiled.createParser(Parser.class);
+    private static Parser _parser = Parboiled.createParser(Parser.class, false);
 
     public static ParsingResult<Node> parse(String input) {
         return ReportingParseRunner.run(_parser.Document(), input);
     }
 
     public static void translate(Node root) {
-        root.accept(new FlattenNestedRuleSets());
+        root.traverse(new FlattenNestedRuleSets());
     }
 }

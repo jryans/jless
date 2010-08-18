@@ -1,10 +1,10 @@
 package com.bazaarvoice.jless.parser;
 
 import com.bazaarvoice.jless.ast.node.ExpressionGroupNode;
-import com.bazaarvoice.jless.ast.node.Node;
 import com.bazaarvoice.jless.ast.node.ExpressionNode;
 import com.bazaarvoice.jless.ast.node.ExpressionsNode;
 import com.bazaarvoice.jless.ast.node.LineBreakNode;
+import com.bazaarvoice.jless.ast.node.Node;
 import com.bazaarvoice.jless.ast.node.PlaceholderNode;
 import com.bazaarvoice.jless.ast.node.PropertyNode;
 import com.bazaarvoice.jless.ast.node.RuleSetNode;
@@ -14,6 +14,8 @@ import com.bazaarvoice.jless.ast.node.SelectorNode;
 import com.bazaarvoice.jless.ast.node.SelectorSegmentNode;
 import com.bazaarvoice.jless.ast.node.SimpleNode;
 import com.bazaarvoice.jless.ast.node.VariableDefinitionNode;
+import com.bazaarvoice.jless.exception.UndefinedVariableException;
+import org.parboiled.Action;
 import org.parboiled.BaseParser;
 import org.parboiled.Context;
 import org.parboiled.Rule;
@@ -52,7 +54,7 @@ public class Parser extends BaseParser<Node> {
         _parserTranslationEnabled = parserTranslationEnabled;
     }
 
-    public boolean isParserTranslationEnabled() {
+    protected boolean isParserTranslationEnabled() {
         return _parserTranslationEnabled;
     }
 
@@ -66,7 +68,7 @@ public class Parser extends BaseParser<Node> {
      * This is the high-level rule at some scope (either the root document or within a rule set / mixin).
      * Future: Imports
      */
-    public Rule Scope() {
+    Rule Scope() {
         return Sequence(
                 push(new ScopeNode()),
                 ZeroOrMore(
@@ -458,12 +460,13 @@ public class Parser extends BaseParser<Node> {
     /**
      *
      */
+    @MemoMismatches
     Rule VariableReference() {
         return Sequence(
                 Variable(),
-               /* _parserTranslationEnabled
-                        ? push(new SimpleNode())
-                        : */push(new SimpleNode(match()))
+                debug(getContext()),
+//                isParserTranslationEnabled() ? push(getNearestScope().resolveVariable(match())) : push(new SimpleNode(match()))
+                ACTION(resolveVariable(match()).run(getContext()))
         );
     }
 
@@ -655,12 +658,41 @@ public class Parser extends BaseParser<Node> {
         return FirstOf(AnyOf("-_"), Alphanumeric());
     }
 
+    // ********** Translation Actions **********
+    Action<Node> resolveVariable(final String name) {
+        return new Action<Node>() {
+            @Override
+            public boolean run(Context context) {
+                if (!isParserTranslationEnabled()) {
+                    return push(new SimpleNode(name));
+                }
+
+                for (int i = 0; i < getContext().getValueStack().size(); i++) {
+                    Node node = peek(i);
+                    if (!(node instanceof ScopeNode)) {
+                        continue;
+                    }
+
+                    ScopeNode scope = (ScopeNode) node;
+                    ExpressionGroupNode value = scope.resolveVariable(name);
+
+                    if (value != null) {
+                        return push(value);
+                    }
+                }
+
+                // Record error location
+                throw new UndefinedVariableException(name);
+            }
+        };
+    }
+
     // ********** Stack Traversal **********
 
     /**
      * Find the instance of ScopeNode that is closest to the top of the stack.
      */
-    /*private ScopeNode getNearestScope() {
+    ScopeNode getNearestScope() {
         for (int i = 0; i < getContext().getValueStack().size(); i++) {
             Node node = peek(i);
             if (node instanceof ScopeNode) {
@@ -669,7 +701,7 @@ public class Parser extends BaseParser<Node> {
         }
 
         throw new IllegalStateException("No scope node was found on the stack!");
-    }*/
+    }
 
     // ********** Debugging **********
 

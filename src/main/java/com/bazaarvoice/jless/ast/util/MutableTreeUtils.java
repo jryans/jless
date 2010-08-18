@@ -1,9 +1,12 @@
 package com.bazaarvoice.jless.ast.util;
 
-import com.bazaarvoice.jless.ast.node.Node;
 import com.bazaarvoice.jless.ast.node.InternalNode;
+import com.bazaarvoice.jless.ast.node.Node;
 import com.bazaarvoice.jless.ast.node.ScopeNode;
 import com.google.common.base.Preconditions;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * TODO: Fix naming scheme
@@ -54,10 +57,34 @@ public final class MutableTreeUtils {
         return node.getParent().getLatestChildIterator().hasNext();
     }
 
-    public static ScopeNode getNearestScope(Node node) {
+    public static ScopeNode getParentScope(Node node) {
         for (Node current = node.getParent(); current != null; current = node.getParent()) {
             if (current instanceof ScopeNode) {
                 return (ScopeNode) current;
+            }
+        }
+
+        return null;
+    }
+
+    public static <C extends Node> List<C> getChildren(InternalNode parent, Class<C> clazz) {
+        List<C> filteredChildren = new ArrayList<C>();
+
+        for (Node child : parent.getChildren()) {
+            if (clazz.isInstance(child)) {
+                //noinspection unchecked
+                filteredChildren.add((C) child);
+            }
+        }
+
+        return filteredChildren;
+    }
+
+    public static <C extends Node> C getFirstChild(InternalNode parent, Class<C> clazz) {
+        for (Node child : parent.getChildren()) {
+            if (clazz.isInstance(child)) {
+                //noinspection unchecked
+                return (C) child;
             }
         }
 

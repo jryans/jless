@@ -14,7 +14,7 @@ public class SpacingNode extends SimpleNode {
     }
 
     @Override
-    public boolean accept(NodeTraversalVisitor visitor) {
+    public boolean traverse(NodeTraversalVisitor visitor) {
         return visitor.visit(this);
     }
 }

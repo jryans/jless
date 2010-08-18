@@ -1,5 +1,6 @@
 package com.bazaarvoice.jless.ast.node;
 
+import com.bazaarvoice.jless.ast.visitor.NodeAdditionVisitor;
 import com.bazaarvoice.jless.ast.visitor.NodeTraversalVisitor;
 
 import java.util.ListIterator;
@@ -17,12 +18,17 @@ public class VariableDefinitionNode extends InternalNode {
     }
 
     @Override
-    public boolean accept(NodeTraversalVisitor visitor) {
+    public boolean add(NodeAdditionVisitor visitor) {
+        return visitor.add(this);
+    }
+
+    @Override
+    public boolean traverse(NodeTraversalVisitor visitor) {
         if (visitor.enter(this)) {
             ListIterator<Node> it = pushChildIterator();
             while (it.hasNext()) {
                 Node child = it.next();
-                if (!child.accept(visitor)) {
+                if (!child.traverse(visitor)) {
                     break;
                 }
             }
