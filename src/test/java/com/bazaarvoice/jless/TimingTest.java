@@ -1,6 +1,9 @@
 package com.bazaarvoice.jless;
 
 import com.bazaarvoice.jless.ast.node.Node;
+import com.bazaarvoice.jless.parser.Parser;
+import org.parboiled.Parboiled;
+import org.parboiled.ReportingParseRunner;
 import org.parboiled.support.ParsingResult;
 import org.testng.annotations.Test;
 
@@ -8,7 +11,7 @@ import org.testng.annotations.Test;
 public class TimingTest extends ParsingTest {
 
     private static final int RUNS_PER_TIMED_SET = 20;
-    private static final String[] CACHE_FILES = {"bazaarvoice", "bazaarvoiceDisplayShared", "css", "css-3", "strings", "whitespace"};
+    private static final String[] CACHE_FILES = {/*"bazaarvoice", */"bazaarvoiceDisplayShared", "css", "css-3", "strings", "whitespace"};
 //    private static final ProfilingParseRunner<BaseTreeNode> _sParseRunner = new ProfilingParseRunner<BaseTreeNode>(Parboiled.createParser(Parser.class).Document());
 
     private float _currentTime;
@@ -98,9 +101,10 @@ public class TimingTest extends ParsingTest {
     protected ParsingResult<Node> runParser(String lessInput) {
         long startTime = System.nanoTime();
 //        ParsingResult<BaseTreeNode> result = _sParseRunner.run(lessInput);
-        ParsingResult<Node> result = super.runParser(lessInput);
+//        ParsingResult<Node> result = super.runParser(lessInput);
+        ParsingResult<Node> result = ReportingParseRunner.run(Parboiled.createParser(Parser.class, true).Document(), lessInput);
         _currentTime = System.nanoTime() - startTime;
-         _currentTime /= 1000000;
+        _currentTime /= 1000000;
         return result;
     }
 

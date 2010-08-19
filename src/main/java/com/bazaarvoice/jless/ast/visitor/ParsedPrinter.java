@@ -1,6 +1,7 @@
 package com.bazaarvoice.jless.ast.visitor;
 
 import com.bazaarvoice.jless.ast.node.ExpressionsNode;
+import com.bazaarvoice.jless.ast.node.FunctionNode;
 import com.bazaarvoice.jless.ast.node.Node;
 import com.bazaarvoice.jless.ast.node.ExpressionNode;
 import com.bazaarvoice.jless.ast.node.LineBreakNode;
@@ -34,7 +35,7 @@ public class ParsedPrinter extends InclusiveNodeVisitor {
         if (MutableTreeUtils.parentHasNext(node)) {
             print(' ');
         }
-        return true;
+        return super.visit(node);
     }
 
     @Override
@@ -42,7 +43,19 @@ public class ParsedPrinter extends InclusiveNodeVisitor {
         if (MutableTreeUtils.parentHasNext(node)) {
             print(", ");
         }
-        return true;
+        return super.visit(node);
+    }
+
+    @Override
+    public boolean enter(FunctionNode node) {
+        print(node.getName()).print('(');
+        return super.enter(node);
+    }
+
+    @Override
+    public boolean visit(FunctionNode node) {
+        print(')');
+        return super.visit(node);
     }
 
     @Override
@@ -53,19 +66,19 @@ public class ParsedPrinter extends InclusiveNodeVisitor {
         if (node.getLineBreaks() > 0) {
             printIndent();
         }
-        return true;
+        return super.visit(node);
     }
 
     @Override
     public boolean visit(MultipleLineCommentNode node) {
         print("/*").print(node.getValue()).print("*/");
-        return true;
+        return super.visit(node);
     }
 
     @Override
     public boolean enter(PropertyNode node) {
         print(node.getName()).print(": ");
-        return true;
+        return super.enter(node);
     }
 
     @Override
@@ -74,7 +87,7 @@ public class ParsedPrinter extends InclusiveNodeVisitor {
         if (node.getParent().getChildren().size() > 1 && MutableTreeUtils.parentHasNext(node)) {
             print(' ');
         }
-        return true;
+        return super.visit(node);
     }
 
     @Override
@@ -94,7 +107,7 @@ public class ParsedPrinter extends InclusiveNodeVisitor {
 //                print(' ');
             }
         }
-        return true;
+        return super.enter(node);
     }
 
     @Override
@@ -109,7 +122,7 @@ public class ParsedPrinter extends InclusiveNodeVisitor {
             }
             deleteIndent().print('}');
         }
-        return true;
+        return super.visit(node);
     }
 
     @Override
@@ -117,37 +130,37 @@ public class ParsedPrinter extends InclusiveNodeVisitor {
         if (GraphUtils.getLastChild((Node) node.getParent()) != node) {
             print(", ");
         }
-        return true;
+        return super.visit(node);
     }
 
     @Override
     public boolean visit(SelectorGroupNode node) {
         print(' ');
-        return true;
+        return super.visit(node);
     }
 
     @Override
     public boolean visit(SelectorSegmentNode node) {
         print(node.getCombinator()).print(node.getSimpleSelector());
-        return true;
+        return super.visit(node);
     }
 
     @Override
     public boolean visit(SimpleNode node) {
         print(node.getValue());
-        return true;
+        return super.visit(node);
     }
 
     @Override
     public boolean visit(SingleLineCommentNode node) {
         print("//").print(node.getValue()).print('\n');
-        return true;
+        return super.visit(node);
     }
 
     @Override
     public boolean enter(VariableDefinitionNode node) {
         print(node.getName()).print(": ");
-        return true;
+        return super.enter(node);
     }
 
     @Override
@@ -156,7 +169,7 @@ public class ParsedPrinter extends InclusiveNodeVisitor {
         if (node.getParent().getChildren().size() > 1 && MutableTreeUtils.parentHasNext(node)) {
             print(' ');
         }
-        return true;
+        return super.visit(node);
     }
 
     // Printing methods

@@ -24,8 +24,11 @@ public class ScopeNode extends InternalNode {
              */
             @Override
             public boolean add(RuleSetNode node) {
-                SelectorGroupNode selectorGroup = MutableTreeUtils.getFirstChild(node, SelectorGroupNode.class);
-                _selectorGroupToRuleSetMap.put(selectorGroup.toString(), node);
+                String selectorGroup = MutableTreeUtils.getFirstChild(node, SelectorGroupNode.class).toString();
+                // Mixins lock on first definition
+                if (!_selectorGroupToRuleSetMap.containsKey(selectorGroup)) {
+                    _selectorGroupToRuleSetMap.put(selectorGroup, node);
+                }
                 return super.add(node);
             }
 
@@ -43,14 +46,19 @@ public class ScopeNode extends InternalNode {
              */
             @Override
             public boolean add(VariableDefinitionNode node) {
-                // "Variables" lock on first definition
                 String name = node.getName();
+                // "Variables" lock on first definition
                 if (!_variableNameToValueMap.containsKey(name)) {
                     _variableNameToValueMap.put(name, MutableTreeUtils.getFirstChild(node, ExpressionGroupNode.class));
                 }
                 return super.add(node);
             }
         };
+    }
+
+    public ScopeNode(Node node) {
+        this();
+        addChild(node);
     }
 
     public ExpressionGroupNode getVariable(String name) {

@@ -7,6 +7,14 @@ import java.util.ListIterator;
 
 public class ExpressionGroupNode extends InternalNode {
 
+    public ExpressionGroupNode() {
+        super();
+    }
+
+    public ExpressionGroupNode(Node node) {
+        super(node);
+    }
+
     @Override
     public boolean add(NodeAdditionVisitor visitor) {
         return visitor.add(this);

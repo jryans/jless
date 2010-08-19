@@ -1,6 +1,8 @@
 package com.bazaarvoice.jless;
 
 import com.bazaarvoice.jless.ast.node.Node;
+import com.bazaarvoice.jless.ast.visitor.ParsedPrinter;
+import com.bazaarvoice.jless.ast.visitor.TranslatedPrinter;
 import com.bazaarvoice.jless.parser.Parser;
 import difflib.DiffUtils;
 import difflib.Patch;
@@ -76,8 +78,8 @@ public class TranslatedDiffTest extends ParsingTest {
         return ".css";
     }
 
-    /*@Override
+    @Override
     protected ParsedPrinter createPrinter() {
         return new TranslatedPrinter();
-    }*/
+    }
 }

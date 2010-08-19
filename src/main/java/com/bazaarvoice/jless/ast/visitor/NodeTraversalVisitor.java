@@ -1,11 +1,12 @@
 package com.bazaarvoice.jless.ast.visitor;
 
-import com.bazaarvoice.jless.ast.node.Node;
 import com.bazaarvoice.jless.ast.node.ExpressionGroupNode;
 import com.bazaarvoice.jless.ast.node.ExpressionNode;
 import com.bazaarvoice.jless.ast.node.ExpressionsNode;
+import com.bazaarvoice.jless.ast.node.FunctionNode;
 import com.bazaarvoice.jless.ast.node.LineBreakNode;
 import com.bazaarvoice.jless.ast.node.MultipleLineCommentNode;
+import com.bazaarvoice.jless.ast.node.Node;
 import com.bazaarvoice.jless.ast.node.PropertyNode;
 import com.bazaarvoice.jless.ast.node.RuleSetNode;
 import com.bazaarvoice.jless.ast.node.ScopeNode;
@@ -37,6 +38,10 @@ public interface NodeTraversalVisitor {
     boolean visit(ExpressionNode node);
 
     boolean visit(ExpressionsNode node);
+
+    boolean enter(FunctionNode node);
+
+    boolean visit(FunctionNode node);
 
     boolean visit(LineBreakNode node);
 

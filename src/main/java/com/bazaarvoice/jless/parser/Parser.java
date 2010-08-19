@@ -1,8 +1,10 @@
 package com.bazaarvoice.jless.parser;
 
+import com.bazaarvoice.jless.ast.node.ArgumentsNode;
 import com.bazaarvoice.jless.ast.node.ExpressionGroupNode;
 import com.bazaarvoice.jless.ast.node.ExpressionNode;
 import com.bazaarvoice.jless.ast.node.ExpressionsNode;
+import com.bazaarvoice.jless.ast.node.FunctionNode;
 import com.bazaarvoice.jless.ast.node.LineBreakNode;
 import com.bazaarvoice.jless.ast.node.Node;
 import com.bazaarvoice.jless.ast.node.PlaceholderNode;
@@ -16,6 +18,7 @@ import com.bazaarvoice.jless.ast.node.SimpleNode;
 import com.bazaarvoice.jless.ast.node.VariableDefinitionNode;
 import com.bazaarvoice.jless.ast.util.MutableTreeUtils;
 import com.bazaarvoice.jless.ast.visitor.InclusiveNodeVisitor;
+import com.bazaarvoice.jless.exception.UndefinedMixinException;
 import com.bazaarvoice.jless.exception.UndefinedVariableException;
 import org.parboiled.Action;
 import org.parboiled.BaseParser;
@@ -79,7 +82,7 @@ public class Parser extends BaseParser<Node> {
                                 MixinReference(),
                                 Sequence(Sp1(), push(new LineBreakNode(match())))
                         ),
-                        debug(getContext()),
+//                        debug(getContext()),
                         peek(1).addChild(pop())//,
 //                        debug(getContext())
                 )
@@ -125,16 +128,17 @@ public class Parser extends BaseParser<Node> {
                         // Standard CSS rule set
                         Sequence(
                                 SelectorGroup(), push(new RuleSetNode(pop())),
-                                '{'
+                                '{',
+                                Scope(), peek(1).addChild(pop()), Ws0()
                         ),
                         // Mixin rule set, with possible arguments
                         Sequence(
                                 ClassSelectorGroup(), push(new RuleSetNode(pop())), Ws0(),
                                 Parameters(), Ws0(),
-                                '{'
+                                '{',
+                                Scope(), peek(1).addChild(pop()), peek(1).addChild(pop()), Ws0()
                         )
                 ),
-                Scope(), peek(1).addChild(pop()), Ws0(),
                 '}', Ws0(), peek().addChild(new LineBreakNode(match()))
         );
     }
@@ -144,9 +148,11 @@ public class Parser extends BaseParser<Node> {
      */
     Rule Parameters() {
         return Sequence(
-                '(', Parameter(), Ws0(),
+                '(',
+                Parameter(), push(new ScopeNode(pop())), Ws0(),
                 ZeroOrMore(
-                        ',', Ws0(), Parameter()
+                        ',', Ws0(),
+                        Parameter(), peek(1).addChild(pop())
                 ),
                 ')'
         );
@@ -154,9 +160,15 @@ public class Parser extends BaseParser<Node> {
 
     /**
      * Variable Ws0 ':' Ws0 Expressions
+     *
+     * TODO: Absorb ExpressionsGroupNode
      */
     Rule Parameter() {
-        return Sequence(Variable(), Ws0(), ':', Ws0(), Expressions(), drop());
+        return Sequence(
+                Variable(), push(new VariableDefinitionNode(match())), Ws0(),
+                ':', Ws0(),
+                Expressions(), peek(1).addChild(new ExpressionGroupNode(pop()))
+        );
     }
 
     /**
@@ -165,15 +177,17 @@ public class Parser extends BaseParser<Node> {
      * TODO: Capture whitespace?
      * TODO: Mixin name validation?
      */
+    @MemoMismatches
     Rule MixinReference() {
         return FirstOf(
                 // No arguments, reference an existing rule set's properties
                 Sequence(
-                        SelectorGroup(), ';', Ws0(),
-                        ACTION(resolveMixinReference(pop().toString()).run(getContext()))
+                        SelectorGroup(), ';',
+                        ACTION(resolveMixinReference(pop().toString()).run(getContext())),
+                        Ws0(), peek().addChild(new LineBreakNode(match()))
                 ),
                 // Call a mixin, passing along some arguments
-                Sequence(Class(), Arguments(), Ws0(), ';', Ws0(), push(new PlaceholderNode()))
+                Sequence(Class(), Arguments(), drop(), Ws0(), ';', Ws0(), push(new PlaceholderNode()))
         );
     }
 
@@ -411,8 +425,8 @@ public class Parser extends BaseParser<Node> {
      */
     Rule Function() {
         return Sequence(
-                OneOrMore(FirstOf(AnyOf("-_"), Alpha())),
-                Arguments()
+                OneOrMore(FirstOf(AnyOf("-_"), Alpha())), push(new FunctionNode(match())),
+                Arguments(), peek(1).addChild(pop())
         );
     }
 
@@ -423,16 +437,17 @@ public class Parser extends BaseParser<Node> {
         return FirstOf(
                 Sequence(
                         '(', Ws0(),
-                        Expressions(), drop(), //push(new ArgumentsNode(pop())),
+                        debug(getContext()),
+                        Expressions(), debug(getContext()), push(new ArgumentsNode(pop())),
                         Ws0(),
                         ZeroOrMore(
                                 ',', Ws0(),
-                                Expressions(), drop(), //peek(1).addChild(pop()),
+                                Expressions(), peek(1).addChild(pop()),
                                 Ws0()
                         ),
                         ')'
                 ),
-                Sequence('(', Ws0(), ')')//, push(null))
+                Sequence('(', Ws0(), ')', push(new ArgumentsNode()))
         );
     }
 
@@ -446,17 +461,12 @@ public class Parser extends BaseParser<Node> {
      */
     Rule Value() {
         return FirstOf(
-                Sequence(
-                        FirstOf(
-                                Keyword(),
-                                Literal(),
-                                URL(),
-                                AlphaFilter(),
-                                Function(),
-                                Font()
-                        ),
-                        push(new SimpleNode(match()))
-                ),
+                Keyword(),
+                Literal(),
+                URL(),
+                AlphaFilter(),
+                Function(),
+                Font(),
                 VariableReference()
         );
     }
@@ -479,12 +489,15 @@ public class Parser extends BaseParser<Node> {
      */
     Rule URL() {
         return Sequence(
-                "url(",
-                FirstOf(
-                        String(),
-                        OneOrMore(FirstOf(AnyOf("-_%$/.&=:;#+?"), Alphanumeric()))
+                Sequence(
+                        "url(",
+                        FirstOf(
+                                String(),
+                                OneOrMore(FirstOf(AnyOf("-_%$/.&=:;#+?"), Alphanumeric()))
+                        ),
+                        ')'
                 ),
-                ')'
+                push(new SimpleNode(match()))
         );
     }
 
@@ -492,7 +505,10 @@ public class Parser extends BaseParser<Node> {
      * 'alpha(opacity=' Digit1 ' )
      */
     Rule AlphaFilter() {
-        return Sequence("alpha(opacity=", Digit1(), ')');
+        return Sequence(
+                Sequence("alpha(opacity=", Digit1(), ')'),
+                push(new SimpleNode(match()))
+        );
     }
 
     /**
@@ -501,23 +517,32 @@ public class Parser extends BaseParser<Node> {
      * Ex: blue, small, normal
      */
     Rule Keyword() {
-        return Sequence(OneOrMore(FirstOf('-', Alpha())), TestNot(Nd()));
+        return Sequence(
+                Sequence(OneOrMore(FirstOf('-', Alpha())), TestNot(Nd())),
+                push(new SimpleNode(match()))
+        );
     }
 
     /**
      * Tokens that don't need to evaluated
      */
     Rule Literal() {
-        return FirstOf(Color(), MultiDimension(), Dimension(), String());
+        return Sequence(
+                FirstOf(Color(), MultiDimension(), Dimension(), String()),
+                push(new SimpleNode(match()))
+        );
     }
 
     /**
      * Alpha [-Alphanumeric]* !Nd / String
      */
     Rule Font() {
-        return FirstOf(
-                Sequence(Alpha(), ZeroOrMore(FirstOf('-', Alphanumeric())), TestNot(Nd())),
-                String()
+        return Sequence(
+                FirstOf(
+                        Sequence(Alpha(), ZeroOrMore(FirstOf('-', Alphanumeric())), TestNot(Nd())),
+                        String()
+                ),
+                push(new SimpleNode(match()))
         );
     }
 
@@ -576,10 +601,17 @@ public class Parser extends BaseParser<Node> {
      * '#' RGB / (('hsl' / 'rgb') 'a'?) Arguments
      */
     Rule Color() {
-        return FirstOf(
-                Sequence('#', RGB()),
-                Sequence(FirstOf("hsl", "rgb"), Optional('a'), Arguments())
-        );
+        return /*FirstOf(
+                Sequence(*/
+                        Sequence('#', RGB())/*,
+                        push(new SimpleNode(match()))
+                ),
+                Sequence(
+                        Sequence(FirstOf("hsl", "rgb"), Optional('a')),
+                        push(new FunctionNode())
+                        Arguments()
+                )
+        )*/;
     }
 
     /**
@@ -692,14 +724,17 @@ public class Parser extends BaseParser<Node> {
                         }
                     });
 
-                    // Mark original rule set as hidden once it has been referenced as a mixin
-//                    ruleSet.setVisible(false);
+                    // TODO: If original rule set is still connected to the tree, swap it out for a LineBreakNode to hide it in the output
+                    /*InternalNode ruleSetParent = ruleSet.getParent();
+                    if (ruleSetParent != null) {
+
+                    }*/
 
                     return push(ruleSetScope);
                 }
 
                 // Record error location
-                throw new UndefinedVariableException(selectorGroup);
+                throw new UndefinedMixinException(selectorGroup);
             }
         };
     }

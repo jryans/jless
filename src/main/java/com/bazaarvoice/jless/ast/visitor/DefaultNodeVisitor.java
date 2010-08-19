@@ -3,6 +3,7 @@ package com.bazaarvoice.jless.ast.visitor;
 import com.bazaarvoice.jless.ast.node.ExpressionGroupNode;
 import com.bazaarvoice.jless.ast.node.ExpressionNode;
 import com.bazaarvoice.jless.ast.node.ExpressionsNode;
+import com.bazaarvoice.jless.ast.node.FunctionNode;
 import com.bazaarvoice.jless.ast.node.LineBreakNode;
 import com.bazaarvoice.jless.ast.node.MultipleLineCommentNode;
 import com.bazaarvoice.jless.ast.node.Node;
@@ -77,6 +78,16 @@ public abstract class DefaultNodeVisitor implements NodeAdditionVisitor, NodeTra
 
     @Override
     public boolean visit(ExpressionsNode node) {
+        return defaultValue();
+    }
+
+    @Override
+    public boolean enter(FunctionNode node) {
+        return defaultValue();
+    }
+
+    @Override
+    public boolean visit(FunctionNode node) {
         return defaultValue();
     }
 
