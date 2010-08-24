@@ -50,11 +50,12 @@ public final class MutableTreeUtils {
     }
 
     public static boolean parentHasNext(Node node) {
-        return node.getParent().getLatestChildIterator().hasNext();
+        InternalNode parent = node.getParent();
+        return parent.isIterating() && parent.getLatestChildIterator().hasNext();
     }
 
     public static ScopeNode getParentScope(Node node) {
-        for (Node current = node.getParent(); current != null; current = node.getParent()) {
+        for (Node current = node.getParent(); current != null; current = current.getParent()) {
             if (current instanceof ScopeNode) {
                 return (ScopeNode) current;
             }

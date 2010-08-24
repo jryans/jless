@@ -4,21 +4,89 @@ import com.bazaarvoice.jless.ast.util.MutableTreeUtils;
 import com.bazaarvoice.jless.ast.visitor.InclusiveNodeVisitor;
 import com.bazaarvoice.jless.ast.visitor.NodeAdditionVisitor;
 import com.bazaarvoice.jless.ast.visitor.NodeTraversalVisitor;
+import com.bazaarvoice.jless.exception.IllegalMixinArgumentException;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
 
 public class ScopeNode extends InternalNode {
 
-    private final Map<String, ExpressionGroupNode> _variableNameToValueMap = new HashMap<String, ExpressionGroupNode>();
-    private final Map<String, RuleSetNode> _selectorGroupToRuleSetMap = new HashMap<String, RuleSetNode>();
+    private Map<String, ExpressionGroupNode> _variableNameToValueMap = new HashMap<String, ExpressionGroupNode>();
+    private Map<String, RuleSetNode> _selectorGroupToRuleSetMap = new HashMap<String, RuleSetNode>();
+    private List<String> _parameterNames = new ArrayList<String>();
 
     public ScopeNode() {
         super();
+        setAdditionVisitor();
+    }
 
-        // Some nodes are captured in additional structures to aid later resolution
-        _additionVisitor = new InclusiveNodeVisitor() {
+    public ScopeNode(Node node) {
+        this();
+        addChild(node);
+    }
+
+    public boolean isVariableDefined(String name) {
+        return _variableNameToValueMap.containsKey(name);
+    }
+
+    public ExpressionGroupNode getVariable(String name) {
+        return _variableNameToValueMap.get(name);
+    }
+
+    public RuleSetNode getRuleSet(String selectorGroup) {
+        return _selectorGroupToRuleSetMap.get(selectorGroup);
+    }
+
+    /**
+     * Creates a clone of this scope to be attached to the tree at the site of a mixin reference. If an ArgumentsNode is passed,
+     * each of its values override those defined by the mixin's parameters.
+     */
+    public ScopeNode callMixin(String name, ArgumentsNode arguments) {
+        List<ExpressionGroupNode> argumentList = (arguments != null) ? MutableTreeUtils.getChildren(arguments, ExpressionGroupNode.class) : Collections.<ExpressionGroupNode>emptyList();
+        if (argumentList.size() > _parameterNames.size()) {
+            throw new IllegalMixinArgumentException(name, _parameterNames.size());
+        }
+
+        ScopeNode mixinScope = clone();
+
+        // Filter out any line breaks
+        mixinScope.filter(new InclusiveNodeVisitor() {
+            @Override
+            public boolean visit(LineBreakNode node) {
+                return false;
+            }
+        });
+
+        // If arguments were passed, apply them
+        for (int i = 0; i < argumentList.size(); i++) {
+            ExpressionGroupNode argument = argumentList.get(i);
+            mixinScope._variableNameToValueMap.put(_parameterNames.get(i), argument);
+        }
+
+        return mixinScope;
+    }
+
+    /**
+     * Some nodes are captured in additional structures to aid later resolution.
+     */
+    private void setAdditionVisitor() {
+        setAdditionVisitor(new InclusiveNodeVisitor() {
+            /**
+             * Add parameter set as a child for printing input, but also add each defined value to the variable map.
+             */
+            @Override
+            public boolean add(ParametersNode node) {
+                for (VariableDefinitionNode variable : MutableTreeUtils.getChildren(node, VariableDefinitionNode.class)) {
+                    _parameterNames.add(variable.getName());
+                    add(variable);
+                }
+                return super.add(node);
+            }
+
             /**
              * Store the rule set's scope by selector group
              */
@@ -53,20 +121,7 @@ public class ScopeNode extends InternalNode {
                 }
                 return super.add(node);
             }
-        };
-    }
-
-    public ScopeNode(Node node) {
-        this();
-        addChild(node);
-    }
-
-    public ExpressionGroupNode getVariable(String name) {
-        return _variableNameToValueMap.get(name);
-    }
-
-    public RuleSetNode getRuleSet(String selectorGroup) {
-        return _selectorGroupToRuleSetMap.get(selectorGroup);
+        });
     }
 
     @Override
@@ -112,5 +167,21 @@ public class ScopeNode extends InternalNode {
     @Override
     public ScopeNode clone() {
         return (ScopeNode) super.clone();
+    }
+
+    /**
+     * Recreate internal state before children are cloned.
+     */
+    @Override
+    protected void cloneChildren(InternalNode node) {
+        ScopeNode scope = (ScopeNode) node;
+
+        // Reset internal state
+        scope._variableNameToValueMap = new HashMap<String, ExpressionGroupNode>();
+        scope._selectorGroupToRuleSetMap = new HashMap<String, RuleSetNode>();
+        scope._parameterNames = new ArrayList<String>();
+        scope.setAdditionVisitor();
+
+        super.cloneChildren(node);
     }
 }

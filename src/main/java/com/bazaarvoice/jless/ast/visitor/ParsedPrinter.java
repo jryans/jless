@@ -1,6 +1,7 @@
 package com.bazaarvoice.jless.ast.visitor;
 
-import com.bazaarvoice.jless.ast.node.ExpressionsNode;
+import com.bazaarvoice.jless.ast.node.ExpressionGroupNode;
+import com.bazaarvoice.jless.ast.node.ExpressionPhraseNode;
 import com.bazaarvoice.jless.ast.node.FunctionNode;
 import com.bazaarvoice.jless.ast.node.Node;
 import com.bazaarvoice.jless.ast.node.ExpressionNode;
@@ -15,6 +16,7 @@ import com.bazaarvoice.jless.ast.node.SelectorSegmentNode;
 import com.bazaarvoice.jless.ast.node.SimpleNode;
 import com.bazaarvoice.jless.ast.node.SingleLineCommentNode;
 import com.bazaarvoice.jless.ast.node.VariableDefinitionNode;
+import com.bazaarvoice.jless.ast.node.VariableReferenceNode;
 import com.bazaarvoice.jless.ast.util.MutableTreeUtils;
 import org.parboiled.trees.GraphUtils;
 
@@ -31,6 +33,14 @@ public class ParsedPrinter extends InclusiveNodeVisitor {
     // Node output
 
     @Override
+    public boolean visit(ExpressionGroupNode node) {
+        if (MutableTreeUtils.parentHasNext(node)) {
+            print(", ");
+        }
+        return super.visit(node);
+    }
+
+    @Override
     public boolean visit(ExpressionNode node) {
         if (MutableTreeUtils.parentHasNext(node)) {
             print(' ');
@@ -39,7 +49,7 @@ public class ParsedPrinter extends InclusiveNodeVisitor {
     }
 
     @Override
-    public boolean visit(ExpressionsNode node) {
+    public boolean visit(ExpressionPhraseNode node) {
         if (MutableTreeUtils.parentHasNext(node)) {
             print(", ");
         }
@@ -98,7 +108,7 @@ public class ParsedPrinter extends InclusiveNodeVisitor {
     @Override
     public boolean enter(ScopeNode node) {
         if (node.getParent() != null) {
-            print("{");
+            print(" {");
             List<Node> children = node.getChildren();
             if (children.isEmpty()) {
                 // do nothing
@@ -135,7 +145,7 @@ public class ParsedPrinter extends InclusiveNodeVisitor {
 
     @Override
     public boolean visit(SelectorGroupNode node) {
-        print(' ');
+//        print(' ');
         return super.visit(node);
     }
 
@@ -153,7 +163,7 @@ public class ParsedPrinter extends InclusiveNodeVisitor {
 
     @Override
     public boolean visit(SingleLineCommentNode node) {
-        print("//").print(node.getValue()).print('\n');
+        print('\n'); // C-style single line comments are not part of the CSS spec, so don't print them
         return super.visit(node);
     }
 
@@ -169,6 +179,12 @@ public class ParsedPrinter extends InclusiveNodeVisitor {
         if (node.getParent().getChildren().size() > 1 && MutableTreeUtils.parentHasNext(node)) {
             print(' ');
         }
+        return super.visit(node);
+    }
+
+    @Override
+    public boolean visit(VariableReferenceNode node) {
+        print(node.getValue());
         return super.visit(node);
     }
 

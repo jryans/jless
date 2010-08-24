@@ -142,10 +142,6 @@ public class ParsingTest {
         runTestFor("dash-prefix");
     }
 
-    public void testLazyEval() {
-        runTestFor("lazy-eval");
-    }
-
     public void testLessBright() {
         runTestFor("less-bright");
     }

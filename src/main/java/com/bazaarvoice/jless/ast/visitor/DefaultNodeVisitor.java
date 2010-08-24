@@ -2,11 +2,12 @@ package com.bazaarvoice.jless.ast.visitor;
 
 import com.bazaarvoice.jless.ast.node.ExpressionGroupNode;
 import com.bazaarvoice.jless.ast.node.ExpressionNode;
-import com.bazaarvoice.jless.ast.node.ExpressionsNode;
+import com.bazaarvoice.jless.ast.node.ExpressionPhraseNode;
 import com.bazaarvoice.jless.ast.node.FunctionNode;
 import com.bazaarvoice.jless.ast.node.LineBreakNode;
 import com.bazaarvoice.jless.ast.node.MultipleLineCommentNode;
 import com.bazaarvoice.jless.ast.node.Node;
+import com.bazaarvoice.jless.ast.node.ParametersNode;
 import com.bazaarvoice.jless.ast.node.PropertyNode;
 import com.bazaarvoice.jless.ast.node.RuleSetNode;
 import com.bazaarvoice.jless.ast.node.ScopeNode;
@@ -16,6 +17,7 @@ import com.bazaarvoice.jless.ast.node.SelectorSegmentNode;
 import com.bazaarvoice.jless.ast.node.SimpleNode;
 import com.bazaarvoice.jless.ast.node.SingleLineCommentNode;
 import com.bazaarvoice.jless.ast.node.VariableDefinitionNode;
+import com.bazaarvoice.jless.ast.node.VariableReferenceNode;
 
 /**
  *
@@ -43,7 +45,13 @@ public abstract class DefaultNodeVisitor implements NodeAdditionVisitor, NodeTra
     }
 
     // Concrete visit methods (NodeAdditionVisitor)
-    
+
+
+    @Override
+    public boolean add(ParametersNode node) {
+        return defaultValue();
+    }
+
     @Override
     public boolean add(RuleSetNode node) {
         return defaultValue();
@@ -60,7 +68,7 @@ public abstract class DefaultNodeVisitor implements NodeAdditionVisitor, NodeTra
     }
 
     // Concrete visit methods (NodeTraversalVisitor)
-    
+
     @Override
     public boolean enter(ExpressionGroupNode node) {
         return defaultValue();
@@ -77,7 +85,7 @@ public abstract class DefaultNodeVisitor implements NodeAdditionVisitor, NodeTra
     }
 
     @Override
-    public boolean visit(ExpressionsNode node) {
+    public boolean visit(ExpressionPhraseNode node) {
         return defaultValue();
     }
 
@@ -173,6 +181,11 @@ public abstract class DefaultNodeVisitor implements NodeAdditionVisitor, NodeTra
 
     @Override
     public boolean visit(VariableDefinitionNode node) {
+        return defaultValue();
+    }
+
+    @Override
+    public boolean visit(VariableReferenceNode node) {
         return defaultValue();
     }
 }

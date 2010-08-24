@@ -41,7 +41,7 @@ public abstract class InternalNode extends Node {
     private List<Node> _children = new ArrayList<Node>();
     private List<Node> _childrenView = Collections.unmodifiableList(_children);
     private Stack<MutableChildIterator> _childIteratorStack = new Stack<MutableChildIterator>();
-    protected NodeAdditionVisitor _additionVisitor = InclusiveNodeVisitor.getInstance();
+    private NodeAdditionVisitor _additionVisitor = InclusiveNodeVisitor.getInstance();
 
     public InternalNode() {
     }
@@ -53,6 +53,10 @@ public abstract class InternalNode extends Node {
     @Override
     public List<Node> getChildren() {
         return _childrenView;
+    }
+
+    protected void setAdditionVisitor(NodeAdditionVisitor additionVisitor) {
+        _additionVisitor = additionVisitor;
     }
 
     @Override
@@ -130,8 +134,12 @@ public abstract class InternalNode extends Node {
         return removed;
     }
 
+    public boolean isIterating() {
+        return !_childIteratorStack.isEmpty();
+    }
+
     public RandomAccessListIterator<Node> getLatestChildIterator() {
-        Preconditions.checkState(!_childIteratorStack.isEmpty(), "There are no child iterators.");
+        Preconditions.checkState(isIterating(), "There are no child iterators.");
 
         return _childIteratorStack.peek();
     }
@@ -201,12 +209,16 @@ public abstract class InternalNode extends Node {
         node._childrenView = Collections.unmodifiableList(node._children);
         node._childIteratorStack = new Stack<MutableChildIterator>();
 
+        cloneChildren(node);
+
+        return node;
+    }
+
+    protected void cloneChildren(InternalNode node) {
         // Copy all children
         for (Node child : _children) {
             TreeUtils.addChild(node, child.clone());
         }
-
-        return node;
     }
 
     private class MutableChildIterator implements RandomAccessListIterator<Node> {

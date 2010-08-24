@@ -5,9 +5,13 @@ import com.bazaarvoice.jless.ast.visitor.NodeTraversalVisitor;
 
 import java.util.ListIterator;
 
-public class ExpressionsNode extends InternalNode {
+public class ParametersNode extends InternalNode {
 
-    public ExpressionsNode(Node child) {
+    public ParametersNode() {
+        super();
+    }
+
+    public ParametersNode(Node child) {
         super(child);
     }
 
