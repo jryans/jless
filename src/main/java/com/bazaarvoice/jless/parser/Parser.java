@@ -674,7 +674,7 @@ public class Parser extends BaseParser<Node> {
     }
 
     Rule Whitespace() {
-        return AnyOf(" \n");
+        return AnyOf(" \n\t");
     }
 
     Rule Sp0() {
@@ -712,7 +712,7 @@ public class Parser extends BaseParser<Node> {
             @Override
             public boolean run(Context context) {
                 if (!isParserTranslationEnabled()) {
-                    return push(new SimpleNode(name));
+                    return push(new PlaceholderNode(new SimpleNode(name)));
                 }
 
                 for (int i = 0; i < getContext().getValueStack().size(); i++) {

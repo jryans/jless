@@ -137,7 +137,7 @@ public class ParsedPrinter extends InclusiveNodeVisitor {
 
     @Override
     public boolean visit(SelectorNode node) {
-        if (GraphUtils.getLastChild((Node) node.getParent()) != node) {
+        if (MutableTreeUtils.parentHasNext(node)) {
             print(", ");
         }
         return super.visit(node);

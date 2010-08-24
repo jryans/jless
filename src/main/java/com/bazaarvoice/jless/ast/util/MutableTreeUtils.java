@@ -55,6 +55,13 @@ public final class MutableTreeUtils {
     }
 
     public static ScopeNode getParentScope(Node node) {
+        if (node instanceof ScopeNode) {
+            ScopeNode parentScope = ((ScopeNode) node).getParentScope();
+            if (parentScope != null) {
+                return parentScope;
+            }
+        }
+
         for (Node current = node.getParent(); current != null; current = current.getParent()) {
             if (current instanceof ScopeNode) {
                 return (ScopeNode) current;

@@ -1,6 +1,7 @@
 package com.bazaarvoice.jless;
 
 import com.bazaarvoice.jless.ast.node.Node;
+import com.bazaarvoice.jless.ast.node.ScopeNode;
 import com.bazaarvoice.jless.ast.visitor.TranslatedPrinter;
 import com.bazaarvoice.jless.exception.LessTranslationException;
 import com.bazaarvoice.jless.parser.Parser;
@@ -55,6 +56,10 @@ public class LessTranslator {
     }
 
     public String translateStreams(List<InputStream> streams) throws IOException {
+        return translateStreams(streams, Collections.<String>emptyList());
+    }
+
+    public String translateStreams(List<InputStream> streams, List<String> paths) throws IOException {
         List<String> strings = new ArrayList<String>();
         for (InputStream stream : streams) {
             strings.add(IOUtils.toString(stream, "UTF-8"));
@@ -64,21 +69,30 @@ public class LessTranslator {
 
     public String translateStrings(List<String> inputs) {
         ValueStack<Node> stack = new DefaultValueStack<Node>();
-        ParseRunner<Node> parseRunner = new ReportingParseRunner<Node>(_parser.Document(), stack);
 
         for (String input : inputs) {
+            ParseRunner<Node> parseRunner = new ReportingParseRunner<Node>(_parser.Document(), stack);
             ParsingResult<Node> result = parseRunner.run(input);
 
             if (result.hasErrors()) {
-                throw new LessTranslationException(ErrorUtils.printParseErrors(result));
+                throw new LessTranslationException("An error occurred while translating a LESS input file:\n" + 
+                        ErrorUtils.printParseErrors(result));
             }
 
+            // If there are multiple scope nodes on the stack, link the new scope for later variable resolution
+            if (stack.size() > 1) {
+                ScopeNode currentScope = (ScopeNode) stack.peek();
+                ScopeNode previousScope = (ScopeNode) stack.peek(1);
+                currentScope.setParentScope(previousScope);
+            }
         }
 
         TranslatedPrinter printer = new TranslatedPrinter();
         stack.peek().traverse(printer);
         return printer.toString();
     }
+
+
 
     public static void translate(Node root) {
 //        root.traverse(new FlattenNestedRuleSets());
@@ -103,4 +117,32 @@ public class LessTranslator {
             System.err.println("Unable to read input file.");
         }
     }
+
+    /*private class TranslationUnit {
+        private final String _input;
+        private String _path;
+
+        public TranslationUnit(File file) throws IOException {
+            this(new FileInputStream(file));
+            _path = file.getAbsolutePath();
+        }
+
+        public TranslationUnit(InputStream stream) throws IOException {
+            this(IOUtils.toString(stream, "UTF-8"));
+            _path = null;
+        }
+
+        public TranslationUnit(String input) {
+            _input = input;
+            _path = null;
+        }
+
+        public String getInput() {
+            return _input;
+        }
+
+        public String getPath() {
+            return _path;
+        }
+    }*/
 }

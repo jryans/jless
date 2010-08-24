@@ -16,8 +16,9 @@ import java.util.Map;
 public class ScopeNode extends InternalNode {
 
     private Map<String, ExpressionGroupNode> _variableNameToValueMap = new HashMap<String, ExpressionGroupNode>();
-    private Map<String, RuleSetNode> _selectorGroupToRuleSetMap = new HashMap<String, RuleSetNode>();
+    private Map<String, RuleSetNode> _selectorToRuleSetMap = new HashMap<String, RuleSetNode>();
     private List<String> _parameterNames = new ArrayList<String>();
+    private ScopeNode _parentScope;
 
     public ScopeNode() {
         super();
@@ -38,7 +39,15 @@ public class ScopeNode extends InternalNode {
     }
 
     public RuleSetNode getRuleSet(String selectorGroup) {
-        return _selectorGroupToRuleSetMap.get(selectorGroup);
+        return _selectorToRuleSetMap.get(selectorGroup);
+    }
+
+    public ScopeNode getParentScope() {
+        return _parentScope;
+    }
+
+    public void setParentScope(ScopeNode parentScope) {
+        _parentScope = parentScope;
     }
 
     /**
@@ -92,10 +101,17 @@ public class ScopeNode extends InternalNode {
              */
             @Override
             public boolean add(RuleSetNode node) {
-                String selectorGroup = MutableTreeUtils.getFirstChild(node, SelectorGroupNode.class).toString();
-                // Mixins lock on first definition
-                if (!_selectorGroupToRuleSetMap.containsKey(selectorGroup)) {
-                    _selectorGroupToRuleSetMap.put(selectorGroup, node);
+                SelectorGroupNode selectorGroup = MutableTreeUtils.getFirstChild(node, SelectorGroupNode.class);
+                for (SelectorNode selectorNode : MutableTreeUtils.getChildren(selectorGroup, SelectorNode.class)) {
+                    StringBuilder sb = new StringBuilder();
+                    for (Node selectorChild : selectorNode.getChildren()) {
+                        sb.append(selectorChild.toString());
+                    }
+                    String selector = sb.toString();
+                    // Mixins lock on first definition
+                    if (!_selectorToRuleSetMap.containsKey(selector)) {
+                        _selectorToRuleSetMap.put(selector, node);
+                    }
                 }
                 return super.add(node);
             }
@@ -178,7 +194,7 @@ public class ScopeNode extends InternalNode {
 
         // Reset internal state
         scope._variableNameToValueMap = new HashMap<String, ExpressionGroupNode>();
-        scope._selectorGroupToRuleSetMap = new HashMap<String, RuleSetNode>();
+        scope._selectorToRuleSetMap = new HashMap<String, RuleSetNode>();
         scope._parameterNames = new ArrayList<String>();
         scope.setAdditionVisitor();
 
