@@ -33,7 +33,7 @@ import org.parboiled.support.Var;
  * that was created by Alexis Sellier as part of the LESS Ruby implementation.
  *
  * From there, the parser has been modified to more closely support Parboiled style and a modified set of requirements.
- * Differences from the LESS Ruby parser include:
+ * Parsing differences from LESS Ruby include:
  * <ul>
  *   <li>Selector parsing was rewritten using the <a href="http://www.w3.org/TR/css3-selectors/#grammar">CSS 3 selector grammar</a></li> 
  *   <li>Numbers in attribute selectors must be quoted (as per the CSS spec)</li>
@@ -98,7 +98,6 @@ public class Parser extends BaseParser<Node> {
      * Ex: div, .class, body > p {...}
      *
      * Future: Hidden
-     * TODO: Cleanup
      */
     Rule RuleSet() {
         return Sequence(
@@ -139,8 +138,6 @@ public class Parser extends BaseParser<Node> {
 
     /**
      * Variable Ws0 ':' Ws0 ExpressionPhrase
-     *
-     * TODO: Absorb ExpressionsGroupNode
      */
     Rule Parameter() {
         return Sequence(
@@ -277,7 +274,6 @@ public class Parser extends BaseParser<Node> {
         return Sequence(Ident(), '(', Ws0(), PseudoExpression(), ')');
     }
 
-    // TODO: Use Number in place of Digit
     Rule PseudoExpression() {
         return OneOrMore(FirstOf(AnyOf("+-"), Dimension(), Digit(), String(), Ident()), Ws0());
     }
@@ -428,23 +424,19 @@ public class Parser extends BaseParser<Node> {
 
     // ********** LESS Entities **********
 
-    // TODO: Check use of !Nd
-
     /**
      * Any token used as a value in an expression
      * Future: Accessors
-     *
-     * TODO: Optimize ordering
      */
     Rule Value() {
         return FirstOf(
                 Keyword(),
                 Literal(),
-                URL(),
-                AlphaFilter(),
                 Function(),
+                VariableReference(),
+                URL(),
                 Font(),
-                VariableReference()
+                AlphaFilter()
         );
     }
 
@@ -458,7 +450,6 @@ public class Parser extends BaseParser<Node> {
 
     /**
      * 'url(' (String / [-_%$/.&=:;#+?Alphanumeric]+) ')'
-     * TODO: Function? Unescape?
      */
     Rule URL() {
         return Sequence(
@@ -485,13 +476,13 @@ public class Parser extends BaseParser<Node> {
     }
 
     /**
-     * [-Alpha]+ !Nd
+     * [-Alpha]+ &Delimiter
      *
      * Ex: blue, small, normal
      */
     Rule Keyword() {
         return Sequence(
-                Sequence(OneOrMore(FirstOf('-', Alpha())), TestNot(Nd())),
+                Sequence(OneOrMore(FirstOf('-', Alpha())), Test(Delimiter())),
                 push(new SimpleNode(match()))
         );
     }
@@ -507,12 +498,12 @@ public class Parser extends BaseParser<Node> {
     }
 
     /**
-     * Alpha [-Alphanumeric]* !Nd / String
+     * Alpha [-Alphanumeric]* &Delimiter / String
      */
     Rule Font() {
         return Sequence(
                 FirstOf(
-                        Sequence(Alpha(), ZeroOrMore(FirstOf('-', Alphanumeric())), TestNot(Nd())),
+                        Sequence(Alpha(), ZeroOrMore(FirstOf('-', Alphanumeric())), Test(Delimiter())),
                         String()
                 ),
                 push(new SimpleNode(match()))
@@ -663,10 +654,6 @@ public class Parser extends BaseParser<Node> {
 
     Rule Spacing() {
         return FirstOf(Whitespace(), Comment());
-    }
-
-    Rule Nd() {
-        return Sequence(TestNot(Delimiter()), ANY);
     }
 
     Rule Delimiter() {

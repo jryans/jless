@@ -8,13 +8,19 @@ import com.bazaarvoice.jless.ast.node.SelectorNode;
 import com.bazaarvoice.jless.ast.node.VariableDefinitionNode;
 
 /**
- *
+ * Visitors that wish to be notified when an {@link com.bazaarvoice.jless.ast.node.Node#add}
+ * of some node type occurs implement this interface. {@link com.bazaarvoice.jless.ast.node.InternalNode#setAdditionVisitor}
+ * is used to register such a visitor with the node.
  */
 public interface NodeAdditionVisitor {
 
     // Base visitor methods
     // These eliminate the need for methods that no visitor uses
 
+    /**
+     * Called when a child node is about to be added.
+     * @return Determines whether the node should be added.
+     */
     boolean add(Node node);
 
     // Concrete visitor methods

@@ -19,15 +19,27 @@ import com.bazaarvoice.jless.ast.node.VariableDefinitionNode;
 import com.bazaarvoice.jless.ast.node.VariableReferenceNode;
 
 /**
- *
+ * Visitors that need to {@link com.bazaarvoice.jless.ast.node.Node#traverse} or 
+ * {@link com.bazaarvoice.jless.ast.node.Node#filter} a set of nodes in the tree
+ * implement this interface.
  */
-public interface NodeTraversalVisitor {
+public interface NodeNavigationVisitor {
 
     // Base visitor methods
     // These eliminate the need for methods that no visitor uses
 
+    /**
+     * Called upon first reaching nodes with children.
+     * @return Determines whether the node's children will be visited.
+     */
     boolean enter(Node node);
 
+    /**
+     * Called when the visitor reaches a given node. If the node contains children,
+     * this is called after both {@link #enter} and optionally visiting the node's children,
+     * when permitted.
+     * @return Determines whether the sibling nodes following this node will be visited.
+     */
     boolean visit(Node node);
 
     // Concrete visitor methods

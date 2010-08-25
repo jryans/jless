@@ -1,12 +1,12 @@
 package com.bazaarvoice.jless.ast.node;
 
-import com.bazaarvoice.jless.ast.visitor.NodeTraversalVisitor;
+import com.bazaarvoice.jless.ast.visitor.NodeNavigationVisitor;
 
 import java.util.Collections;
 import java.util.List;
 
 /**
- *
+ * Super class for all leaf nodes of the tree.
  */
 public abstract class LeafNode extends Node {
 
@@ -36,12 +36,12 @@ public abstract class LeafNode extends Node {
     }
 
     @Override
-    public boolean filter(NodeTraversalVisitor visitor) {
+    public boolean filter(NodeNavigationVisitor visitor) {
         return visitor.visit(this);
     }
 
     @Override
-    public boolean traverse(NodeTraversalVisitor visitor) {
+    public boolean traverse(NodeNavigationVisitor visitor) {
         return !isVisible() || visitor.visit(this);
     }
 }

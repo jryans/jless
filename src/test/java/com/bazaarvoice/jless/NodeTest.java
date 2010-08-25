@@ -17,9 +17,15 @@ public class NodeTest {
         p.addChild(new SimpleNode("c3"));
         p.addChild(new SimpleNode("c4"));
 
-        RandomAccessListIterator i1 = p.pushChildIterator(1);
-        RandomAccessListIterator i2 = p.pushChildIterator(2);
-        RandomAccessListIterator i3 = p.pushChildIterator(3);
+        RandomAccessListIterator i1 = p.pushChildIterator();
+        i1.next();
+        RandomAccessListIterator i2 = p.pushChildIterator();
+        i2.next();
+        i2.next();
+        RandomAccessListIterator i3 = p.pushChildIterator();
+        i3.next();
+        i3.next();
+        i3.next();
 
         Assert.assertEquals(i1.nextIndex(), 1);
         Assert.assertEquals(i2.nextIndex(), 2);

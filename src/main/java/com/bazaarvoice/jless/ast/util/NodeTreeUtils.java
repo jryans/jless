@@ -38,11 +38,11 @@ public final class NodeTreeUtils {
         return null;
     }
 
-    public static <C extends Node> List<C> getChildren(InternalNode parent, Class<C> clazz) {
+    public static <C extends Node> List<C> getChildren(InternalNode parent, Class<C> targetClass) {
         List<C> filteredChildren = new ArrayList<C>();
 
         for (Node child : parent.getChildren()) {
-            if (clazz.isInstance(child)) {
+            if (targetClass.isInstance(child)) {
                 //noinspection unchecked
                 filteredChildren.add((C) child);
             }
@@ -51,9 +51,9 @@ public final class NodeTreeUtils {
         return filteredChildren;
     }
 
-    public static <C extends Node> C getFirstChild(InternalNode parent, Class<C> clazz) {
+    public static <C extends Node> C getFirstChild(InternalNode parent, Class<C> targetClass) {
         for (Node child : parent.getChildren()) {
-            if (clazz.isInstance(child)) {
+            if (targetClass.isInstance(child)) {
                 //noinspection unchecked
                 return (C) child;
             }

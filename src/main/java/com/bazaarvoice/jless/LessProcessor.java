@@ -24,9 +24,40 @@ import java.util.Collections;
 import java.util.List;
 
 /**
- * The translator is not thread-safe...
+ * LessProcessor is JLESS's parsing and translation engine that is used to convert input files that
+ * use the <a href="http://lesscss.org/">LESS</a> styling framework syntax into standard CSS.
+ * This implementation is based on the Ruby version of LESS by Alexis Sellier.
  *
- * TODO: Doc
+ * At this time, the following LESS features are supported:
+ * <ul>
+ *   <li>Variables</li>
+ *   <li>Mixins</li>
+ *   <li>Mixin Arguments</li>
+ *   <li>Nesting</li>
+ * </ul>
+ *
+ * The following LESS features are not currently supported:
+ * <ul>
+ *   <li>Operations</li>
+ *   <li>Accessors</li>
+ *   <li>Imports</li>
+ * </ul>
+ *
+ * This implementation does not attempt to generate the same output as the Ruby version.
+ * Translation differences from LESS Ruby include:
+ * <ul>
+ *   <li>Equivalent adjacent rule sets are not grouped</li>
+ *   <li>Empty rule sets are preserved</li>
+ *   <li>Numbers and colors are not reformatted</li>
+ * </ul>
+ *
+ * This list only notes changes in the <em>translation</em> stage. See {@link com.bazaarvoice.jless.parser.Parser} for details
+ * on any changes to the <em>parsing</em> stage.
+ *
+ * <strong>This class is not thread-safe.</strong> Clients must ensure that multiple threads do not attempt to use the same
+ * instance of LessProcessor at the same time.
+ *
+ * @see com.bazaarvoice.jless.parser.Parser
  */
 public class LessProcessor {
 
@@ -75,6 +106,12 @@ public class LessProcessor {
         return processStrings(strings);
     }
 
+    /**
+     * Each input is processed individually, creating a {@link ScopeNode} on the parser's {@link ValueStack}.
+     * These ScopeNodes are then joined together to allow for variable resolution across scopes. The resulting
+     * output consists of the translated version of the last input file. This means that all inputs serve as
+     * silent context files, but will not produce any output of their own.
+     */
     public String processStrings(List<String> inputs) {
         ValueStack<Node> stack = new DefaultValueStack<Node>();
 
@@ -128,32 +165,4 @@ public class LessProcessor {
             System.err.println("Unable to read input file.");
         }
     }
-
-    /*private class TranslationUnit {
-        private final String _input;
-        private String _path;
-
-        public TranslationUnit(File file) throws IOException {
-            this(new FileInputStream(file));
-            _path = file.getAbsolutePath();
-        }
-
-        public TranslationUnit(InputStream stream) throws IOException {
-            this(IOUtils.toString(stream, "UTF-8"));
-            _path = null;
-        }
-
-        public TranslationUnit(String input) {
-            _input = input;
-            _path = null;
-        }
-
-        public String getInput() {
-            return _input;
-        }
-
-        public String getPath() {
-            return _path;
-        }
-    }*/
 }

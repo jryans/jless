@@ -3,7 +3,7 @@ package com.bazaarvoice.jless.ast.node;
 import com.bazaarvoice.jless.ast.util.NodeTreeUtils;
 import com.bazaarvoice.jless.ast.visitor.InclusiveNodeVisitor;
 import com.bazaarvoice.jless.ast.visitor.NodeAdditionVisitor;
-import com.bazaarvoice.jless.ast.visitor.NodeTraversalVisitor;
+import com.bazaarvoice.jless.ast.visitor.NodeNavigationVisitor;
 import com.bazaarvoice.jless.exception.IllegalMixinArgumentException;
 
 import java.util.ArrayList;
@@ -104,7 +104,6 @@ public class ScopeNode extends InternalNode {
                 SelectorGroupNode selectorGroup = NodeTreeUtils.getFirstChild(node, SelectorGroupNode.class);
                 for (SelectorNode selectorNode : NodeTreeUtils.getChildren(selectorGroup, SelectorNode.class)) {
                     StringBuilder sb = new StringBuilder();
-                    // TODO: Optimize
                     for (Node selectorChild : selectorNode.getChildren()) {
                         sb.append(selectorChild.toString());
                     }
@@ -147,7 +146,7 @@ public class ScopeNode extends InternalNode {
     }
 
     @Override
-    public boolean filter(NodeTraversalVisitor visitor) {
+    public boolean filter(NodeNavigationVisitor visitor) {
         if (visitor.enter(this)) {
             ListIterator<Node> it = pushChildIterator();
             while (it.hasNext()) {
@@ -163,7 +162,7 @@ public class ScopeNode extends InternalNode {
     }
 
     @Override
-    public boolean traverse(NodeTraversalVisitor visitor) {
+    public boolean traverse(NodeNavigationVisitor visitor) {
         if (!isVisible()) {
             return true;
         }

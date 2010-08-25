@@ -1,25 +1,9 @@
-/*
- * Copyright (C) 2009 Mathias Doenitz
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- * http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package com.bazaarvoice.jless.ast.node;
 
 import com.bazaarvoice.jless.ast.util.RandomAccessListIterator;
 import com.bazaarvoice.jless.ast.visitor.InclusiveNodeVisitor;
 import com.bazaarvoice.jless.ast.visitor.NodeAdditionVisitor;
-import com.bazaarvoice.jless.ast.visitor.NodeTraversalVisitor;
+import com.bazaarvoice.jless.ast.visitor.NodeNavigationVisitor;
 import com.google.common.base.Preconditions;
 import org.parboiled.trees.TreeUtils;
 
@@ -31,11 +15,13 @@ import java.util.ListIterator;
 import java.util.Stack;
 
 /**
- * A base implementation of the {@link org.parboiled.trees.MutableTreeNode}.
+ * Super class for all internal nodes of the tree.
  *
- * TODO: Rewrite this!
- *
- * @param <T> the actual implementation type of this MutableTreeNodeImpl
+ * A variety of methods allow for manipulating the children of an InternalNode, while still ensuring that
+ * only one parent owns a given child node at any one time. A mutable iterator is available, allowing for
+ * typical {@link ListIterator} operations, as well as modifications at arbitrary indices from the iterator.
+ * Additionally, the child set may be modified while iteration is occurring without going through the iterator
+ * directly. 
  */
 public abstract class InternalNode extends Node {
 
@@ -56,9 +42,16 @@ public abstract class InternalNode extends Node {
         return _childrenView;
     }
 
+    /**
+     * Registers a visitor that will be called each time a child node is about to be added.
+     * If the visitor returns false from such a call, the child is not added. 
+     * @see com.bazaarvoice.jless.ast.visitor.NodeAdditionVisitor
+     */
     protected void setAdditionVisitor(NodeAdditionVisitor additionVisitor) {
         _additionVisitor = additionVisitor;
     }
+
+    // ********** Modification **********
 
     @Override
     public boolean addChild(Node child) {
@@ -87,7 +80,9 @@ public abstract class InternalNode extends Node {
         }
 
         // detach new child from old parent
-        if (child.getParent() == this) return;
+        if (child.getParent() == this) {
+            return;
+        }
         if (child.getParent() != null) {
             TreeUtils.removeChild(child.getParent(), child);
         }
@@ -113,7 +108,9 @@ public abstract class InternalNode extends Node {
 
         // detach old child
         Node old = _children.get(index);
-        if (old == child) return;
+        if (old == child) {
+            return;
+        }
         old.setParent(null);
 
         // detach new child from old parent
@@ -147,6 +144,8 @@ public abstract class InternalNode extends Node {
         }
     }
 
+    // ********** Iteration **********
+
     public boolean isIterating() {
         return !_childIteratorStack.isEmpty();
     }
@@ -165,20 +164,14 @@ public abstract class InternalNode extends Node {
         return it;
     }
 
-    public RandomAccessListIterator<Node> pushChildIterator(int startPosition) {
-        MutableChildIterator it = new MutableChildIterator(startPosition);
-
-        _childIteratorStack.push(it);
-        
-        return it;
-    }
-
     public void popChildIterator() {
         _childIteratorStack.pop();
     }
 
+    // ********** Visitors **********
+
     @Override
-    public boolean filter(NodeTraversalVisitor visitor) {
+    public boolean filter(NodeNavigationVisitor visitor) {
         if (visitor.enter(this)) {
             ListIterator<Node> it = pushChildIterator();
             while (it.hasNext()) {
@@ -194,7 +187,7 @@ public abstract class InternalNode extends Node {
     }
 
     @Override
-    public boolean traverse(NodeTraversalVisitor visitor) {
+    public boolean traverse(NodeNavigationVisitor visitor) {
         if (!isVisible()) {
             return true;
         }
@@ -212,6 +205,8 @@ public abstract class InternalNode extends Node {
 
         return visitor.visit(this);
     }
+
+    // ********** Cloning **********
 
     /**
      * Clones fields and child nodes, but ignores the iterator stack (since the new nodes are not attached
@@ -240,16 +235,8 @@ public abstract class InternalNode extends Node {
 
     private class MutableChildIterator implements RandomAccessListIterator<Node> {
 
-        private int _cursor;
+        private int _cursor = 0;
         private int _lastReturned = -1;
-
-        public MutableChildIterator() {
-            this(0);
-        }
-
-        public MutableChildIterator(int startPosition) {
-            _cursor = startPosition;
-        }
 
         @Override
         public boolean hasNext() {
@@ -266,11 +253,6 @@ public abstract class InternalNode extends Node {
         }
 
         @Override
-        public Node peekNext() {
-            return _children.get(_cursor);
-        }
-
-        @Override
         public boolean hasPrevious() {
             return _cursor != 0;
         }
@@ -282,11 +264,6 @@ public abstract class InternalNode extends Node {
             _lastReturned = --_cursor;
 
             return _children.get(_cursor);
-        }
-
-        @Override
-        public Node peekPrevious() {
-            return _children.get(_cursor - 1);
         }
 
         @Override

@@ -3,7 +3,7 @@ package com.bazaarvoice.jless.ast.node;
 import com.bazaarvoice.jless.ast.util.NodeTreeUtils;
 import com.bazaarvoice.jless.ast.visitor.InclusiveNodeVisitor;
 import com.bazaarvoice.jless.ast.visitor.NodeAdditionVisitor;
-import com.bazaarvoice.jless.ast.visitor.NodeTraversalVisitor;
+import com.bazaarvoice.jless.ast.visitor.NodeNavigationVisitor;
 
 import java.util.ListIterator;
 
@@ -45,7 +45,7 @@ public class SelectorNode extends InternalNode {
     }
 
     @Override
-    public boolean filter(NodeTraversalVisitor visitor) {
+    public boolean filter(NodeNavigationVisitor visitor) {
         if (visitor.enter(this)) {
             ListIterator<Node> it = pushChildIterator();
             while (it.hasNext()) {
@@ -61,7 +61,7 @@ public class SelectorNode extends InternalNode {
     }
 
     @Override
-    public boolean traverse(NodeTraversalVisitor visitor) {
+    public boolean traverse(NodeNavigationVisitor visitor) {
         if (!isVisible()) {
             return true;
         }

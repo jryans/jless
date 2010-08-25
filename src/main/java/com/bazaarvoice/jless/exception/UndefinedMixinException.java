@@ -2,9 +2,6 @@ package com.bazaarvoice.jless.exception;
 
 import org.parboiled.errors.ActionException;
 
-/**
- *
- */
 public class UndefinedMixinException extends ActionException {
 
     public UndefinedMixinException(String name) {

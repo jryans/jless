@@ -22,7 +22,7 @@ import com.bazaarvoice.jless.ast.node.VariableReferenceNode;
 /**
  *
  */
-public abstract class DefaultNodeVisitor implements NodeAdditionVisitor, NodeTraversalVisitor {
+public abstract class DefaultNodeVisitor implements NodeAdditionVisitor, NodeNavigationVisitor {
     
     protected abstract boolean defaultValue();
     

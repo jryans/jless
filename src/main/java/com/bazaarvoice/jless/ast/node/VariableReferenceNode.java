@@ -2,7 +2,7 @@ package com.bazaarvoice.jless.ast.node;
 
 import com.bazaarvoice.jless.ast.util.NodeTreeUtils;
 import com.bazaarvoice.jless.ast.visitor.NodeAdditionVisitor;
-import com.bazaarvoice.jless.ast.visitor.NodeTraversalVisitor;
+import com.bazaarvoice.jless.ast.visitor.NodeNavigationVisitor;
 
 public class VariableReferenceNode extends LeafNode {
 
@@ -39,12 +39,12 @@ public class VariableReferenceNode extends LeafNode {
     }
 
     @Override
-    public boolean filter(NodeTraversalVisitor visitor) {
+    public boolean filter(NodeNavigationVisitor visitor) {
         return visitor.visit(this);
     }
 
     @Override
-    public boolean traverse(NodeTraversalVisitor visitor) {
+    public boolean traverse(NodeNavigationVisitor visitor) {
         return !isVisible() || visitor.visit(this);
     }
 }
