@@ -17,38 +17,12 @@ public class RuleSetNode extends InternalNode {
     }
 
     @Override
-    public boolean filter(NodeNavigationVisitor visitor) {
-        if (visitor.enter(this)) {
-            ListIterator<Node> it = pushChildIterator();
-            while (it.hasNext()) {
-                Node child = it.next();
-                if (!child.filter(visitor)) {
-                    it.remove();
-                }
-            }
-            popChildIterator();
-        }
-
-        return visitor.visit(this);
+    protected boolean enter(NodeNavigationVisitor visitor) {
+        return visitor.enter(this);
     }
 
     @Override
-    public boolean traverse(NodeNavigationVisitor visitor) {
-        if (!isVisible()) {
-            return true;
-        }
-
-        if (visitor.enter(this)) {
-            ListIterator<Node> it = pushChildIterator();
-            while (it.hasNext()) {
-                Node child = it.next();
-                if (!child.traverse(visitor)) {
-                    break;
-                }
-            }
-            popChildIterator();
-        }
-
+    protected boolean visit(NodeNavigationVisitor visitor) {
         return visitor.visit(this);
     }
 }

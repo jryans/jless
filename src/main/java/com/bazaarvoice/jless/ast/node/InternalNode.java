@@ -171,8 +171,8 @@ public abstract class InternalNode extends Node {
     // ********** Visitors **********
 
     @Override
-    public boolean filter(NodeNavigationVisitor visitor) {
-        if (visitor.enter(this)) {
+    public final boolean filter(NodeNavigationVisitor visitor) {
+        if (enter(visitor)) {
             ListIterator<Node> it = pushChildIterator();
             while (it.hasNext()) {
                 Node child = it.next();
@@ -183,16 +183,16 @@ public abstract class InternalNode extends Node {
             popChildIterator();
         }
 
-        return visitor.visit(this);
+        return visit(visitor);
     }
 
     @Override
-    public boolean traverse(NodeNavigationVisitor visitor) {
+    public final boolean traverse(NodeNavigationVisitor visitor) {
         if (!isVisible()) {
             return true;
         }
 
-        if (visitor.enter(this)) {
+        if (enter(visitor)) {
             ListIterator<Node> it = pushChildIterator();
             while (it.hasNext()) {
                 Node child = it.next();
@@ -203,7 +203,7 @@ public abstract class InternalNode extends Node {
             popChildIterator();
         }
 
-        return visitor.visit(this);
+        return visit(visitor);
     }
 
     // ********** Cloning **********

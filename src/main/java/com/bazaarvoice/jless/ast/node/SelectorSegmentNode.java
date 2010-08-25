@@ -57,12 +57,7 @@ public class SelectorSegmentNode extends LeafNode {
     }
 
     @Override
-    public boolean filter(NodeNavigationVisitor visitor) {
+    protected boolean visit(NodeNavigationVisitor visitor) {
         return visitor.visit(this);
-    }
-
-    @Override
-    public boolean traverse(NodeNavigationVisitor visitor) {
-        return !isVisible() || visitor.visit(this);
     }
 }

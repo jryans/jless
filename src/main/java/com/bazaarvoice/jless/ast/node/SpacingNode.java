@@ -20,12 +20,7 @@ public class SpacingNode extends SimpleNode {
     }
 
     @Override
-    public boolean filter(NodeNavigationVisitor visitor) {
+    protected boolean visit(NodeNavigationVisitor visitor) {
         return visitor.visit(this);
-    }
-
-    @Override
-    public boolean traverse(NodeNavigationVisitor visitor) {
-        return !isVisible() || visitor.visit(this);
     }
 }

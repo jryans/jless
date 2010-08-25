@@ -383,7 +383,7 @@ public class Parser extends BaseParser<Node> {
 
     @MemoMismatches
     Rule Ident() {
-        return Sequence(Optional('-'), NameStart(), ZeroOrMore(NameCharacter()));
+        return Sequence(NameStart(), ZeroOrMore(NameCharacter()));
     }
 
     Rule Name() {
@@ -529,7 +529,7 @@ public class Parser extends BaseParser<Node> {
         return Sequence(
                 FirstOf(
                         Dimension(),
-                        OneOrMore(FirstOf('-', this.Alpha()))
+                        OneOrMore(FirstOf('-', Alpha()))
                 ),
                 '/',
                 Dimension()
@@ -657,7 +657,7 @@ public class Parser extends BaseParser<Node> {
     }
 
     Rule Delimiter() {
-        return AnyOf(" ;,!})\n");
+        return AnyOf(" ;,!})\n\t");
     }
 
     Rule NameStart() {

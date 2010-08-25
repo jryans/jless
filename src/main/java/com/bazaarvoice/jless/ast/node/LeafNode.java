@@ -36,12 +36,17 @@ public abstract class LeafNode extends Node {
     }
 
     @Override
-    public boolean filter(NodeNavigationVisitor visitor) {
-        return visitor.visit(this);
+    protected final boolean enter(NodeNavigationVisitor visitor) {
+        throw new UnsupportedOperationException("Leaf nodes can't contain children.");
     }
 
     @Override
-    public boolean traverse(NodeNavigationVisitor visitor) {
-        return !isVisible() || visitor.visit(this);
+    public final boolean filter(NodeNavigationVisitor visitor) {
+        return visit(visitor);
+    }
+
+    @Override
+    public final boolean traverse(NodeNavigationVisitor visitor) {
+        return !isVisible() || visit(visitor);
     }
 }

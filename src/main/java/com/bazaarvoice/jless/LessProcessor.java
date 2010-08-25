@@ -95,10 +95,6 @@ public class LessProcessor {
     }
 
     public String processStreams(List<InputStream> streams) throws IOException {
-        return processStreams(streams, Collections.<String>emptyList());
-    }
-
-    public String processStreams(List<InputStream> streams, List<String> paths) throws IOException {
         List<String> strings = new ArrayList<String>();
         for (InputStream stream : streams) {
             strings.add(IOUtils.toString(stream, "UTF-8"));
