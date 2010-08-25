@@ -18,7 +18,7 @@ import com.bazaarvoice.jless.ast.node.SelectorSegmentNode;
 import com.bazaarvoice.jless.ast.node.SimpleNode;
 import com.bazaarvoice.jless.ast.node.VariableDefinitionNode;
 import com.bazaarvoice.jless.ast.node.VariableReferenceNode;
-import com.bazaarvoice.jless.ast.util.MutableTreeUtils;
+import com.bazaarvoice.jless.ast.util.NodeTreeUtils;
 import com.bazaarvoice.jless.exception.UndefinedMixinException;
 import com.bazaarvoice.jless.exception.UndefinedVariableException;
 import org.parboiled.Action;
@@ -458,9 +458,6 @@ public class Parser extends BaseParser<Node> {
         );
     }
 
-    /**
-     * Future: Lazy evaluation
-     */
     @MemoMismatches
     Rule VariableReference() {
         return Sequence(
@@ -729,7 +726,7 @@ public class Parser extends BaseParser<Node> {
                     }
 
                     // Get the scope of the rule set we located and call it as a mixin
-                    ScopeNode ruleSetScope = MutableTreeUtils.getFirstChild(ruleSet, ScopeNode.class).callMixin(name, arguments);
+                    ScopeNode ruleSetScope = NodeTreeUtils.getFirstChild(ruleSet, ScopeNode.class).callMixin(name, arguments);
 
                     // TODO: If original rule set is still connected to the tree, swap it out for a LineBreakNode to hide it in the output
                     /*InternalNode ruleSetParent = ruleSet.getParent();

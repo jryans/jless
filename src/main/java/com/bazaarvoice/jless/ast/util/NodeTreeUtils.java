@@ -9,13 +9,11 @@ import java.util.List;
 import java.util.ListIterator;
 
 /**
- * TODO: Fix naming scheme
- *
- * Utils for BaseTreeNode nodes? Maybe just for visitors?
+ * Utilities for traversing and manipulating the node tree.
  */
-public final class MutableTreeUtils {
+public final class NodeTreeUtils {
 
-    private MutableTreeUtils() {}
+    private NodeTreeUtils() {}
 
     /**
      * Add the input node after the current node in its parent's list of children.

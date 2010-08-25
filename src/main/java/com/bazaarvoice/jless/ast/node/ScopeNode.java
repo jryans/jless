@@ -1,6 +1,6 @@
 package com.bazaarvoice.jless.ast.node;
 
-import com.bazaarvoice.jless.ast.util.MutableTreeUtils;
+import com.bazaarvoice.jless.ast.util.NodeTreeUtils;
 import com.bazaarvoice.jless.ast.visitor.InclusiveNodeVisitor;
 import com.bazaarvoice.jless.ast.visitor.NodeAdditionVisitor;
 import com.bazaarvoice.jless.ast.visitor.NodeTraversalVisitor;
@@ -55,7 +55,7 @@ public class ScopeNode extends InternalNode {
      * each of its values override those defined by the mixin's parameters.
      */
     public ScopeNode callMixin(String name, ArgumentsNode arguments) {
-        List<ExpressionGroupNode> argumentList = (arguments != null) ? MutableTreeUtils.getChildren(arguments, ExpressionGroupNode.class) : Collections.<ExpressionGroupNode>emptyList();
+        List<ExpressionGroupNode> argumentList = (arguments != null) ? NodeTreeUtils.getChildren(arguments, ExpressionGroupNode.class) : Collections.<ExpressionGroupNode>emptyList();
         if (argumentList.size() > _parameterNames.size()) {
             throw new IllegalMixinArgumentException(name, _parameterNames.size());
         }
@@ -89,7 +89,7 @@ public class ScopeNode extends InternalNode {
              */
             @Override
             public boolean add(ParametersNode node) {
-                for (VariableDefinitionNode variable : MutableTreeUtils.getChildren(node, VariableDefinitionNode.class)) {
+                for (VariableDefinitionNode variable : NodeTreeUtils.getChildren(node, VariableDefinitionNode.class)) {
                     _parameterNames.add(variable.getName());
                     add(variable);
                 }
@@ -101,9 +101,10 @@ public class ScopeNode extends InternalNode {
              */
             @Override
             public boolean add(RuleSetNode node) {
-                SelectorGroupNode selectorGroup = MutableTreeUtils.getFirstChild(node, SelectorGroupNode.class);
-                for (SelectorNode selectorNode : MutableTreeUtils.getChildren(selectorGroup, SelectorNode.class)) {
+                SelectorGroupNode selectorGroup = NodeTreeUtils.getFirstChild(node, SelectorGroupNode.class);
+                for (SelectorNode selectorNode : NodeTreeUtils.getChildren(selectorGroup, SelectorNode.class)) {
                     StringBuilder sb = new StringBuilder();
+                    // TODO: Optimize
                     for (Node selectorChild : selectorNode.getChildren()) {
                         sb.append(selectorChild.toString());
                     }
@@ -121,7 +122,7 @@ public class ScopeNode extends InternalNode {
              */
             @Override
             public boolean add(ScopeNode node) {
-                MutableTreeUtils.moveChildren(node, ScopeNode.this);
+                NodeTreeUtils.moveChildren(node, ScopeNode.this);
                 return false; // Don't add the original scope itself
             }
 
@@ -133,7 +134,7 @@ public class ScopeNode extends InternalNode {
                 String name = node.getName();
                 // "Variables" lock on first definition
                 if (!_variableNameToValueMap.containsKey(name)) {
-                    _variableNameToValueMap.put(name, MutableTreeUtils.getFirstChild(node, ExpressionGroupNode.class));
+                    _variableNameToValueMap.put(name, NodeTreeUtils.getFirstChild(node, ExpressionGroupNode.class));
                 }
                 return super.add(node);
             }

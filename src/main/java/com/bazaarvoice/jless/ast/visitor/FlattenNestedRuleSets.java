@@ -9,7 +9,7 @@ import com.bazaarvoice.jless.ast.node.ScopeNode;
 import com.bazaarvoice.jless.ast.node.SelectorGroupNode;
 import com.bazaarvoice.jless.ast.node.SelectorNode;
 import com.bazaarvoice.jless.ast.node.SelectorSegmentNode;
-import com.bazaarvoice.jless.ast.util.MutableTreeUtils;
+import com.bazaarvoice.jless.ast.util.NodeTreeUtils;
 import org.parboiled.trees.GraphUtils;
 
 import java.util.ArrayList;
@@ -44,12 +44,12 @@ public class FlattenNestedRuleSets extends InclusiveNodeVisitor {
         if (!_ruleSetStack.empty()) {
             // Move this rule set up to be a sibling of its parent with comments that describe the parent
             final RuleSetNode parentRuleSet = _ruleSetStack.get(0);
-            MutableTreeUtils.addSiblingAfter(parentRuleSet, surroundWithContext(parentRuleSet, node));
+            NodeTreeUtils.addSiblingAfter(parentRuleSet, surroundWithContext(parentRuleSet, node));
 
             // If the parent rule set's scope is contains no meaningful content, mark it as invisible
-            ScopeNode scope = MutableTreeUtils.getFirstChild(parentRuleSet, ScopeNode.class);
+            ScopeNode scope = NodeTreeUtils.getFirstChild(parentRuleSet, ScopeNode.class);
             int scopeChildCount = scope.getChildren().size();
-            if (scopeChildCount == 0 || scopeChildCount == MutableTreeUtils.getChildren(scope, LineBreakNode.class).size()) {
+            if (scopeChildCount == 0 || scopeChildCount == NodeTreeUtils.getChildren(scope, LineBreakNode.class).size()) {
                 parentRuleSet.setVisible(false);
             }
         }
@@ -143,7 +143,7 @@ public class FlattenNestedRuleSets extends InclusiveNodeVisitor {
     }
 
     private Node[] surroundWithContext(RuleSetNode parent, RuleSetNode node) {
-        String parentSelector = MutableTreeUtils.getFirstChild(parent, SelectorGroupNode.class).toString();
+        String parentSelector = NodeTreeUtils.getFirstChild(parent, SelectorGroupNode.class).toString();
 
         List<Node> nodeList = new ArrayList<Node>();
 
@@ -151,7 +151,7 @@ public class FlattenNestedRuleSets extends InclusiveNodeVisitor {
         nodeList.add(new MultipleLineCommentNode(" " + parentSelector + "{ "));
 
         // Grab line breaks just inside the parent rule set's scope, if any
-        Node enterScopeLineBreak = MutableTreeUtils.getFirstChild(parent, ScopeNode.class).getChildren().get(0);
+        Node enterScopeLineBreak = NodeTreeUtils.getFirstChild(parent, ScopeNode.class).getChildren().get(0);
         if (enterScopeLineBreak instanceof LineBreakNode) {
             nodeList.add(enterScopeLineBreak.clone());
         }

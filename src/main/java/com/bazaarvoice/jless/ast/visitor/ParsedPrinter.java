@@ -17,8 +17,7 @@ import com.bazaarvoice.jless.ast.node.SimpleNode;
 import com.bazaarvoice.jless.ast.node.SingleLineCommentNode;
 import com.bazaarvoice.jless.ast.node.VariableDefinitionNode;
 import com.bazaarvoice.jless.ast.node.VariableReferenceNode;
-import com.bazaarvoice.jless.ast.util.MutableTreeUtils;
-import org.parboiled.trees.GraphUtils;
+import com.bazaarvoice.jless.ast.util.NodeTreeUtils;
 
 import java.util.List;
 
@@ -34,7 +33,7 @@ public class ParsedPrinter extends InclusiveNodeVisitor {
 
     @Override
     public boolean visit(ExpressionGroupNode node) {
-        if (MutableTreeUtils.parentHasNext(node)) {
+        if (NodeTreeUtils.parentHasNext(node)) {
             print(", ");
         }
         return super.visit(node);
@@ -42,7 +41,7 @@ public class ParsedPrinter extends InclusiveNodeVisitor {
 
     @Override
     public boolean visit(ExpressionNode node) {
-        if (MutableTreeUtils.parentHasNext(node)) {
+        if (NodeTreeUtils.parentHasNext(node)) {
             print(' ');
         }
         return super.visit(node);
@@ -50,7 +49,7 @@ public class ParsedPrinter extends InclusiveNodeVisitor {
 
     @Override
     public boolean visit(ExpressionPhraseNode node) {
-        if (MutableTreeUtils.parentHasNext(node)) {
+        if (NodeTreeUtils.parentHasNext(node)) {
             print(", ");
         }
         return super.visit(node);
@@ -94,7 +93,7 @@ public class ParsedPrinter extends InclusiveNodeVisitor {
     @Override
     public boolean visit(PropertyNode node) {
         print(";");
-        if (node.getParent().getChildren().size() > 1 && MutableTreeUtils.parentHasNext(node)) {
+        if (node.getParent().getChildren().size() > 1 && NodeTreeUtils.parentHasNext(node)) {
             print(' ');
         }
         return super.visit(node);
@@ -137,7 +136,7 @@ public class ParsedPrinter extends InclusiveNodeVisitor {
 
     @Override
     public boolean visit(SelectorNode node) {
-        if (MutableTreeUtils.parentHasNext(node)) {
+        if (NodeTreeUtils.parentHasNext(node)) {
             print(", ");
         }
         return super.visit(node);
@@ -176,7 +175,7 @@ public class ParsedPrinter extends InclusiveNodeVisitor {
     @Override
     public boolean visit(VariableDefinitionNode node) {
         print(";");
-        if (node.getParent().getChildren().size() > 1 && MutableTreeUtils.parentHasNext(node)) {
+        if (node.getParent().getChildren().size() > 1 && NodeTreeUtils.parentHasNext(node)) {
             print(' ');
         }
         return super.visit(node);
