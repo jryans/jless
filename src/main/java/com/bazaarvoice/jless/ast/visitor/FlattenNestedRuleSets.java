@@ -1,5 +1,6 @@
 package com.bazaarvoice.jless.ast.visitor;
 
+import com.bazaarvoice.jless.ast.node.InternalNode;
 import com.bazaarvoice.jless.ast.node.LineBreakNode;
 import com.bazaarvoice.jless.ast.node.MultipleLineCommentNode;
 import com.bazaarvoice.jless.ast.node.Node;
@@ -10,7 +11,7 @@ import com.bazaarvoice.jless.ast.node.SelectorGroupNode;
 import com.bazaarvoice.jless.ast.node.SelectorNode;
 import com.bazaarvoice.jless.ast.node.SelectorSegmentNode;
 import com.bazaarvoice.jless.ast.util.NodeTreeUtils;
-import org.parboiled.trees.GraphUtils;
+import com.bazaarvoice.jless.ast.util.RandomAccessListIterator;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -26,6 +27,8 @@ public class FlattenNestedRuleSets extends InclusiveNodeVisitor {
     private List<Node> _updatedSelectors;
     private List<Node> _selectorWorkingSet;
 
+    private int _nodesAddedToParentRuleSet;
+
     @Override
     public boolean enter(PropertyNode node) {
         return false;
@@ -33,23 +36,31 @@ public class FlattenNestedRuleSets extends InclusiveNodeVisitor {
 
     @Override
     public boolean enter(RuleSetNode node) {
+        if (_ruleSetStack.empty()) {
+            _nodesAddedToParentRuleSet = 0;
+        }
+
         _ruleSetStack.push(node);
         return true;
     }
 
     @Override
-    public boolean visit(RuleSetNode node) {
+    public boolean visit(RuleSetNode ruleSet) {
         _ruleSetStack.pop();
 
         if (!_ruleSetStack.empty()) {
-            // Move this rule set up to be a sibling of its parent with comments that describe the parent
+            // Preserve the node's current scope for variable resolution
             final RuleSetNode parentRuleSet = _ruleSetStack.get(0);
-            NodeTreeUtils.addSiblingAfter(parentRuleSet, surroundWithContext(parentRuleSet, node));
+            ScopeNode parentScope = NodeTreeUtils.getFirstChild(parentRuleSet, ScopeNode.class);
+            ScopeNode scope = NodeTreeUtils.getFirstChild(ruleSet, ScopeNode.class);
+            scope.setParentScope(parentScope);
+
+            // Move this rule set up to be a sibling of its parent with comments that describe the parent
+            addSiblingAfter(parentRuleSet, surroundWithContext(parentRuleSet, ruleSet));
 
             // If the parent rule set's scope is contains no meaningful content, mark it as invisible
-            ScopeNode scope = NodeTreeUtils.getFirstChild(parentRuleSet, ScopeNode.class);
-            int scopeChildCount = scope.getChildren().size();
-            if (scopeChildCount == 0 || scopeChildCount == NodeTreeUtils.getChildren(scope, LineBreakNode.class).size()) {
+            int scopeChildCount = parentScope.getChildren().size();
+            if (scopeChildCount == 0 || scopeChildCount == NodeTreeUtils.getChildren(parentScope, LineBreakNode.class).size()) {
                 parentRuleSet.setVisible(false);
             }
         }
@@ -132,8 +143,8 @@ public class FlattenNestedRuleSets extends InclusiveNodeVisitor {
             SelectorSegmentNode segmentClone = (SelectorSegmentNode) segment.clone();
 
             // If this is the first segment and it's not a sub-element selector, use the descendant combinator
-            if (segment.getParent().getLatestChildIterator().previousIndex() == 0 && !segment.isSubElementSelector() && segment.getCombinator().equals("")) {
-                segmentClone.setCombinator(" "); // TODO: Constants?
+            if (segment.getParent().getLatestChildIterator().previousIndex() == 0 && !segment.isSubElementSelector() && segment.getCombinator().equals(SelectorSegmentNode.NO_COMBINATOR)) {
+                segmentClone.setCombinator(SelectorSegmentNode.DESCENDANT_COMBINATOR);
             }
 
             selector.addChild(segmentClone);
@@ -142,19 +153,45 @@ public class FlattenNestedRuleSets extends InclusiveNodeVisitor {
         return true;
     }
 
-    private Node[] surroundWithContext(RuleSetNode parent, RuleSetNode node) {
+    /**
+     * Add the input nodes after the current node in its parent's list of children, but yet
+     * also ensure that they will be included in the current iteration of those children.
+     */
+    private void addSiblingAfter(Node node, List<Node> siblings) {
+        InternalNode parent = node.getParent();
+
+        // Add the sibling nodes after the current node (also the parent iterator's current node)
+        RandomAccessListIterator<Node> childIterator = parent.getLatestChildIterator();
+        int index = childIterator.nextIndex() + _nodesAddedToParentRuleSet;
+        for (Node sibling : siblings) {
+            childIterator.add(index++, sibling);
+        }
+
+        // If the offset was 0, then the iterator advanced with each add
+        if (_nodesAddedToParentRuleSet == 0) {
+            // Rewind the iterator so that the added nodes are visited
+            for (Node sibling : siblings) {
+                childIterator.previous();
+            }
+        }
+
+        // Update offset for future add operations
+        _nodesAddedToParentRuleSet += siblings.size();
+    }
+
+    private List<Node> surroundWithContext(RuleSetNode parent, RuleSetNode node) {
         String parentSelector = NodeTreeUtils.getFirstChild(parent, SelectorGroupNode.class).toString();
 
         List<Node> nodeList = new ArrayList<Node>();
 
         // Add rule set header comment
-        nodeList.add(new MultipleLineCommentNode(" " + parentSelector + "{ "));
+        nodeList.add(new MultipleLineCommentNode(" " + parentSelector + " { "));
 
         // Grab line breaks just inside the parent rule set's scope, if any
-        Node enterScopeLineBreak = NodeTreeUtils.getFirstChild(parent, ScopeNode.class).getChildren().get(0);
+        /*Node enterScopeLineBreak = NodeTreeUtils.getFirstChild(parent, ScopeNode.class).getChildren().get(0);
         if (enterScopeLineBreak instanceof LineBreakNode) {
             nodeList.add(enterScopeLineBreak.clone());
-        }
+        }*/
 
         // Add rule set itself
         nodeList.add(node);
@@ -163,11 +200,11 @@ public class FlattenNestedRuleSets extends InclusiveNodeVisitor {
         nodeList.add(new MultipleLineCommentNode(" } " + parentSelector));
 
         // Grab line breaks just at the end of the parent rule set, if any
-        Node exitScopeLineBreak = GraphUtils.getLastChild((Node) parent);
+        /*Node exitScopeLineBreak = GraphUtils.getLastChild((Node) parent);
         if (exitScopeLineBreak instanceof LineBreakNode) {
             nodeList.add(exitScopeLineBreak.clone());
-        }
+        }*/
 
-        return nodeList.toArray(new Node[nodeList.size()]);
+        return nodeList;
     }
 }

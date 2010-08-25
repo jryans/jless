@@ -5,6 +5,9 @@ import com.bazaarvoice.jless.ast.visitor.NodeTraversalVisitor;
 
 public class SelectorSegmentNode extends LeafNode {
 
+    public static final String NO_COMBINATOR = "";
+    public static final String DESCENDANT_COMBINATOR = " ";
+
     private String _combinator;
     private String _simpleSelector;
     private boolean _subElementSelector;

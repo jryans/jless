@@ -2,6 +2,7 @@ package com.bazaarvoice.jless;
 
 import com.bazaarvoice.jless.ast.node.Node;
 import com.bazaarvoice.jless.ast.node.ScopeNode;
+import com.bazaarvoice.jless.ast.visitor.FlattenNestedRuleSets;
 import com.bazaarvoice.jless.ast.visitor.TranslatedPrinter;
 import com.bazaarvoice.jless.exception.LessTranslationException;
 import com.bazaarvoice.jless.parser.Parser;
@@ -87,6 +88,7 @@ public class LessTranslator {
             }
         }
 
+        // Print only the last input
         TranslatedPrinter printer = new TranslatedPrinter();
         stack.peek().traverse(printer);
         return printer.toString();
@@ -95,7 +97,7 @@ public class LessTranslator {
 
 
     public static void translate(Node root) {
-//        root.traverse(new FlattenNestedRuleSets());
+        root.traverse(new FlattenNestedRuleSets());
     }
 
     public static void main(String[] args) {

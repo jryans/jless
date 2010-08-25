@@ -6,6 +6,7 @@ import com.bazaarvoice.jless.ast.node.ExpressionNode;
 import com.bazaarvoice.jless.ast.node.ExpressionPhraseNode;
 import com.bazaarvoice.jless.ast.node.FunctionNode;
 import com.bazaarvoice.jless.ast.node.LineBreakNode;
+import com.bazaarvoice.jless.ast.node.MultipleLineCommentNode;
 import com.bazaarvoice.jless.ast.node.Node;
 import com.bazaarvoice.jless.ast.node.ParametersNode;
 import com.bazaarvoice.jless.ast.node.PlaceholderNode;
@@ -21,12 +22,16 @@ import com.bazaarvoice.jless.ast.node.VariableReferenceNode;
 import com.bazaarvoice.jless.ast.util.NodeTreeUtils;
 import com.bazaarvoice.jless.exception.UndefinedMixinException;
 import com.bazaarvoice.jless.exception.UndefinedVariableException;
-import org.parboiled.Action;
 import org.parboiled.BaseParser;
 import org.parboiled.Context;
 import org.parboiled.Rule;
 import org.parboiled.annotations.MemoMismatches;
 import org.parboiled.support.Var;
+import org.parboiled.trees.GraphUtils;
+
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 
 /**
  * Initially transcribed into Parboiled from the
@@ -88,7 +93,10 @@ public class Parser extends BaseParser<Node> {
                                 Sequence(Sp1(), push(new LineBreakNode(match())))
                         ),
 //                        debug(getContext()),
-                        peek(1).addChild(pop())//,
+                        FirstOf(
+                                flattenNestedRuleSet(),
+                                peek(1).addChild(pop())
+                        )//,
 //                        debug(getContext())
                 )
         );
@@ -121,7 +129,8 @@ public class Parser extends BaseParser<Node> {
                                 Scope(), peek(1).addChild(pop()), peek(1).addChild(pop()), Ws0()
                         )
                 ),
-                '}', Ws0(), peek().addChild(new LineBreakNode(match()))
+                '}', Ws0(), peek().addChild(new LineBreakNode(match()))//,
+//                flattenNestedRuleSet()
         );
     }
 
@@ -164,13 +173,13 @@ public class Parser extends BaseParser<Node> {
                 // No arguments, reference an existing rule set's properties
                 Sequence(
                         SelectorGroup(), ';',
-                        ACTION(resolveMixinReference(pop().toString(), null).run(getContext())),
+                        resolveMixinReference(pop().toString(), null),
                         Ws0(), peek().addChild(new LineBreakNode(match()))
                 ),
                 // Call a mixin, passing along some arguments
                 Sequence(
                         Class(), name.set(match()), Arguments(), ';',
-                        ACTION(resolveMixinReference(name.get(), (ArgumentsNode) pop()).run(getContext())),
+                        resolveMixinReference(name.get(), (ArgumentsNode) pop()),
                         Ws0(), peek().addChild(new LineBreakNode(match()))
                 )
         );
@@ -462,7 +471,7 @@ public class Parser extends BaseParser<Node> {
     Rule VariableReference() {
         return Sequence(
                 Variable(),
-                ACTION(resolveVariableReference(match()).run(getContext()))
+                pushVariableReference(match())
         );
     }
 
@@ -581,21 +590,10 @@ public class Parser extends BaseParser<Node> {
     }
 
     /**
-     * '#' RGB / (('hsl' / 'rgb') 'a'?) Arguments
-     * TODO: Cleanup
+     * '#' RGB
      */
     Rule Color() {
-        return /*FirstOf(
-                Sequence(*/
-                        Sequence('#', RGB())/*,
-                        push(new SimpleNode(match()))
-                ),
-                Sequence(
-                        Sequence(FirstOf("hsl", "rgb"), Optional('a')),
-                        push(new FunctionNode())
-                        Arguments()
-                )
-        )*/;
+        return Sequence('#', RGB());
     }
 
     /**
@@ -704,72 +702,135 @@ public class Parser extends BaseParser<Node> {
 
     // ********** Translation Actions **********
 
-    Action<Node> resolveMixinReference(final String name, final ArgumentsNode arguments) {
-        return new Action<Node>() {
-            @Override
-            public boolean run(Context context) {
-                if (!isParserTranslationEnabled()) {
-                    return push(new PlaceholderNode(new SimpleNode(name)));
-                }
+    /**
+     * Future: Hide referenced mixins from output
+     */
+    boolean resolveMixinReference(String name, ArgumentsNode arguments) {
+        if (!isParserTranslationEnabled()) {
+            return push(new PlaceholderNode(new SimpleNode(name)));
+        }
 
-                for (int i = 0; i < getContext().getValueStack().size(); i++) {
-                    Node node = peek(i);
-                    if (!(node instanceof ScopeNode)) {
-                        continue;
-                    }
-
-                    ScopeNode scope = (ScopeNode) node;
-                    RuleSetNode ruleSet = scope.getRuleSet(name);
-
-                    if (ruleSet == null) {
-                        continue;
-                    }
-
-                    // Get the scope of the rule set we located and call it as a mixin
-                    ScopeNode ruleSetScope = NodeTreeUtils.getFirstChild(ruleSet, ScopeNode.class).callMixin(name, arguments);
-
-                    // TODO: If original rule set is still connected to the tree, swap it out for a LineBreakNode to hide it in the output
-                    /*InternalNode ruleSetParent = ruleSet.getParent();
-                    if (ruleSetParent != null) {
-
-                    }*/
-
-                    return push(ruleSetScope);
-                }
-
-                // Record error location
-                throw new UndefinedMixinException(name);
+        // Walk down the stack, looking for a scope node that knows about a given rule set
+        for (Node node : getContext().getValueStack()) {
+            if (!(node instanceof ScopeNode)) {
+                continue;
             }
-        };
+
+            ScopeNode scope = (ScopeNode) node;
+            RuleSetNode ruleSet = scope.getRuleSet(name);
+
+            if (ruleSet == null) {
+                continue;
+            }
+
+            // Get the scope of the rule set we located and call it as a mixin
+            ScopeNode ruleSetScope = NodeTreeUtils.getFirstChild(ruleSet, ScopeNode.class).callMixin(name, arguments);
+
+            return push(ruleSetScope);
+        }
+
+        // Record error location
+        throw new UndefinedMixinException(name);
     }
 
-    Action<Node> resolveVariableReference(final String name) {
-        return new Action<Node>() {
-            @Override
-            public boolean run(Context context) {
-                if (!isParserTranslationEnabled()) {
-                    return push(new SimpleNode(name));
-                }
+    boolean pushVariableReference(String name) {
+        if (!isParserTranslationEnabled()) {
+            return push(new SimpleNode(name));
+        }
 
-                for (int i = 0; i < getContext().getValueStack().size(); i++) {
-                    Node node = peek(i);
-                    if (!(node instanceof ScopeNode)) {
-                        continue;
-                    }
-
-                    // Ensure that the variable exists
-                    ScopeNode scope = (ScopeNode) node;
-                    if (!scope.isVariableDefined(name)) {
-                        continue;
-                    }
-
-                    return push(new VariableReferenceNode(name));
-                }
-
-                // Record error location
-                throw new UndefinedVariableException(name);
+        // Walk down the stack, looking for a scope node that knows about a given variable
+        for (Node node : getContext().getValueStack()) {
+            if (!(node instanceof ScopeNode)) {
+                continue;
             }
-        };
+
+            // Ensure that the variable exists
+            ScopeNode scope = (ScopeNode) node;
+            if (!scope.isVariableDefined(name)) {
+                continue;
+            }
+
+            return push(new VariableReferenceNode(name));
+        }
+
+        // Record error location
+        throw new UndefinedVariableException(name);
+    }
+    
+    boolean flattenNestedRuleSet() {
+        /*if (!isParserTranslationEnabled()) {
+            return false; // rule set will be added into a nested
+        }
+
+        // Each rule set places a RuleSetNode and ScopeNode on the stack, so there are nested
+        // rule sets when the stack contains at least 4 nodes.
+        if (getContext().getValueStack().size() < 4 || !(peek() instanceof RuleSetNode) || !(peek(2) instanceof RuleSetNode)) {
+            return false; // flattening is not needed here
+        }
+
+        RuleSetNode ruleSet = (RuleSetNode) pop();
+        RuleSetNode parentRuleSet = (RuleSetNode) peek(1);
+
+        // Gather the selectors of the current and parent rule sets
+        SelectorGroupNode parentSelectorGroup = NodeTreeUtils.getFirstChild(parentRuleSet, SelectorGroupNode.class);
+        List<SelectorNode> parentSelectors = NodeTreeUtils.getChildren(parentSelectorGroup, SelectorNode.class);
+        SelectorGroupNode selectorGroup = NodeTreeUtils.getFirstChild(ruleSet, SelectorGroupNode.class);
+        List<SelectorNode> selectors = NodeTreeUtils.getChildren(selectorGroup, SelectorNode.class);
+
+        // Create the updated selectors
+        List<SelectorNode> updatedSelectors = new ArrayList<SelectorNode>();
+        for (SelectorNode parentSelector : parentSelectors) {
+            for (SelectorNode selector : selectors) {
+                SelectorNode parentSelectorClone = parentSelector.clone();
+                parentSelectorClone.addChild(selector.clone());
+                updatedSelectors.add(parentSelectorClone);
+            }
+        }
+
+        // Replace the existing selectors
+        selectorGroup.clearChildren();
+        selectorGroup.addChildren(updatedSelectors);
+
+        // Move the current rule set to become a sibling of its parent rule set
+        // and surround with comments to preserve line numbering
+        ScopeNode parentScope = (ScopeNode) peek();
+        ScopeNode grandparentScope = (ScopeNode) peek(2);
+        grandparentScope.addChildren(surroundWithContext(parentRuleSet, parentSelectorGroup, parentScope, ruleSet));
+
+        // TODO: var scope
+
+        return true;*/
+
+        return false;
+    }
+
+    private Collection<Node> surroundWithContext(RuleSetNode parentRuleSet, SelectorGroupNode parentSelectorGroup, ScopeNode parentScope, RuleSetNode ruleSet) {
+        String parentSelector = parentSelectorGroup.toString();
+
+        List<Node> nodeList = new ArrayList<Node>();
+
+        // Add rule set header comment
+        nodeList.add(new MultipleLineCommentNode(" " + parentSelector + " { "));
+
+        // Grab line breaks just inside the parent rule set's scope, if any
+        Node enterScopeLineBreak = parentScope.getChildren().get(0);
+        if (enterScopeLineBreak instanceof LineBreakNode) {
+            nodeList.add(enterScopeLineBreak.clone());
+        }
+
+        // Add rule set itself
+        nodeList.add(ruleSet);
+
+        // Add rule set footer comment
+        nodeList.add(new MultipleLineCommentNode(" } " + parentSelector));
+
+        // Grab line breaks just at the end of the parent rule set, if any
+        Node exitScopeLineBreak = GraphUtils.getLastChild((Node) parentRuleSet);
+        if (exitScopeLineBreak instanceof LineBreakNode) {
+            nodeList.add(exitScopeLineBreak.clone());
+        }
+
+        return nodeList;
     }
 
     // ********** Debugging **********

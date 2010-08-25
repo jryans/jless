@@ -4,6 +4,7 @@ import com.bazaarvoice.jless.ast.node.Node;
 import com.bazaarvoice.jless.ast.node.ParametersNode;
 import com.bazaarvoice.jless.ast.node.RuleSetNode;
 import com.bazaarvoice.jless.ast.node.ScopeNode;
+import com.bazaarvoice.jless.ast.node.SelectorNode;
 import com.bazaarvoice.jless.ast.node.VariableDefinitionNode;
 
 /**
@@ -23,6 +24,8 @@ public interface NodeAdditionVisitor {
     boolean add(RuleSetNode node);
 
     boolean add(ScopeNode node);
+
+    boolean add(SelectorNode node);
 
     boolean add(VariableDefinitionNode node);
 }

@@ -146,8 +146,8 @@ public class ParsingTest {
         runTestFor("less-bright");
     }
 
-    public void testMixins() {
-        runTestFor("mixins");
+    public void testNested() {
+        runTestFor("nested");
     }
 
     public void testRuleSets() {

@@ -24,6 +24,7 @@ import com.google.common.base.Preconditions;
 import org.parboiled.trees.TreeUtils;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.ListIterator;
@@ -63,6 +64,12 @@ public abstract class InternalNode extends Node {
     public boolean addChild(Node child) {
         addChild(_children.size(), child);
         return true;
+    }
+
+    public void addChildren(Collection<? extends Node> children) {
+        for (Node child : children) {
+            addChild(child);
+        }
     }
 
     @Override
@@ -132,6 +139,12 @@ public abstract class InternalNode extends Node {
         }
 
         return removed;
+    }
+
+    public void clearChildren() {
+        while (_children.size() > 0) {
+            removeChild(0);
+        }
     }
 
     public boolean isIterating() {

@@ -15,37 +15,6 @@ public final class NodeTreeUtils {
 
     private NodeTreeUtils() {}
 
-    /**
-     * Add the input node after the current node in its parent's list of children.
-     */
-    public static void addSiblingAfter(Node node, Node sibling) {
-        InternalNode parent = node.getParent();
-
-        // Add the sibling node after the current node
-        RandomAccessListIterator<Node> childIterator = parent.getLatestChildIterator();
-        childIterator.add(sibling);
-
-        // Rewind the iterator so that the added node is visited
-        childIterator.previous();
-    }
-
-    /**
-     * Add the input nodes after the current node in its parent's list of children.
-     */
-    public static void addSiblingAfter(Node node, Node... siblings) {
-        InternalNode parent = node.getParent();
-
-        // Add the sibling nodes after the current node (also the parent iterator's current node)
-        RandomAccessListIterator<Node> childIterator = parent.getLatestChildIterator();
-        for (Node sibling : siblings) {
-            childIterator.add(sibling);
-        }
-
-        // Rewind the iterator so that the added nodes are visited
-        for (Node sibling : siblings) {
-            childIterator.previous();
-        }
-    }
 
     public static boolean parentHasNext(Node node) {
         InternalNode parent = node.getParent();

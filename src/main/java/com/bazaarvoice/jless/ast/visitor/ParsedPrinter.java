@@ -113,7 +113,6 @@ public class ParsedPrinter extends InclusiveNodeVisitor {
                 // do nothing
             } else {
                 addIndent();
-//                print(' ');
             }
         }
         return super.enter(node);
@@ -127,7 +126,6 @@ public class ParsedPrinter extends InclusiveNodeVisitor {
                 // do nothing
             } else {
                 removeIndent();
-//                print(' ');
             }
             deleteIndent().print('}');
         }
@@ -144,7 +142,6 @@ public class ParsedPrinter extends InclusiveNodeVisitor {
 
     @Override
     public boolean visit(SelectorGroupNode node) {
-//        print(' ');
         return super.visit(node);
     }
 

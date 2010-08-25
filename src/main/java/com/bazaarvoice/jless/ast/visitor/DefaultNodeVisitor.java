@@ -63,6 +63,11 @@ public abstract class DefaultNodeVisitor implements NodeAdditionVisitor, NodeTra
     }
 
     @Override
+    public boolean add(SelectorNode node) {
+        return defaultValue();
+    }
+
+    @Override
     public boolean add(VariableDefinitionNode node) {
         return defaultValue();
     }
