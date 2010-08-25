@@ -40,6 +40,10 @@ public class VariableDefinitionNode extends InternalNode {
 
     @Override
     public boolean traverse(NodeTraversalVisitor visitor) {
+        if (!isVisible()) {
+            return true;
+        }
+
         if (visitor.enter(this)) {
             ListIterator<Node> it = pushChildIterator();
             while (it.hasNext()) {

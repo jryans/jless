@@ -12,6 +12,7 @@ import com.bazaarvoice.jless.ast.node.SelectorNode;
 import com.bazaarvoice.jless.ast.node.SelectorSegmentNode;
 import com.bazaarvoice.jless.ast.util.NodeTreeUtils;
 import com.bazaarvoice.jless.ast.util.RandomAccessListIterator;
+import org.parboiled.trees.GraphUtils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -188,10 +189,10 @@ public class FlattenNestedRuleSets extends InclusiveNodeVisitor {
         nodeList.add(new MultipleLineCommentNode(" " + parentSelector + " { "));
 
         // Grab line breaks just inside the parent rule set's scope, if any
-        /*Node enterScopeLineBreak = NodeTreeUtils.getFirstChild(parent, ScopeNode.class).getChildren().get(0);
+        Node enterScopeLineBreak = NodeTreeUtils.getFirstChild(parent, ScopeNode.class).getChildren().get(0);
         if (enterScopeLineBreak instanceof LineBreakNode) {
-            nodeList.add(enterScopeLineBreak.clone());
-        }*/
+            nodeList.add(enterScopeLineBreak);
+        }
 
         // Add rule set itself
         nodeList.add(node);
@@ -200,10 +201,10 @@ public class FlattenNestedRuleSets extends InclusiveNodeVisitor {
         nodeList.add(new MultipleLineCommentNode(" } " + parentSelector));
 
         // Grab line breaks just at the end of the parent rule set, if any
-        /*Node exitScopeLineBreak = GraphUtils.getLastChild((Node) parent);
+        Node exitScopeLineBreak = GraphUtils.getLastChild((Node) parent);
         if (exitScopeLineBreak instanceof LineBreakNode) {
-            nodeList.add(exitScopeLineBreak.clone());
-        }*/
+            nodeList.add(exitScopeLineBreak);
+        }
 
         return nodeList;
     }

@@ -2,7 +2,7 @@ package com.bazaarvoice.jless.ast.node;
 
 import com.bazaarvoice.jless.ast.visitor.NodeAdditionVisitor;
 import com.bazaarvoice.jless.ast.visitor.NodeTraversalVisitor;
-import com.bazaarvoice.jless.ast.visitor.ParsedPrinter;
+import com.bazaarvoice.jless.ast.visitor.Printer;
 import org.parboiled.trees.MutableTreeNode;
 
 /**
@@ -10,6 +10,7 @@ import org.parboiled.trees.MutableTreeNode;
  */
 public abstract class Node implements MutableTreeNode<Node>, Cloneable {
     private InternalNode _parent;
+    private boolean _visible = true;
 
     @Override
     public InternalNode getParent() {
@@ -18,6 +19,18 @@ public abstract class Node implements MutableTreeNode<Node>, Cloneable {
 
     public void setParent(InternalNode parent) {
         _parent = parent;
+    }
+
+    public boolean isVisible() {
+        return _visible;
+    }
+
+    /**
+     * Controls whether the node and its children will be visited by a traversal visitor.
+     */
+    public boolean setVisible(boolean visible) {
+        _visible = visible;
+        return true;
     }
 
     /**
@@ -58,7 +71,7 @@ public abstract class Node implements MutableTreeNode<Node>, Cloneable {
 
     @Override
     public String toString() {
-        ParsedPrinter p = new ParsedPrinter();
+        Printer p = new Printer();
         traverse(p);
         return p.toString();
     }

@@ -42,6 +42,6 @@ public abstract class LeafNode extends Node {
 
     @Override
     public boolean traverse(NodeTraversalVisitor visitor) {
-        return visitor.visit(this);
+        return !isVisible() || visitor.visit(this);
     }
 }

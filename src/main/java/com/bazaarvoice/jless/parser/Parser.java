@@ -6,7 +6,6 @@ import com.bazaarvoice.jless.ast.node.ExpressionNode;
 import com.bazaarvoice.jless.ast.node.ExpressionPhraseNode;
 import com.bazaarvoice.jless.ast.node.FunctionNode;
 import com.bazaarvoice.jless.ast.node.LineBreakNode;
-import com.bazaarvoice.jless.ast.node.MultipleLineCommentNode;
 import com.bazaarvoice.jless.ast.node.Node;
 import com.bazaarvoice.jless.ast.node.ParametersNode;
 import com.bazaarvoice.jless.ast.node.PlaceholderNode;
@@ -27,11 +26,6 @@ import org.parboiled.Context;
 import org.parboiled.Rule;
 import org.parboiled.annotations.MemoMismatches;
 import org.parboiled.support.Var;
-import org.parboiled.trees.GraphUtils;
-
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
 
 /**
  * Initially transcribed into Parboiled from the
@@ -93,10 +87,7 @@ public class Parser extends BaseParser<Node> {
                                 Sequence(Sp1(), push(new LineBreakNode(match())))
                         ),
 //                        debug(getContext()),
-                        FirstOf(
-                                flattenNestedRuleSet(),
-                                peek(1).addChild(pop())
-                        )//,
+                        peek(1).addChild(pop())
 //                        debug(getContext())
                 )
         );
@@ -156,7 +147,7 @@ public class Parser extends BaseParser<Node> {
      */
     Rule Parameter() {
         return Sequence(
-                Variable(), push(new VariableDefinitionNode(match())), Ws0(),
+                Variable(), push(new VariableDefinitionNode(match())), peek().setVisible(!isParserTranslationEnabled()), Ws0(),
                 ':', Ws0(),
                 ExpressionPhrase(), peek(1).addChild(new ExpressionGroupNode(pop()))
         );
@@ -320,7 +311,7 @@ public class Parser extends BaseParser<Node> {
                 Sequence(
                         FirstOf(
                                 Sequence(PropertyName(), push(new PropertyNode(match()))),
-                                Sequence(Variable(), push(new VariableDefinitionNode(match())))
+                                Sequence(Variable(), push(new VariableDefinitionNode(match())), peek().setVisible(!isParserTranslationEnabled()))
                         ), Ws0(),
                         ':', Ws0(),
                         push(new ExpressionGroupNode()),
@@ -755,82 +746,6 @@ public class Parser extends BaseParser<Node> {
 
         // Record error location
         throw new UndefinedVariableException(name);
-    }
-    
-    boolean flattenNestedRuleSet() {
-        /*if (!isParserTranslationEnabled()) {
-            return false; // rule set will be added into a nested
-        }
-
-        // Each rule set places a RuleSetNode and ScopeNode on the stack, so there are nested
-        // rule sets when the stack contains at least 4 nodes.
-        if (getContext().getValueStack().size() < 4 || !(peek() instanceof RuleSetNode) || !(peek(2) instanceof RuleSetNode)) {
-            return false; // flattening is not needed here
-        }
-
-        RuleSetNode ruleSet = (RuleSetNode) pop();
-        RuleSetNode parentRuleSet = (RuleSetNode) peek(1);
-
-        // Gather the selectors of the current and parent rule sets
-        SelectorGroupNode parentSelectorGroup = NodeTreeUtils.getFirstChild(parentRuleSet, SelectorGroupNode.class);
-        List<SelectorNode> parentSelectors = NodeTreeUtils.getChildren(parentSelectorGroup, SelectorNode.class);
-        SelectorGroupNode selectorGroup = NodeTreeUtils.getFirstChild(ruleSet, SelectorGroupNode.class);
-        List<SelectorNode> selectors = NodeTreeUtils.getChildren(selectorGroup, SelectorNode.class);
-
-        // Create the updated selectors
-        List<SelectorNode> updatedSelectors = new ArrayList<SelectorNode>();
-        for (SelectorNode parentSelector : parentSelectors) {
-            for (SelectorNode selector : selectors) {
-                SelectorNode parentSelectorClone = parentSelector.clone();
-                parentSelectorClone.addChild(selector.clone());
-                updatedSelectors.add(parentSelectorClone);
-            }
-        }
-
-        // Replace the existing selectors
-        selectorGroup.clearChildren();
-        selectorGroup.addChildren(updatedSelectors);
-
-        // Move the current rule set to become a sibling of its parent rule set
-        // and surround with comments to preserve line numbering
-        ScopeNode parentScope = (ScopeNode) peek();
-        ScopeNode grandparentScope = (ScopeNode) peek(2);
-        grandparentScope.addChildren(surroundWithContext(parentRuleSet, parentSelectorGroup, parentScope, ruleSet));
-
-        // TODO: var scope
-
-        return true;*/
-
-        return false;
-    }
-
-    private Collection<Node> surroundWithContext(RuleSetNode parentRuleSet, SelectorGroupNode parentSelectorGroup, ScopeNode parentScope, RuleSetNode ruleSet) {
-        String parentSelector = parentSelectorGroup.toString();
-
-        List<Node> nodeList = new ArrayList<Node>();
-
-        // Add rule set header comment
-        nodeList.add(new MultipleLineCommentNode(" " + parentSelector + " { "));
-
-        // Grab line breaks just inside the parent rule set's scope, if any
-        Node enterScopeLineBreak = parentScope.getChildren().get(0);
-        if (enterScopeLineBreak instanceof LineBreakNode) {
-            nodeList.add(enterScopeLineBreak.clone());
-        }
-
-        // Add rule set itself
-        nodeList.add(ruleSet);
-
-        // Add rule set footer comment
-        nodeList.add(new MultipleLineCommentNode(" } " + parentSelector));
-
-        // Grab line breaks just at the end of the parent rule set, if any
-        Node exitScopeLineBreak = GraphUtils.getLastChild((Node) parentRuleSet);
-        if (exitScopeLineBreak instanceof LineBreakNode) {
-            nodeList.add(exitScopeLineBreak.clone());
-        }
-
-        return nodeList;
     }
 
     // ********** Debugging **********

@@ -1,7 +1,7 @@
 package com.bazaarvoice.jless;
 
 import com.bazaarvoice.jless.ast.node.Node;
-import com.bazaarvoice.jless.ast.visitor.ParsedPrinter;
+import com.bazaarvoice.jless.ast.visitor.Printer;
 import com.bazaarvoice.jless.parser.Parser;
 import org.apache.commons.io.IOUtils;
 import org.parboiled.Parboiled;
@@ -104,13 +104,13 @@ public class ParsingTest {
     }
 
     public String printResult(Node root) {
-        ParsedPrinter p = createPrinter();
+        Printer p = createPrinter();
         root.traverse(p);
         return p.toString();
     }
 
-    protected ParsedPrinter createPrinter() {
-        return new ParsedPrinter();
+    protected Printer createPrinter() {
+        return new Printer();
     }
 
     protected void runTestFor(String fileName) {

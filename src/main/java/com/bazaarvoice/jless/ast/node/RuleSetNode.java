@@ -7,18 +7,8 @@ import java.util.ListIterator;
 
 public class RuleSetNode extends InternalNode {
 
-    private boolean _visible = true;
-
     public RuleSetNode(Node child) {
         super(child);
-    }
-
-    public boolean isVisible() {
-        return _visible;
-    }
-
-    public void setVisible(boolean visible) {
-        _visible = visible;
     }
 
     @Override
@@ -44,6 +34,10 @@ public class RuleSetNode extends InternalNode {
 
     @Override
     public boolean traverse(NodeTraversalVisitor visitor) {
+        if (!isVisible()) {
+            return true;
+        }
+
         if (visitor.enter(this)) {
             ListIterator<Node> it = pushChildIterator();
             while (it.hasNext()) {

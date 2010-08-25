@@ -1,7 +1,7 @@
 package com.bazaarvoice.jless;
 
 import com.bazaarvoice.jless.ast.node.Node;
-import com.bazaarvoice.jless.ast.visitor.ParsedPrinter;
+import com.bazaarvoice.jless.ast.visitor.Printer;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -37,7 +37,7 @@ public final class TestUtils {
      * Utility method that can be run from within the debugger to look at the parsed output file.
      */
     public static String printParsedResult(Node root) {
-        ParsedPrinter p = new ParsedPrinter();
+        Printer p = new Printer();
         root.traverse(p);
         return p.toString();
     }

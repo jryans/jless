@@ -1,14 +1,13 @@
 package com.bazaarvoice.jless.ast.visitor;
 
 import com.bazaarvoice.jless.ast.node.ExpressionGroupNode;
+import com.bazaarvoice.jless.ast.node.ExpressionNode;
 import com.bazaarvoice.jless.ast.node.ExpressionPhraseNode;
 import com.bazaarvoice.jless.ast.node.FunctionNode;
-import com.bazaarvoice.jless.ast.node.Node;
-import com.bazaarvoice.jless.ast.node.ExpressionNode;
 import com.bazaarvoice.jless.ast.node.LineBreakNode;
 import com.bazaarvoice.jless.ast.node.MultipleLineCommentNode;
+import com.bazaarvoice.jless.ast.node.Node;
 import com.bazaarvoice.jless.ast.node.PropertyNode;
-import com.bazaarvoice.jless.ast.node.RuleSetNode;
 import com.bazaarvoice.jless.ast.node.ScopeNode;
 import com.bazaarvoice.jless.ast.node.SelectorGroupNode;
 import com.bazaarvoice.jless.ast.node.SelectorNode;
@@ -21,7 +20,7 @@ import com.bazaarvoice.jless.ast.util.NodeTreeUtils;
 
 import java.util.List;
 
-public class ParsedPrinter extends InclusiveNodeVisitor {
+public class Printer extends InclusiveNodeVisitor {
 
     private static final int INDENT_STEP = 4;
 
@@ -97,11 +96,6 @@ public class ParsedPrinter extends InclusiveNodeVisitor {
             print(' ');
         }
         return super.visit(node);
-    }
-
-    @Override
-    public boolean enter(RuleSetNode node) {
-        return node.isVisible();
     }
 
     @Override
@@ -186,19 +180,19 @@ public class ParsedPrinter extends InclusiveNodeVisitor {
 
     // Printing methods
 
-    private ParsedPrinter print(String s) {
+    private Printer print(String s) {
         _sb.append(s);
         _lastPrintedIndent = false;
         return this;
     }
 
-    private ParsedPrinter print(Character c) {
+    private Printer print(Character c) {
         _sb.append(c);
         _lastPrintedIndent = false;
         return this;
     }
 
-    private ParsedPrinter printIndent() {
+    private Printer printIndent() {
         for (int i = 0; i < _indent; i++) {
             _sb.append(' ');
         }
@@ -206,23 +200,23 @@ public class ParsedPrinter extends InclusiveNodeVisitor {
         return this;
     }
 
-    private ParsedPrinter printLine() {
+    private Printer printLine() {
         _sb.append('\n');
         _lastPrintedIndent = false;
         return this;
     }
 
-    private ParsedPrinter addIndent() {
+    private Printer addIndent() {
         _indent += INDENT_STEP;
         return this;
     }
 
-    private ParsedPrinter removeIndent() {
+    private Printer removeIndent() {
         _indent -= INDENT_STEP;
         return this;
     }
 
-    private ParsedPrinter deleteIndent() {
+    private Printer deleteIndent() {
         if (_lastPrintedIndent) {
             _sb.delete(_sb.length() - INDENT_STEP, _sb.length());
         }

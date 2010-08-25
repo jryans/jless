@@ -26,6 +26,6 @@ public class SpacingNode extends SimpleNode {
 
     @Override
     public boolean traverse(NodeTraversalVisitor visitor) {
-        return visitor.visit(this);
+        return !isVisible() || visitor.visit(this);
     }
 }
