@@ -8,7 +8,9 @@
     background-image: -webkit-gradient(linear, left top, left bottom, from(#030303), to(#010101)); 
 }
 
-/* } .nested *//* .nested { */.nested .test1 {
+/* } .nested */
+
+/* .nested { */.nested .test1 {
     background-image: -moz-linear-gradient(top, bottom, from(#030303), to(#010101)); background-image: -webkit-gradient(linear, left top, left bottom, from(#030303), to(#010101)); 
 }
 
@@ -20,4 +22,8 @@
     background-image: -moz-linear-gradient(top, bottom, from(red), to(green)); 
     background-image: -webkit-gradient(linear, left top, left bottom, from(red), to(green)); 
 }
-/* } .nested */
+/* } .nested *//* .cat, .dog { */
+.cat:hover, .dog:hover, .cat .bob, .dog .bob {
+    color: blue; 
+}
+/* } .cat, .dog */

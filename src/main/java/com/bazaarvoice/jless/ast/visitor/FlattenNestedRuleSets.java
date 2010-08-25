@@ -9,7 +9,6 @@ import com.bazaarvoice.jless.ast.node.RuleSetNode;
 import com.bazaarvoice.jless.ast.node.ScopeNode;
 import com.bazaarvoice.jless.ast.node.SelectorGroupNode;
 import com.bazaarvoice.jless.ast.node.SelectorNode;
-import com.bazaarvoice.jless.ast.node.SelectorSegmentNode;
 import com.bazaarvoice.jless.ast.util.NodeTreeUtils;
 import com.bazaarvoice.jless.ast.util.RandomAccessListIterator;
 import org.parboiled.trees.GraphUtils;
@@ -19,24 +18,30 @@ import java.util.List;
 import java.util.Stack;
 
 /**
+ * This visitor flattens nested rule sets since nesting is not allowed in CSS.  When a rule set move up the
+ * hierarchy in this manner, each of its selectors is combined with the selectors from the parent rule set.
  *
+ * Example input:
+ *   .cat, .dog {
+ *       :hover, .bob {
+ *           color: blue;
+ *       }
+ *   }
+ *
+ * Resulting output (comments not shown):
+ *  .cat:hover, .dog:hover, .cat .bob, .dog .bob {
+        color: blue;
+ *  }
  */
 public class FlattenNestedRuleSets extends InclusiveNodeVisitor {
 
     private Stack<RuleSetNode> _ruleSetStack = new Stack<RuleSetNode>();
-
     private List<Node> _updatedSelectors;
-    private List<Node> _selectorWorkingSet;
-
     private int _nodesAddedToParentRuleSet;
 
     @Override
-    public boolean enter(PropertyNode node) {
-        return false;
-    }
-
-    @Override
     public boolean enter(RuleSetNode node) {
+        // If entering the parent rule set
         if (_ruleSetStack.empty()) {
             _nodesAddedToParentRuleSet = 0;
         }
@@ -49,8 +54,9 @@ public class FlattenNestedRuleSets extends InclusiveNodeVisitor {
     public boolean visit(RuleSetNode ruleSet) {
         _ruleSetStack.pop();
 
+        // If leaving the nested rule set
         if (!_ruleSetStack.empty()) {
-            // Preserve the node's current scope for variable resolution
+            // Preserve the rule set's current scope for variable resolution by setting the parent scope link
             final RuleSetNode parentRuleSet = _ruleSetStack.get(0);
             ScopeNode parentScope = NodeTreeUtils.getFirstChild(parentRuleSet, ScopeNode.class);
             ScopeNode scope = NodeTreeUtils.getFirstChild(ruleSet, ScopeNode.class);
@@ -59,7 +65,7 @@ public class FlattenNestedRuleSets extends InclusiveNodeVisitor {
             // Move this rule set up to be a sibling of its parent with comments that describe the parent
             addSiblingAfter(parentRuleSet, surroundWithContext(parentRuleSet, ruleSet));
 
-            // If the parent rule set's scope is contains no meaningful content, mark it as invisible
+            // If the parent rule set's scope contains no meaningful content, mark it as invisible
             int scopeChildCount = parentScope.getChildren().size();
             if (scopeChildCount == 0 || scopeChildCount == NodeTreeUtils.getChildren(parentScope, LineBreakNode.class).size()) {
                 parentRuleSet.setVisible(false);
@@ -92,25 +98,18 @@ public class FlattenNestedRuleSets extends InclusiveNodeVisitor {
         if (_ruleSetStack.size() > 1) {
             // In a nested rule set, and the new selectors are now complete
 
-            // Remove the old selectors
-            int selectorCount = selectorGroup.getChildren().size();
-            for (int i = 0; i < selectorCount; i++) {
-                selectorGroup.removeChild(0);
-            }
-
-            // Add the new selectors
-            for (Node selector : _updatedSelectors) {
-                selectorGroup.addChild(selector);
-            }
+            // Replace old selectors
+            selectorGroup.clearChildren();
+            selectorGroup.addChildren(_updatedSelectors);
         }
 
         return true;
     }
 
     @Override
-    public boolean enter(SelectorNode node) {
-        // We've reached a selector in a nested rule set, clear the selector working set
-        _selectorWorkingSet = new ArrayList<Node>();
+    public boolean enter(final SelectorNode selector) {
+        // We've reached a selector in a nested rule set, create a new selector working set
+        final List<SelectorNode> selectorWorkingSet = new ArrayList<SelectorNode>();
 
         // Visit the parent rule set and clone its selector nodes
         _ruleSetStack.get(0).traverse(new InclusiveNodeVisitor() {
@@ -120,38 +119,27 @@ public class FlattenNestedRuleSets extends InclusiveNodeVisitor {
             }
 
             @Override
-            public boolean visit(SelectorNode node) {
-                _selectorWorkingSet.add(node.clone());
+            public boolean visit(SelectorNode parentSelector) {
+                SelectorNode parentSelectorClone = parentSelector.clone();
+
+                // Add the current selector from the nested rule set to the cloned selector node from the parent.
+                // SelectorNode listens for additions of other SelectorNodes, and will absorb its children properly.
+                parentSelectorClone.addChild(selector.clone());
+
+                selectorWorkingSet.add(parentSelectorClone);
                 return true;
             }
         });
 
-        return true;
-    }
-
-    @Override
-    public boolean visit(SelectorNode node) {
         // Add the current selector working set to the larger collection of selectors for the nested rule set
-        _updatedSelectors.addAll(_selectorWorkingSet);
+        _updatedSelectors.addAll(selectorWorkingSet);
 
-        return true;
+        return false;
     }
 
     @Override
-    public boolean visit(SelectorSegmentNode segment) {
-        // We've reached a selector segment in a nested rule set, append it to all selectors in the working set
-        for (Node selector : _selectorWorkingSet) {
-            SelectorSegmentNode segmentClone = (SelectorSegmentNode) segment.clone();
-
-            // If this is the first segment and it's not a sub-element selector, use the descendant combinator
-            if (segment.getParent().getLatestChildIterator().previousIndex() == 0 && !segment.isSubElementSelector() && segment.getCombinator().equals(SelectorSegmentNode.NO_COMBINATOR)) {
-                segmentClone.setCombinator(SelectorSegmentNode.DESCENDANT_COMBINATOR);
-            }
-
-            selector.addChild(segmentClone);
-        }
-
-        return true;
+    public boolean enter(PropertyNode node) {
+        return false;
     }
 
     /**
