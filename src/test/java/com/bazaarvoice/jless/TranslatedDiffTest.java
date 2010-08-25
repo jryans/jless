@@ -1,14 +1,9 @@
 package com.bazaarvoice.jless;
 
-import com.bazaarvoice.jless.ast.node.Node;
-import com.bazaarvoice.jless.parser.Parser;
 import difflib.DiffUtils;
 import difflib.Patch;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
-import org.parboiled.Parboiled;
-import org.parboiled.ReportingParseRunner;
-import org.parboiled.support.ParsingResult;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
@@ -18,28 +13,18 @@ import java.util.Arrays;
 import java.util.List;
 
 @Test
-public class TranslatedDiffTest extends ParsingTest {
+public class TranslatedDiffTest extends ProcessingTest {
 
     @Override
-    protected void runTestFor(String fileName) {
-        ParsingResult<Node> result = parse(fileName);
-
-        LessTranslator.translate(result.resultValue);
-
-//        TestUtils.getLog().println("Output AST:");
-//        TestUtils.getLog().println(GraphUtils.printTree(result.resultValue, new ToStringFormatter<Node>(null)));
-
-        printResult(fileName, result);
-
-        diffOutput(fileName, result);
+    protected void runTestFor(String... fileNames) {
+        setTranslationEnabled(true);
+        List<String> inputs = assembleInputs(fileNames);
+        String output = runProcessor(inputs);
+        saveOutput(fileNames[fileNames.length - 1], output);
+        diffOutput(fileNames[fileNames.length - 1], output);
     }
 
-    @Override
-    protected ParsingResult<Node> runParser(String lessInput) {
-        return ReportingParseRunner.run(Parboiled.createParser(Parser.class, true).Document(), lessInput);
-    }
-
-    private void diffOutput(String fileName, ParsingResult<Node> parsingResult) {
+    private void diffOutput(String fileName, String output) {
         InputStream referenceStream = getClass().getResourceAsStream("/expected/" + fileName + ".css");
         List<String> referenceLines = null;
 
@@ -51,7 +36,7 @@ public class TranslatedDiffTest extends ParsingTest {
             e.printStackTrace();
         }
 
-        List<String> outputLines = Arrays.asList(StringUtils.splitPreserveAllTokens(printResult(fileName, parsingResult), '\n'));
+        List<String> outputLines = Arrays.asList(StringUtils.splitPreserveAllTokens(output, '\n'));
 
         Patch diff = DiffUtils.diff(referenceLines, outputLines);
 

@@ -7,9 +7,6 @@ import com.bazaarvoice.jless.ast.util.RandomAccessListIterator;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
-/**
- *
- */
 @Test
 public class NodeTest {
 

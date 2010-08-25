@@ -198,7 +198,7 @@ public class FlattenNestedRuleSets extends InclusiveNodeVisitor {
         nodeList.add(node);
 
         // Add rule set footer comment
-        nodeList.add(new MultipleLineCommentNode(" } " + parentSelector));
+        nodeList.add(new MultipleLineCommentNode(" } " + parentSelector + " "));
 
         // Grab line breaks just at the end of the parent rule set, if any
         Node exitScopeLineBreak = GraphUtils.getLastChild((Node) parent);

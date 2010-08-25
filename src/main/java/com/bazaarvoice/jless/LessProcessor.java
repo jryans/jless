@@ -3,7 +3,7 @@ package com.bazaarvoice.jless;
 import com.bazaarvoice.jless.ast.node.Node;
 import com.bazaarvoice.jless.ast.node.ScopeNode;
 import com.bazaarvoice.jless.ast.visitor.FlattenNestedRuleSets;
-import com.bazaarvoice.jless.ast.visitor.TranslatedPrinter;
+import com.bazaarvoice.jless.ast.visitor.Printer;
 import com.bazaarvoice.jless.exception.LessTranslationException;
 import com.bazaarvoice.jless.parser.Parser;
 import org.apache.commons.io.IOUtils;
@@ -28,47 +28,54 @@ import java.util.List;
  *
  * TODO: Doc
  */
-public class LessTranslator {
+public class LessProcessor {
 
+    // Controls whether only parsing or both parsing and translation are performed.
+    private boolean _translationEnabled;
     private Parser _parser;
 
-    public LessTranslator() {
-        _parser = Parboiled.createParser(Parser.class);
+    public LessProcessor() {
+        this(true);
     }
 
-    public String translate(File file) throws IOException {
-        return translateFiles(Collections.singletonList(file));
+    public LessProcessor(boolean translationEnabled) {
+        _translationEnabled = translationEnabled;
+        _parser = Parboiled.createParser(Parser.class, _translationEnabled);
     }
 
-    public String translate(InputStream stream) throws IOException {
-        return translateStreams(Collections.singletonList(stream));
+    public String process(File file) throws IOException {
+        return processFiles(Collections.singletonList(file));
     }
 
-    public String translate(String input) {
-        return translateStrings(Collections.singletonList(input));
+    public String process(InputStream stream) throws IOException {
+        return processStreams(Collections.singletonList(stream));
     }
 
-    public String translateFiles(List<File> files) throws IOException {
+    public String process(String input) {
+        return processStrings(Collections.singletonList(input));
+    }
+
+    public String processFiles(List<File> files) throws IOException {
         List<InputStream> streams = new ArrayList<InputStream>();
         for (File file : files) {
             streams.add(new FileInputStream(file));
         }
-        return translateStreams(streams);
+        return processStreams(streams);
     }
 
-    public String translateStreams(List<InputStream> streams) throws IOException {
-        return translateStreams(streams, Collections.<String>emptyList());
+    public String processStreams(List<InputStream> streams) throws IOException {
+        return processStreams(streams, Collections.<String>emptyList());
     }
 
-    public String translateStreams(List<InputStream> streams, List<String> paths) throws IOException {
+    public String processStreams(List<InputStream> streams, List<String> paths) throws IOException {
         List<String> strings = new ArrayList<String>();
         for (InputStream stream : streams) {
             strings.add(IOUtils.toString(stream, "UTF-8"));
         }
-        return translateStrings(strings);
+        return processStrings(strings);
     }
 
-    public String translateStrings(List<String> inputs) {
+    public String processStrings(List<String> inputs) {
         ValueStack<Node> stack = new DefaultValueStack<Node>();
 
         for (String input : inputs) {
@@ -88,16 +95,18 @@ public class LessTranslator {
             }
         }
 
-        // Print only the last input
-        TranslatedPrinter printer = new TranslatedPrinter();
-        stack.peek().traverse(printer);
+        // Collect all nodes that form the output
+        Node output = stack.peek();
+
+        // Perform additional translation steps if needed
+        if (_translationEnabled) {
+            output.traverse(new FlattenNestedRuleSets());
+        }
+
+        // Print the output nodes
+        Printer printer = new Printer();
+        output.traverse(printer);
         return printer.toString();
-    }
-
-
-
-    public static void translate(Node root) {
-        root.traverse(new FlattenNestedRuleSets());
     }
 
     public static void main(String[] args) {
@@ -106,7 +115,7 @@ public class LessTranslator {
             System.exit(1);
         }
 
-        LessTranslator translator = new LessTranslator();
+        LessProcessor translator = new LessProcessor();
 
         List<File> files = new ArrayList<File>();
         for (String fileName : args) {
@@ -114,7 +123,7 @@ public class LessTranslator {
         }
 
         try {
-            System.out.println(translator.translateFiles(files));
+            System.out.println(translator.processFiles(files));
         } catch (IOException e) {
             System.err.println("Unable to read input file.");
         }

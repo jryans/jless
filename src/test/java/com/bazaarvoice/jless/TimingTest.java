@@ -1,58 +1,58 @@
 package com.bazaarvoice.jless;
 
-import com.bazaarvoice.jless.ast.node.Node;
-import com.bazaarvoice.jless.parser.Parser;
-import org.parboiled.Parboiled;
-import org.parboiled.ReportingParseRunner;
-import org.parboiled.support.ParsingResult;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
+import java.util.List;
+
 @Test
-public class TimingTest extends ParsingTest {
+public class TimingTest extends ProcessingTest {
 
-    private static final int RUNS_PER_TIMED_SET = 20;
-    private static final String[] CACHE_FILES = {/*"bazaarvoice", */"bazaarvoiceDisplayShared", "css", "css-3", "strings", "whitespace"};
-//    private static final ProfilingParseRunner<BaseTreeNode> _sParseRunner = new ProfilingParseRunner<BaseTreeNode>(Parboiled.createParser(Parser.class).Document());
+    private static final int RUNS_PER_TIMED_SET = 25;
+    private static final String[] WARM_UP_FILES = {"bazaarvoiceDisplayShared", "css", "css-3", "strings", "whitespace"};
 
-    private float _currentTime;
-    private boolean _cached = false;
+    private boolean _warm = false;
 
     @Override
-    protected void runTestFor(String fileName) {
-        if (!_cached) {
-            cacheRules();
+    protected void runTestFor(String... fileNames) {
+        if (!_warm) {
+            warmUp();
         }
-        ParsingResult<Node> result = timeParsing(fileName);
-        timeTranslation(fileName, result);
+
+        List<String> inputs = assembleInputs(fileNames);
+
+        setTranslationEnabled(false);
+        timeProcessor(fileNames[fileNames.length - 1], inputs);
+        setTranslationEnabled(true);
+        timeProcessor(fileNames[fileNames.length - 1], inputs);
     }
 
     /**
-     * Parboiled caches parsing rules when they are first encountered, so parsing some files first
-     * will make our timing measurements more closely reflect continuous usage.
+     * Running through the code paths a number of times before benchmarking helps warm up
+     * the JVM and helps reach steady-state performance.
      */
-    private void cacheRules() {
+    private void warmUp() {
+        setTranslationEnabled(true);
+        List<String> inputs = assembleInputs(WARM_UP_FILES);
+
         for (int i = 0; i < RUNS_PER_TIMED_SET; i++) {
-            for (String fileName : CACHE_FILES) {
-                parse(fileName, false);
-            }
+            runProcessor(inputs);
         }
-//        TestUtils.getLog().println(_sParseRunner.getReport().print());
-//        TestUtils.flushLog();
-        _cached = true;
+        _warm = true;
     }
 
-    private ParsingResult<Node> timeParsing(String fileName) {
+    private void timeProcessor(String fileName, List<String> inputs) {
         float totalTime = 0, minTime = Long.MAX_VALUE, maxTime = 0, avgTime = 0;
         int i;
 
-        TestUtils.getLog().println("Parse times for " + fileName);
-
-        ParsingResult<Node> result = null;
+        TestUtils.getLog().println("Processing times for " + fileName + ", translation " + (isTranslationEnabled() ? "on" : "off"));
 
         for (i = 0; i < RUNS_PER_TIMED_SET; i++) {
-            result = parse(fileName, false);
-            totalTime += _currentTime;
+            long startTime = System.nanoTime();
+            runProcessor(inputs);
+            long _currentTime = System.nanoTime() - startTime;
+            _currentTime /= 1000000;
+            totalTime += (System.nanoTime() - startTime) / 1000000;
             if (_currentTime < minTime) {
                 minTime = _currentTime;
             }
@@ -68,52 +68,5 @@ public class TimingTest extends ParsingTest {
         TestUtils.getLog().format("Avg. Time: %.3f ms%n", avgTime);
 
         Assert.assertTrue(avgTime <= 60, "Average parsing time for " + fileName + " is larger than 60 ms");
-
-        return result;
-    }
-    
-    private void timeTranslation(String fileName, ParsingResult<Node> parseResult) {
-        float totalTime = 0, minTime = Long.MAX_VALUE, maxTime = 0, avgTime = 0;
-        int i;
-
-        TestUtils.getLog().println("Translation times for " + fileName);
-
-        for (i = 0; i < RUNS_PER_TIMED_SET; i++) {
-            runTranslator(parseResult);
-            totalTime += _currentTime;
-            if (_currentTime < minTime) {
-                minTime = _currentTime;
-            }
-            if (_currentTime > maxTime) {
-                maxTime = _currentTime;
-            }
-        }
-
-        avgTime = totalTime / i;
-
-        TestUtils.getLog().format("Min. Time: %.3f ms%n", minTime);
-        TestUtils.getLog().format("Max. Time: %.3f ms%n", maxTime);
-        TestUtils.getLog().format("Avg. Time: %.3f ms%n", avgTime);
-
-        Assert.assertTrue(avgTime <= 5, "Average translation time for " + fileName + " is larger than 5 ms");
-    }
-
-    @Override
-    protected ParsingResult<Node> runParser(String lessInput) {
-        long startTime = System.nanoTime();
-//        ParsingResult<BaseTreeNode> result = _sParseRunner.run(lessInput);
-//        ParsingResult<Node> result = super.runParser(lessInput);
-        ParsingResult<Node> result = ReportingParseRunner.run(Parboiled.createParser(Parser.class, true).Document(), lessInput);
-        _currentTime = System.nanoTime() - startTime;
-        _currentTime /= 1000000;
-        return result;
-    }
-
-    @Override
-    protected void runTranslator(ParsingResult<Node> parseResult) {
-        long startTime = System.nanoTime();
-        super.runTranslator(parseResult);
-        _currentTime = System.nanoTime() - startTime;
-        _currentTime /= 1000000;
     }
 }

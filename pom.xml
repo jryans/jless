@@ -22,7 +22,7 @@
                 <configuration>
                     <archive>
                         <manifest>
-                            <mainClass>com.bazaarvoice.jless.LessTranslator</mainClass>
+                            <mainClass>com.bazaarvoice.jless.LessProcessor</mainClass>
                         </manifest>
                     </archive>
                 </configuration>

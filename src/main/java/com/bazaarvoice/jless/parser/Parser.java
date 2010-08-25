@@ -44,10 +44,10 @@ import org.parboiled.support.Var;
  * This parser attempts to track line breaks so that the input and output files can have the same number of lines
  * (which is helpful when referencing styles via browser tools like Firebug).
  *
- * This list only notes changes in the <em>parsing</em> stage. See {@link com.bazaarvoice.jless.LessTranslator} for details on any changes
+ * This list only notes changes in the <em>parsing</em> stage. See {@link com.bazaarvoice.jless.LessProcessor} for details on any changes
  * to the <em>translation</em> stage.
  *
- * @see com.bazaarvoice.jless.LessTranslator
+ * @see com.bazaarvoice.jless.LessProcessor
  */
 public class Parser extends BaseParser<Node> {
 
@@ -79,16 +79,13 @@ public class Parser extends BaseParser<Node> {
         return Sequence(
                 push(new ScopeNode()),
                 ZeroOrMore(
-//                        debug(getContext()),
                         FirstOf(
                                 Declaration(),
                                 RuleSet(),
                                 MixinReference(),
                                 Sequence(Sp1(), push(new LineBreakNode(match())))
                         ),
-//                        debug(getContext()),
                         peek(1).addChild(pop())
-//                        debug(getContext())
                 )
         );
     }
@@ -214,14 +211,12 @@ public class Parser extends BaseParser<Node> {
                 Optional(SymbolCombinator()), selectorSegmentNode.set(new SelectorSegmentNode(match())),
                 SimpleSelector(selectorSegmentNode), selectorSegmentNode.get().setSimpleSelector(match()),
                 peek().addChild(selectorSegmentNode.getAndClear()),
-//                debug(getContext()),
                 // Additional selector segments must have a combinator
                 ZeroOrMore(
                         Combinator(), selectorSegmentNode.set(new SelectorSegmentNode(match())),
                         SimpleSelector(selectorSegmentNode), selectorSegmentNode.get().setSimpleSelector(match()),
                         peek().addChild(selectorSegmentNode.getAndClear())
                 )
-//                debug(getContext())
         );
     }
 
@@ -246,11 +241,8 @@ public class Parser extends BaseParser<Node> {
     Rule SimpleSelector(Var<SelectorSegmentNode> selectorSegmentNode) {
         return FirstOf(
                 Sequence(
-//                        debug(getContext()),
                         FirstOf(ElementName(), UniversalHtml(), Universal()),
-//                        debug(getContext()),
                         ZeroOrMore(FirstOf(Hash(), Class(), Attribute(), Negation(), Pseudo()))
-//                        debug(getContext())
                 ),
                 OneOrMore(FirstOf(
                         Hash(), Class(),
@@ -344,7 +336,6 @@ public class Parser extends BaseParser<Node> {
         // Space-separated expressions
         return Sequence(
                 Expression(), push(new ExpressionPhraseNode(pop())),
-//                        debug(getContext()),
                 ZeroOrMore(Ws1(), Expression(), peek(1).addChild(pop())),
                 Optional(Ws0(), Important(), peek(1).addChild(pop()))
         );
@@ -422,8 +413,7 @@ public class Parser extends BaseParser<Node> {
         return FirstOf(
                 Sequence(
                         '(', Ws0(),
-                        debug(getContext()),
-                        ExpressionPhrase(), debug(getContext()), push(new ArgumentsNode(new ExpressionGroupNode(pop()))),
+                        ExpressionPhrase(), push(new ArgumentsNode(new ExpressionGroupNode(pop()))),
                         Ws0(),
                         ZeroOrMore(
                                 ',', Ws0(),
@@ -600,7 +590,7 @@ public class Parser extends BaseParser<Node> {
     // ********** Comments **********
 
     Rule Comment() {
-        return /*Sequence(debug(getContext()), */FirstOf(MultipleLineComment(), SingleLineComment())/*, debug(getContext()))*/;
+        return FirstOf(MultipleLineComment(), SingleLineComment());
     }
 
     /**

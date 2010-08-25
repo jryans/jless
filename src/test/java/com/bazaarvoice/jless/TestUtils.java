@@ -10,14 +10,13 @@ import java.io.PrintStream;
 
 public final class TestUtils {
 
-    private static File _sLogFile;
     private static PrintStream _sLogStream;
 
     public static PrintStream getLog() {
         if (_sLogStream == null) {
             try {
-                _sLogFile = new File("test.log");
-                _sLogStream = new PrintStream(new FileOutputStream(_sLogFile));
+                File log = new File("test.log");
+                _sLogStream = new PrintStream(new FileOutputStream(log));
             } catch (IOException e) {
                 System.err.println(e);
                 e.printStackTrace();
