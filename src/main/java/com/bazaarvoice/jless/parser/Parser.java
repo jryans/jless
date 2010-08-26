@@ -116,8 +116,7 @@ public class Parser extends BaseParser<Node> {
                                 Scope(), peek(1).addChild(pop()), peek(1).addChild(pop()), Ws0()
                         )
                 ),
-                '}', Ws0(), peek().addChild(new LineBreakNode(match()))//,
-//                flattenNestedRuleSet()
+                '}', Ws0(), peek().addChild(new LineBreakNode(match()))
         );
     }
 

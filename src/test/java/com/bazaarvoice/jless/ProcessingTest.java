@@ -1,6 +1,6 @@
 package com.bazaarvoice.jless;
 
-import org.apache.commons.io.IOUtils;
+import org.testng.Assert;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.Test;
 
@@ -27,26 +27,26 @@ public class ProcessingTest {
 
     protected void runTestFor(String... fileNames) {
         setTranslationEnabled(false);
-        List<String> inputs = assembleInputs(fileNames);
+        List<InputStream> inputs = assembleInputs(fileNames);
         saveOutput(fileNames[fileNames.length - 1], runProcessor(inputs)); // Parsing errors will cause an exception to be thrown
     }
 
-    protected List<String> assembleInputs(String[] fileNames) {
-        List<String> inputs = new ArrayList<String>();
+    protected List<InputStream> assembleInputs(String[] fileNames) {
+        List<InputStream> inputs = new ArrayList<InputStream>();
         for (String fileName : fileNames) {
-            InputStream lessStream = getClass().getResourceAsStream("/less/" + fileName + ".less");
-            try {
-                inputs.add(IOUtils.toString(lessStream, "UTF-8"));
-            } catch (IOException e) {
-                TestUtils.getLog().println("Unable to read " + fileName + ".less");
-                e.printStackTrace();
-            }
+            InputStream stream = getClass().getResourceAsStream("/less/" + fileName + ".less");
+            Assert.assertNotNull(stream, "Unable to read " + fileName + ".less");
+            inputs.add(stream);
         }
         return inputs;
     }
 
-    protected String runProcessor(List<String> inputs) {
-        return new LessProcessor(_translationEnabled).processStrings(inputs);
+    protected String runProcessor(List<InputStream> inputs) {
+        try {
+            return new LessProcessor(_translationEnabled).process(inputs).toString();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     protected String saveOutput(String outputFileName, String output) {
@@ -61,8 +61,7 @@ public class ProcessingTest {
             generatedOutput.println(output);
             generatedOutput.close();
         } catch (IOException e) {
-            System.err.println(e);
-            e.printStackTrace();
+            throw new RuntimeException(e);
         }
 
         return output;

@@ -6,6 +6,8 @@ import com.bazaarvoice.jless.ast.visitor.FlattenNestedRuleSets;
 import com.bazaarvoice.jless.ast.visitor.Printer;
 import com.bazaarvoice.jless.exception.LessTranslationException;
 import com.bazaarvoice.jless.parser.Parser;
+import com.google.common.base.Supplier;
+import com.google.common.base.Suppliers;
 import org.apache.commons.io.IOUtils;
 import org.parboiled.Parboiled;
 import org.parboiled.ParseRunner;
@@ -54,16 +56,12 @@ import java.util.List;
  * This list only notes changes in the <em>translation</em> stage. See {@link com.bazaarvoice.jless.parser.Parser} for details
  * on any changes to the <em>parsing</em> stage.
  *
- * <strong>This class is not thread-safe.</strong> Clients must ensure that multiple threads do not attempt to use the same
- * instance of LessProcessor at the same time.
- *
  * @see com.bazaarvoice.jless.parser.Parser
  */
 public class LessProcessor {
 
     // Controls whether only parsing or both parsing and translation are performed.
     private boolean _translationEnabled;
-    private Parser _parser;
 
     public LessProcessor() {
         this(true);
@@ -71,75 +69,66 @@ public class LessProcessor {
 
     public LessProcessor(boolean translationEnabled) {
         _translationEnabled = translationEnabled;
-        _parser = Parboiled.createParser(Parser.class, _translationEnabled);
     }
 
-    public String process(File file) throws IOException {
-        return processFiles(Collections.singletonList(file));
+    public Result process(InputStream input, String fileName) throws IOException {
+        return process(Collections.<Result>emptyList(), input, fileName);
     }
 
-    public String process(InputStream stream) throws IOException {
-        return processStreams(Collections.singletonList(stream));
-    }
-
-    public String process(String input) {
-        return processStrings(Collections.singletonList(input));
-    }
-
-    public String processFiles(List<File> files) throws IOException {
-        List<InputStream> streams = new ArrayList<InputStream>();
-        for (File file : files) {
-            streams.add(new FileInputStream(file));
-        }
-        return processStreams(streams);
-    }
-
-    public String processStreams(List<InputStream> streams) throws IOException {
-        List<String> strings = new ArrayList<String>();
-        for (InputStream stream : streams) {
-            strings.add(IOUtils.toString(stream, "UTF-8"));
-        }
-        return processStrings(strings);
+    public Result process(Result parent, InputStream input, String fileName) throws IOException {
+        return process(Collections.<Result>singletonList(parent), input, fileName);
     }
 
     /**
-     * Each input is processed individually, creating a {@link ScopeNode} on the parser's {@link ValueStack}.
-     * These ScopeNodes are then joined together to allow for variable resolution across scopes. The resulting
-     * output consists of the translated version of the last input file. This means that all inputs serve as
-     * silent context files, but will not produce any output of their own.
+     * The {@link ScopeNode}s from any parent results are placed on the parser's {@link ValueStack} and joined
+     * together to allow for variable and mixin resolution across scopes.
+     * @return A printable {@link Result} of processing the given input.
      */
-    public String processStrings(List<String> inputs) {
+    public Result process(List<Result> parents, InputStream input, String fileName) throws IOException {
         ValueStack<Node> stack = new DefaultValueStack<Node>();
 
-        for (String input : inputs) {
-            ParseRunner<Node> parseRunner = new ReportingParseRunner<Node>(_parser.Document(), stack);
-            ParsingResult<Node> result = parseRunner.run(input);
-
-            if (result.hasErrors()) {
-                throw new LessTranslationException("An error occurred while translating a LESS input file:\n" + 
-                        ErrorUtils.printParseErrors(result));
+        // Make the scope of each parent result accessible for variable and mixin resolution during parsing
+        ScopeNode parentScope = null;
+        for (Result parent : parents) {
+            ScopeNode scope = parent.getScope();
+            stack.push(scope);
+            if (parentScope != null) {
+                scope.setParentScope(parentScope);
             }
-
-            // If there are multiple scope nodes on the stack, link the new scope for later variable resolution
-            if (stack.size() > 1) {
-                ScopeNode currentScope = (ScopeNode) stack.peek();
-                ScopeNode previousScope = (ScopeNode) stack.peek(1);
-                currentScope.setParentScope(previousScope);
-            }
+            parentScope = scope;
         }
 
-        // Collect all nodes that form the output
-        Node output = stack.peek();
+        // Parse the input
+        ParseRunner<Node> parseRunner = new ReportingParseRunner<Node>(Parboiled.createParser(Parser.class, _translationEnabled).Document(), stack);
+        ParsingResult<Node> result = parseRunner.run(IOUtils.toString(input, "UTF-8"));
 
-        // Perform additional translation steps if needed
-        if (_translationEnabled) {
-            output.traverse(new FlattenNestedRuleSets());
+        if (result.hasErrors()) {
+            StringBuilder sb = new StringBuilder();
+            sb.append("An error occurred while parsing a LESS input file");
+            if (fileName != null) {
+                sb.append(" (").append(fileName).append(')');
+            }
+            sb.append(":\n").append(ErrorUtils.printParseErrors(result));
+            throw new LessTranslationException(sb.toString());
         }
 
-        // Print the output nodes
-        Printer printer = new Printer();
-        output.traverse(printer);
-        return printer.toString();
+        // Retrieve the processed result
+        ScopeNode scope = (ScopeNode) stack.pop();
+
+        // Link the new scope to the last parent for later variable resolution
+        scope.setParentScope(parentScope);
+
+        return new Result(scope);
+    }
+
+    public Result process(List<InputStream> inputs) throws IOException {
+        List<Result> results = new ArrayList<Result>();
+
+        for (InputStream input : inputs) {
+            results.add(process(results, input, null));
+        }
+
+        return results.get(results.size() - 1);
     }
 
     public static void main(String[] args) {
@@ -156,9 +145,43 @@ public class LessProcessor {
         }
 
         try {
-            System.out.println(translator.processFiles(files));
+            List<InputStream> streams = new ArrayList<InputStream>();
+            for (File file : files) {
+                streams.add(new FileInputStream(file));
+            }
+            System.out.println(translator.process(streams));
         } catch (IOException e) {
             System.err.println("Unable to read input file.");
+        }
+    }
+    
+    public class Result {
+        private final ScopeNode _scope;
+
+        public Result(ScopeNode scope) {
+            _scope = scope;
+        }
+
+        public ScopeNode getScope() {
+            return _scope;
+        }
+
+        @Override
+        public String toString() {
+            return Suppliers.memoize(new Supplier<String>() {
+                @Override
+                public String get() {
+                    // Perform additional translation steps if needed
+                    if (_translationEnabled) {
+                        _scope.traverse(new FlattenNestedRuleSets());
+                    }
+
+                    // Print the output nodes
+                    Printer printer = new Printer();
+                    _scope.traverse(printer);
+                    return printer.toString();
+                }
+            }).get();
         }
     }
 }

@@ -5,9 +5,6 @@ import com.bazaarvoice.jless.ast.visitor.NodeNavigationVisitor;
 import com.bazaarvoice.jless.ast.visitor.Printer;
 import org.parboiled.trees.MutableTreeNode;
 
-/**
- *
- */
 public abstract class Node implements MutableTreeNode<Node>, Cloneable {
     private InternalNode _parent;
     private boolean _visible = true;

@@ -151,6 +151,9 @@ public class Printer extends InclusiveNodeVisitor {
         return super.visit(node);
     }
 
+    /**
+     * TODO: remove me
+     */
     @Override
     public boolean visit(SingleLineCommentNode node) {
         print('\n'); // C-style single line comments are not part of the CSS spec, so don't print them

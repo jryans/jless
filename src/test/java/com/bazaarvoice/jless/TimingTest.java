@@ -3,6 +3,7 @@ package com.bazaarvoice.jless;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
+import java.io.InputStream;
 import java.util.List;
 
 @Test
@@ -19,7 +20,7 @@ public class TimingTest extends ProcessingTest {
             warmUp();
         }
 
-        List<String> inputs = assembleInputs(fileNames);
+        List<InputStream> inputs = assembleInputs(fileNames);
 
         setTranslationEnabled(false);
         timeProcessor(fileNames[fileNames.length - 1], inputs);
@@ -33,7 +34,7 @@ public class TimingTest extends ProcessingTest {
      */
     private void warmUp() {
         setTranslationEnabled(true);
-        List<String> inputs = assembleInputs(WARM_UP_FILES);
+        List<InputStream> inputs = assembleInputs(WARM_UP_FILES);
 
         for (int i = 0; i < RUNS_PER_TIMED_SET; i++) {
             runProcessor(inputs);
@@ -41,7 +42,7 @@ public class TimingTest extends ProcessingTest {
         _warm = true;
     }
 
-    private void timeProcessor(String fileName, List<String> inputs) {
+    private void timeProcessor(String fileName, List<InputStream> inputs) {
         float totalTime = 0, minTime = Long.MAX_VALUE, maxTime = 0, avgTime = 0;
         int i;
 

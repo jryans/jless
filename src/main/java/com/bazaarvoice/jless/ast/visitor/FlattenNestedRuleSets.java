@@ -54,7 +54,7 @@ public class FlattenNestedRuleSets extends InclusiveNodeVisitor {
     public boolean visit(RuleSetNode ruleSet) {
         _ruleSetStack.pop();
 
-        // If leaving the nested rule set
+        // If exiting the nested rule set
         if (!_ruleSetStack.empty()) {
             // Preserve the rule set's current scope for variable resolution by setting the parent scope link
             final RuleSetNode parentRuleSet = _ruleSetStack.get(0);
@@ -65,6 +65,7 @@ public class FlattenNestedRuleSets extends InclusiveNodeVisitor {
             // Move this rule set up to be a sibling of its parent with comments that describe the parent
             addSiblingAfter(parentRuleSet, surroundWithContext(parentRuleSet, ruleSet));
 
+            // TODO: replace with line breaks you contain
             // If the parent rule set's scope contains no meaningful content, mark it as invisible
             int scopeChildCount = parentScope.getChildren().size();
             if (scopeChildCount == 0 || scopeChildCount == NodeTreeUtils.getChildren(parentScope, LineBreakNode.class).size()) {
