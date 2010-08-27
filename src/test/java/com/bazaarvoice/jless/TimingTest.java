@@ -51,14 +51,14 @@ public class TimingTest extends ProcessingTest {
         for (i = 0; i < RUNS_PER_TIMED_SET; i++) {
             long startTime = System.nanoTime();
             runProcessor(inputs);
-            long _currentTime = System.nanoTime() - startTime;
-            _currentTime /= 1000000;
-            totalTime += (System.nanoTime() - startTime) / 1000000;
-            if (_currentTime < minTime) {
-                minTime = _currentTime;
+            long runTime = System.nanoTime() - startTime;
+            runTime /= 1000000;
+            totalTime += runTime;
+            if (runTime < minTime) {
+                minTime = runTime;
             }
-            if (_currentTime > maxTime) {
-                maxTime = _currentTime;
+            if (runTime > maxTime) {
+                maxTime = runTime;
             }
         }
 

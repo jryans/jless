@@ -71,12 +71,12 @@ public class LessProcessor {
         _translationEnabled = translationEnabled;
     }
 
-    public Result process(InputStream input, String fileName) throws IOException {
-        return process(Collections.<Result>emptyList(), input, fileName);
+    public Result process(InputStream input) throws IOException {
+        return process(Collections.<Result>emptyList(), input);
     }
 
-    public Result process(Result parent, InputStream input, String fileName) throws IOException {
-        return process(Collections.<Result>singletonList(parent), input, fileName);
+    public Result process(Result parent, InputStream input) throws IOException {
+        return process(Collections.<Result>singletonList(parent), input);
     }
 
     /**
@@ -84,7 +84,7 @@ public class LessProcessor {
      * together to allow for variable and mixin resolution across scopes.
      * @return A printable {@link Result} of processing the given input.
      */
-    public Result process(List<Result> parents, InputStream input, String fileName) throws IOException {
+    public Result process(List<Result> parents, InputStream input) throws IOException {
         ValueStack<Node> stack = new DefaultValueStack<Node>();
 
         // Make the scope of each parent result accessible for variable and mixin resolution during parsing
@@ -103,13 +103,8 @@ public class LessProcessor {
         ParsingResult<Node> result = parseRunner.run(IOUtils.toString(input, "UTF-8"));
 
         if (result.hasErrors()) {
-            StringBuilder sb = new StringBuilder();
-            sb.append("An error occurred while parsing a LESS input file");
-            if (fileName != null) {
-                sb.append(" (").append(fileName).append(')');
-            }
-            sb.append(":\n").append(ErrorUtils.printParseErrors(result));
-            throw new LessTranslationException(sb.toString());
+            throw new LessTranslationException("An error occurred while parsing a LESS input file:\n" +
+                    ErrorUtils.printParseErrors(result));
         }
 
         // Retrieve the processed result
@@ -125,7 +120,7 @@ public class LessProcessor {
         List<Result> results = new ArrayList<Result>();
 
         for (InputStream input : inputs) {
-            results.add(process(results, input, null));
+            results.add(process(results, input));
         }
 
         return results.get(results.size() - 1);
