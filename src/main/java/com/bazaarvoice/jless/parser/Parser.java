@@ -204,13 +204,17 @@ public class Parser extends BaseParser<Node> {
         return Sequence(
                 push(new SelectorNode()),
                 // First selector segment may have a combinator (with nested rule sets)
-                Optional(SymbolCombinator()), selectorSegmentNode.set(new SelectorSegmentNode(match())),
-                SimpleSelector(selectorSegmentNode), selectorSegmentNode.get().setSimpleSelector(match()),
+                Optional(SymbolCombinator()),
+                selectorSegmentNode.set(new SelectorSegmentNode(match())),
+                SimpleSelector(selectorSegmentNode),
+                selectorSegmentNode.get().setSimpleSelector(match()),
                 peek().addChild(selectorSegmentNode.getAndClear()),
                 // Additional selector segments must have a combinator
                 ZeroOrMore(
-                        Combinator(), selectorSegmentNode.set(new SelectorSegmentNode(match())),
-                        SimpleSelector(selectorSegmentNode), selectorSegmentNode.get().setSimpleSelector(match()),
+                        Combinator(),
+                        selectorSegmentNode.set(new SelectorSegmentNode(match())),
+                        SimpleSelector(selectorSegmentNode),
+                        selectorSegmentNode.get().setSimpleSelector(match()),
                         peek().addChild(selectorSegmentNode.getAndClear())
                 )
         );
@@ -238,10 +242,10 @@ public class Parser extends BaseParser<Node> {
         return FirstOf(
                 Sequence(
                         FirstOf(ElementName(), UniversalHtml(), Universal()),
-                        ZeroOrMore(FirstOf(Hash(), Class(), Attribute(), Negation(), Pseudo()))
+                        ZeroOrMore(FirstOf(ID(), Class(), Attribute(), Negation(), Pseudo()))
                 ),
                 OneOrMore(FirstOf(
-                        Hash(), Class(),
+                        ID(), Class(),
                         Sequence(
                                 FirstOf(Attribute(), Negation(), Pseudo()),
                                 selectorSegmentNode.get().setSubElementSelector(true)
@@ -282,7 +286,7 @@ public class Parser extends BaseParser<Node> {
     }
 
     Rule NegationArgument() {
-        return FirstOf(ElementName(), Universal(), Hash(), Class(), Attribute(), Pseudo());
+        return FirstOf(ElementName(), Universal(), ID(), Class(), Attribute(), Pseudo());
     }
 
     // ********** Variables & Expressions **********
@@ -371,7 +375,7 @@ public class Parser extends BaseParser<Node> {
         return Ch('*');
     }
 
-    Rule Hash() {
+    Rule ID() {
         return Sequence('#', Name());
     }
 
@@ -380,23 +384,14 @@ public class Parser extends BaseParser<Node> {
         return Sequence('.', Ident());
     }
 
-    @MemoMismatches
-    Rule Ident() {
-        return Sequence(NameStart(), ZeroOrMore(NameCharacter()));
-    }
-
-    Rule Name() {
-        return OneOrMore(NameCharacter());
-    }
-
     // ********** Functions & Arguments **********
 
     /**
-     * [-_Alpha]+ Arguments
+     * Ident Arguments
      */
     Rule Function() {
         return Sequence(
-                OneOrMore(FirstOf(AnyOf("-_"), Alpha())), push(new FunctionNode(match())),
+                Ident(), push(new FunctionNode(match())),
                 Arguments(), peek(1).addChild(pop())
         );
     }
@@ -466,23 +461,28 @@ public class Parser extends BaseParser<Node> {
     }
 
     /**
-     * 'alpha(opacity=' Digit1 ' )
+     * 'alpha(' Ws0 'opacity' Ws0 '=' Ws0 Digit1 Ws0 ')'
      */
     Rule AlphaFilter() {
         return Sequence(
-                Sequence("alpha(opacity=", Digit1(), ')'),
+                Sequence(
+                        "alpha(", Ws0(),
+                        "opacity", Ws0(),
+                        '=', Ws0(),
+                        Digit1(), Ws0(),
+                        ')'
+                ),
                 push(new SimpleNode(match()))
         );
     }
 
     /**
-     * 'expression' Ws0 '(' (!');' .)* ');'
+     * 'expression(' (!');' .)* ');'
      */
     Rule ExpressionFunction() {
         return Sequence(
                 Sequence(
-                        "expression", Ws0(),
-                        '(',
+                        "expression(",
                         ZeroOrMore(
                                 TestNot(
                                         ')',
@@ -498,13 +498,13 @@ public class Parser extends BaseParser<Node> {
     }
 
     /**
-     * [-Alpha]+ &Delimiter
+     * Ident &Delimiter
      *
      * Ex: blue, small, normal
      */
     Rule Keyword() {
         return Sequence(
-                Sequence(OneOrMore(FirstOf('-', Alpha())), Test(Delimiter())),
+                Sequence(Ident(), Test(Delimiter())),
                 push(new SimpleNode(match()))
         );
     }
@@ -545,13 +545,13 @@ public class Parser extends BaseParser<Node> {
     /**
      * Some CSS properties allow multiple dimensions separated by '/'
      *
-     * (Dimension / [-a-z]+) '/' Dimension
+     * (Dimension / Ident) '/' Dimension
      */
     Rule MultiDimension() {
         return Sequence(
                 FirstOf(
                         Dimension(),
-                        OneOrMore(FirstOf('-', Alpha()))
+                        Ident()
                 ),
                 '/',
                 Dimension()
@@ -679,20 +679,33 @@ public class Parser extends BaseParser<Node> {
     }
 
     Rule Delimiter() {
-        return AnyOf(" ;,!})\n\t");
+        return FirstOf(AnyOf(";,!})"), Whitespace());
     }
 
     Rule NameStart() {
-        return FirstOf('-', Alpha());
+        return FirstOf('_', Alpha());
     }
 
     Rule NameCharacter() {
         return FirstOf(AnyOf("-_"), Alphanumeric());
     }
 
+    @MemoMismatches
+    Rule Ident() {
+        return Sequence(Optional('-'), NameStart(), ZeroOrMore(NameCharacter()));
+    }
+
+    Rule Name() {
+        return OneOrMore(NameCharacter());
+    }
+
     // ********** Translation Actions **********
 
     /**
+     * Locates the referenced mixin in one of the scope nodes on the stack. If found, the mixin's
+     * scope is cloned and placed onto the stack in place of the mixin reference. Additionally,
+     * any arguments are applied to the mixin's scope.
+     *
      * Future: Hide referenced mixins from output
      */
     boolean resolveMixinReference(String name, ArgumentsNode arguments) {
@@ -723,6 +736,12 @@ public class Parser extends BaseParser<Node> {
         throw new UndefinedMixinException(name);
     }
 
+    /**
+     * Looks for a variable definition that matches the reference in the scope nodes on the stack.
+     * If found, a reference node that can repeat this lookup later is placed on the stack, not the
+     * current value itself. This is done because the value may change if the variable reference is
+     * inside a mixin.
+     */
     boolean pushVariableReference(String name) {
         if (!isParserTranslationEnabled()) {
             return push(new SimpleNode(name));
