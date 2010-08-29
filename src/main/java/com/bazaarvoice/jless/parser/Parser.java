@@ -435,7 +435,8 @@ public class Parser extends BaseParser<Node> {
                 VariableReference(),
                 URL(),
                 Font(),
-                AlphaFilter()
+                AlphaFilter(),
+                ExpressionFunction()
         );
     }
 
@@ -453,11 +454,11 @@ public class Parser extends BaseParser<Node> {
     Rule URL() {
         return Sequence(
                 Sequence(
-                        "url(",
+                        "url(", Ws0(),
                         FirstOf(
                                 String(),
                                 OneOrMore(FirstOf(AnyOf("-_%$/.&=:;#+?"), Alphanumeric()))
-                        ),
+                        ), Ws0(),
                         ')'
                 ),
                 push(new SimpleNode(match()))
@@ -470,6 +471,28 @@ public class Parser extends BaseParser<Node> {
     Rule AlphaFilter() {
         return Sequence(
                 Sequence("alpha(opacity=", Digit1(), ')'),
+                push(new SimpleNode(match()))
+        );
+    }
+
+    /**
+     * 'expression' Ws0 '(' (!');' .)* ');'
+     */
+    Rule ExpressionFunction() {
+        return Sequence(
+                Sequence(
+                        "expression", Ws0(),
+                        '(',
+                        ZeroOrMore(
+                                TestNot(
+                                        ')',
+                                        Ws0(),
+                                        AnyOf(";}")
+                                ),
+                                ANY
+                        ),
+                        ')'
+                ),
                 push(new SimpleNode(match()))
         );
     }

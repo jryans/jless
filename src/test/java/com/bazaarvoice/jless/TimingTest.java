@@ -10,7 +10,7 @@ import java.util.List;
 public class TimingTest extends ProcessingTest {
 
     private static final int RUNS_PER_TIMED_SET = 25;
-    private static final String[] WARM_UP_FILES = {"bazaarvoiceDisplayShared", "css", "css-3", "strings", "whitespace"};
+    private static final String[] WARM_UP_FILES = {"css", "css-3", "strings", "whitespace"};
 
     private boolean _warm = false;
 

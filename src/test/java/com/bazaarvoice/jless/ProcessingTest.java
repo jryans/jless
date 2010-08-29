@@ -76,11 +76,19 @@ public class ProcessingTest {
     }
 
     public void testBazaarvoice() {
-        runTestFor("less-bright", "bazaarvoice");
+        runTestFor("theme", "bazaarvoice");
     }
 
     public void testBazaarvoiceDisplayShared() {
-        runTestFor("bazaarvoiceDisplayShared");
+        runTestFor("theme", "bazaarvoiceDisplayShared");
+    }
+
+    public void testBazaarvoiceQA() {
+        runTestFor("theme", "bazaarvoiceQA");
+    }
+
+    public void testBazaarvoiceSubmitShared() {
+        runTestFor("theme", "bazaarvoiceSubmitShared");
     }
 
     public void testComments() {
