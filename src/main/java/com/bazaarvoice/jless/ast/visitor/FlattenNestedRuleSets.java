@@ -51,7 +51,7 @@ public class FlattenNestedRuleSets extends InclusiveNodeVisitor {
     }
 
     @Override
-    public boolean visit(RuleSetNode ruleSet) {
+    public boolean exit(RuleSetNode ruleSet) {
         _ruleSetStack.pop();
 
         // If exiting the nested rule set
@@ -95,7 +95,7 @@ public class FlattenNestedRuleSets extends InclusiveNodeVisitor {
     }
 
     @Override
-    public boolean visit(SelectorGroupNode selectorGroup) {
+    public boolean exit(SelectorGroupNode selectorGroup) {
         if (_ruleSetStack.size() > 1) {
             // In a nested rule set, and the new selectors are now complete
 
@@ -120,7 +120,7 @@ public class FlattenNestedRuleSets extends InclusiveNodeVisitor {
             }
 
             @Override
-            public boolean visit(SelectorNode parentSelector) {
+            public boolean exit(SelectorNode parentSelector) {
                 SelectorNode parentSelectorClone = parentSelector.clone();
 
                 // Add the current selector from the nested rule set to the cloned selector node from the parent.

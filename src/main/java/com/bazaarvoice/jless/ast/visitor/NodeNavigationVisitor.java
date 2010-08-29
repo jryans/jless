@@ -29,32 +29,37 @@ public interface NodeNavigationVisitor {
     // These eliminate the need for methods that no visitor uses
 
     /**
-     * Called upon first reaching nodes with children.
+     * Called when the visitor first reaches a node with children.
      * @return Determines whether the node's children will be visited.
      */
     boolean enter(Node node);
 
     /**
-     * Called when the visitor reaches a given node. If the node contains children,
-     * this is called after both {@link #enter} and optionally visiting the node's children,
-     * when permitted.
+     * Called when the visitor reaches a leaf node.
      * @return Determines whether the sibling nodes following this node will be visited.
      */
     boolean visit(Node node);
+
+    /**
+     * Called when the visitor is about to leave a node with children. This is called
+     * after both {@link #enter} and optionally visiting the node's children, when permitted.
+     * @return Determines whether the sibling nodes following this node will be visited.
+     */
+    boolean exit(Node node);
 
     // Concrete visitor methods
 
     boolean enter(ExpressionGroupNode node);
 
-    boolean visit(ExpressionGroupNode node);
+    boolean exit(ExpressionGroupNode node);
 
-    boolean visit(ExpressionNode node);
+    boolean exit(ExpressionNode node);
 
-    boolean visit(ExpressionPhraseNode node);
+    boolean exit(ExpressionPhraseNode node);
 
     boolean enter(FunctionNode node);
 
-    boolean visit(FunctionNode node);
+    boolean exit(FunctionNode node);
 
     boolean visit(LineBreakNode node);
 
@@ -62,23 +67,23 @@ public interface NodeNavigationVisitor {
 
     boolean enter(PropertyNode node);
 
-    boolean visit(PropertyNode node);
+    boolean exit(PropertyNode node);
 
     boolean enter(RuleSetNode node);
 
-    boolean visit(RuleSetNode node);
+    boolean exit(RuleSetNode node);
 
     boolean enter(ScopeNode node);
 
-    boolean visit(ScopeNode node);
+    boolean exit(ScopeNode node);
 
     boolean enter(SelectorNode node);
 
-    boolean visit(SelectorNode node);
+    boolean exit(SelectorNode node);
 
     boolean enter(SelectorGroupNode node);
 
-    boolean visit(SelectorGroupNode node);
+    boolean exit(SelectorGroupNode node);
 
     boolean visit(SelectorSegmentNode node);
 
@@ -88,7 +93,7 @@ public interface NodeNavigationVisitor {
 
     boolean enter(VariableDefinitionNode node);
 
-    boolean visit(VariableDefinitionNode node);
+    boolean exit(VariableDefinitionNode node);
 
     boolean visit(VariableReferenceNode node);
 }

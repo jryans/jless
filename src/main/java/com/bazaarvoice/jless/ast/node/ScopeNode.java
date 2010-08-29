@@ -10,7 +10,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
-import java.util.ListIterator;
 import java.util.Map;
 
 public class ScopeNode extends InternalNode {
@@ -151,8 +150,8 @@ public class ScopeNode extends InternalNode {
     }
 
     @Override
-    protected boolean visit(NodeNavigationVisitor visitor) {
-        return visitor.visit(this);
+    protected boolean exit(NodeNavigationVisitor visitor) {
+        return visitor.exit(this);
     }
 
     /**

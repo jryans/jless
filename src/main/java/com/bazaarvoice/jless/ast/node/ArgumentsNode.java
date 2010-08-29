@@ -24,7 +24,7 @@ public class ArgumentsNode extends InternalNode {
     }
 
     @Override
-    protected boolean visit(NodeNavigationVisitor visitor) {
-        return visitor.visit(this);
+    protected boolean exit(NodeNavigationVisitor visitor) {
+        return visitor.exit(this);
     }
 }

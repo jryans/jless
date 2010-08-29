@@ -31,27 +31,27 @@ public class Printer extends InclusiveNodeVisitor {
     // Node output
 
     @Override
-    public boolean visit(ExpressionGroupNode node) {
+    public boolean exit(ExpressionGroupNode node) {
         if (NodeTreeUtils.parentHasNext(node)) {
             print(", ");
         }
-        return super.visit(node);
+        return super.exit(node);
     }
 
     @Override
-    public boolean visit(ExpressionNode node) {
+    public boolean exit(ExpressionNode node) {
         if (NodeTreeUtils.parentHasNext(node)) {
             print(' ');
         }
-        return super.visit(node);
+        return super.exit(node);
     }
 
     @Override
-    public boolean visit(ExpressionPhraseNode node) {
+    public boolean exit(ExpressionPhraseNode node) {
         if (NodeTreeUtils.parentHasNext(node)) {
             print(", ");
         }
-        return super.visit(node);
+        return super.exit(node);
     }
 
     @Override
@@ -61,9 +61,9 @@ public class Printer extends InclusiveNodeVisitor {
     }
 
     @Override
-    public boolean visit(FunctionNode node) {
+    public boolean exit(FunctionNode node) {
         print(')');
-        return super.visit(node);
+        return super.exit(node);
     }
 
     @Override
@@ -90,12 +90,12 @@ public class Printer extends InclusiveNodeVisitor {
     }
 
     @Override
-    public boolean visit(PropertyNode node) {
+    public boolean exit(PropertyNode node) {
         print(";");
         if (node.getParent().getChildren().size() > 1 && NodeTreeUtils.parentHasNext(node)) {
             print(' ');
         }
-        return super.visit(node);
+        return super.exit(node);
     }
 
     @Override
@@ -113,7 +113,7 @@ public class Printer extends InclusiveNodeVisitor {
     }
 
     @Override
-    public boolean visit(ScopeNode node) {
+    public boolean exit(ScopeNode node) {
         if (node.getParent() != null) {
             List<Node> children = node.getChildren();
             if (children.isEmpty()) {
@@ -123,20 +123,20 @@ public class Printer extends InclusiveNodeVisitor {
             }
             deleteIndent().print('}');
         }
-        return super.visit(node);
+        return super.exit(node);
     }
 
     @Override
-    public boolean visit(SelectorNode node) {
+    public boolean exit(SelectorNode node) {
         if (NodeTreeUtils.parentHasNext(node)) {
             print(", ");
         }
-        return super.visit(node);
+        return super.exit(node);
     }
 
     @Override
-    public boolean visit(SelectorGroupNode node) {
-        return super.visit(node);
+    public boolean exit(SelectorGroupNode node) {
+        return super.exit(node);
     }
 
     @Override
@@ -167,12 +167,12 @@ public class Printer extends InclusiveNodeVisitor {
     }
 
     @Override
-    public boolean visit(VariableDefinitionNode node) {
+    public boolean exit(VariableDefinitionNode node) {
         print(";");
         if (node.getParent().getChildren().size() > 1 && NodeTreeUtils.parentHasNext(node)) {
             print(' ');
         }
-        return super.visit(node);
+        return super.exit(node);
     }
 
     @Override

@@ -170,6 +170,10 @@ public abstract class InternalNode extends Node {
 
     // ********** Visitors **********
 
+    protected abstract boolean enter(NodeNavigationVisitor visitor);
+
+    protected abstract boolean exit(NodeNavigationVisitor visitor);
+
     @Override
     public final boolean filter(NodeNavigationVisitor visitor) {
         if (enter(visitor)) {
@@ -183,7 +187,7 @@ public abstract class InternalNode extends Node {
             popChildIterator();
         }
 
-        return visit(visitor);
+        return exit(visitor);
     }
 
     @Override
@@ -203,7 +207,7 @@ public abstract class InternalNode extends Node {
             popChildIterator();
         }
 
-        return visit(visitor);
+        return exit(visitor);
     }
 
     // ********** Cloning **********

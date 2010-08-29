@@ -5,8 +5,6 @@ import com.bazaarvoice.jless.ast.visitor.InclusiveNodeVisitor;
 import com.bazaarvoice.jless.ast.visitor.NodeAdditionVisitor;
 import com.bazaarvoice.jless.ast.visitor.NodeNavigationVisitor;
 
-import java.util.ListIterator;
-
 public class SelectorNode extends InternalNode {
 
     public SelectorNode() {
@@ -50,8 +48,8 @@ public class SelectorNode extends InternalNode {
     }
 
     @Override
-    protected boolean visit(NodeNavigationVisitor visitor) {
-        return visitor.visit(this);
+    protected boolean exit(NodeNavigationVisitor visitor) {
+        return visitor.exit(this);
     }
 
     /**

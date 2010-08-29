@@ -44,6 +44,11 @@ public abstract class DefaultNodeVisitor implements NodeAdditionVisitor, NodeNav
         return defaultValue();
     }
 
+    @Override
+    public boolean exit(Node node) {
+        return defaultValue();
+    }
+
     // Concrete visit methods (NodeAdditionVisitor)
 
 
@@ -80,17 +85,17 @@ public abstract class DefaultNodeVisitor implements NodeAdditionVisitor, NodeNav
     }
 
     @Override
-    public boolean visit(ExpressionGroupNode node) {
+    public boolean exit(ExpressionGroupNode node) {
         return defaultValue();
     }
 
     @Override
-    public boolean visit(ExpressionNode node) {
+    public boolean exit(ExpressionNode node) {
         return defaultValue();
     }
 
     @Override
-    public boolean visit(ExpressionPhraseNode node) {
+    public boolean exit(ExpressionPhraseNode node) {
         return defaultValue();
     }
 
@@ -100,7 +105,7 @@ public abstract class DefaultNodeVisitor implements NodeAdditionVisitor, NodeNav
     }
 
     @Override
-    public boolean visit(FunctionNode node) {
+    public boolean exit(FunctionNode node) {
         return defaultValue();
     }
 
@@ -120,7 +125,7 @@ public abstract class DefaultNodeVisitor implements NodeAdditionVisitor, NodeNav
     }
 
     @Override
-    public boolean visit(PropertyNode node) {
+    public boolean exit(PropertyNode node) {
         return defaultValue();
     }
 
@@ -130,7 +135,7 @@ public abstract class DefaultNodeVisitor implements NodeAdditionVisitor, NodeNav
     }
 
     @Override
-    public boolean visit(RuleSetNode node) {
+    public boolean exit(RuleSetNode node) {
         return defaultValue();
     }
 
@@ -140,7 +145,7 @@ public abstract class DefaultNodeVisitor implements NodeAdditionVisitor, NodeNav
     }
 
     @Override
-    public boolean visit(ScopeNode node) {
+    public boolean exit(ScopeNode node) {
         return defaultValue();
     }
 
@@ -150,7 +155,7 @@ public abstract class DefaultNodeVisitor implements NodeAdditionVisitor, NodeNav
     }
 
     @Override
-    public boolean visit(SelectorNode node) {
+    public boolean exit(SelectorNode node) {
         return defaultValue();
     }
 
@@ -160,7 +165,7 @@ public abstract class DefaultNodeVisitor implements NodeAdditionVisitor, NodeNav
     }
 
     @Override
-    public boolean visit(SelectorGroupNode node) {
+    public boolean exit(SelectorGroupNode node) {
         return defaultValue();
     }
 
@@ -185,7 +190,7 @@ public abstract class DefaultNodeVisitor implements NodeAdditionVisitor, NodeNav
     }
 
     @Override
-    public boolean visit(VariableDefinitionNode node) {
+    public boolean exit(VariableDefinitionNode node) {
         return defaultValue();
     }
 

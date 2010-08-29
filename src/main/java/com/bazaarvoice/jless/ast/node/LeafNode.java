@@ -35,10 +35,7 @@ public abstract class LeafNode extends Node {
         return Collections.emptyList();
     }
 
-    @Override
-    protected final boolean enter(NodeNavigationVisitor visitor) {
-        throw new UnsupportedOperationException("Leaf nodes can't contain children.");
-    }
+    protected abstract boolean visit(NodeNavigationVisitor visit);
 
     @Override
     public final boolean filter(NodeNavigationVisitor visitor) {
