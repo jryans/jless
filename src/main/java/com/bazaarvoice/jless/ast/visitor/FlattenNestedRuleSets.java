@@ -15,7 +15,6 @@ import org.parboiled.trees.GraphUtils;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Stack;
 
 /**
  * This visitor flattens nested rule sets since nesting is not allowed in CSS.  When a rule set move up the
@@ -35,166 +34,178 @@ import java.util.Stack;
  */
 public class FlattenNestedRuleSets extends InclusiveNodeVisitor {
 
-    private Stack<RuleSetNode> _ruleSetStack = new Stack<RuleSetNode>();
-    private List<Node> _updatedSelectors;
+    private RuleSetNode _parentRuleSet;
     private int _nodesAddedToParentRuleSet;
 
     @Override
-    public boolean enter(RuleSetNode node) {
-        // If entering the parent rule set
-        if (_ruleSetStack.empty()) {
-            _nodesAddedToParentRuleSet = 0;
+    public boolean enter(final ScopeNode scope) {
+        // If there's already a parent rule set, then use a new visitor for nested rule sets in this scope.
+        if (_parentRuleSet != null) {
+            scope.traverse(new NestedRuleSetVisitor(scope));
+
+            // Don't enter the scope in this visitor
+            return false;
         }
 
-        _ruleSetStack.push(node);
+        return true;
+    }
+
+    @Override
+    public boolean enter(RuleSetNode ruleSet) {
+        // Entering the parent rule set
+        _nodesAddedToParentRuleSet = 0;
+        _parentRuleSet = ruleSet;
         return true;
     }
 
     @Override
     public boolean exit(RuleSetNode ruleSet) {
-        _ruleSetStack.pop();
-
-        // If exiting the nested rule set
-        if (!_ruleSetStack.empty()) {
-            // Preserve the rule set's current scope for variable resolution by setting the parent scope link
-            final RuleSetNode parentRuleSet = _ruleSetStack.get(0);
-            ScopeNode parentScope = NodeTreeUtils.getFirstChild(parentRuleSet, ScopeNode.class);
-            ScopeNode scope = NodeTreeUtils.getFirstChild(ruleSet, ScopeNode.class);
-            scope.setParentScope(parentScope);
-
-            // Move this rule set up to be a sibling of its parent with comments that describe the parent
-            addSiblingAfter(parentRuleSet, surroundWithContext(parentRuleSet, ruleSet));
-
-            // TODO: replace with line breaks you contain
-            // If the parent rule set's scope contains no meaningful content, mark it as invisible
-            int scopeChildCount = parentScope.getChildren().size();
-            if (scopeChildCount == 0 || scopeChildCount == NodeTreeUtils.getChildren(parentScope, LineBreakNode.class).size()) {
-                parentRuleSet.setVisible(false);
-            }
-        }
-
+        _parentRuleSet = null;
         return true;
-    }
-
-    @Override
-    public boolean enter(ScopeNode node) {
-        // Don't enter the scope of a nested rule set
-        return _ruleSetStack.size() <= 1;
     }
 
     @Override
     public boolean enter(SelectorGroupNode node) {
-        if (_ruleSetStack.size() > 1) {
-            // In a nested rule set, reset the list of updated selector nodes and enter
-            _updatedSelectors = new ArrayList<Node>();
-            return true;
-        } else {
-            // This visitor ignores the parent's selectors
-            return false;
-        }
+        // This visitor ignores the parent's selectors
+        return false;
     }
 
-    @Override
-    public boolean exit(SelectorGroupNode selectorGroup) {
-        if (_ruleSetStack.size() > 1) {
-            // In a nested rule set, and the new selectors are now complete
+    private class NestedRuleSetVisitor extends InclusiveNodeVisitor {
 
+        private ScopeNode _parentScope;
+        private List<Node> _updatedSelectors;
+
+        private NestedRuleSetVisitor(ScopeNode parentScope) {
+            _parentScope = parentScope;
+        }
+
+        @Override
+        public boolean exit(RuleSetNode ruleSet) {
+            // Preserve the rule set's current scope for variable resolution by setting the parent scope link
+            ScopeNode scope = NodeTreeUtils.getFirstChild(ruleSet, ScopeNode.class);
+            scope.setParentScope(_parentScope);
+
+            // Move this rule set up to be a sibling of its parent with comments that describe the parent
+            addSiblingAfter(_parentRuleSet, surroundWithContext(_parentRuleSet, ruleSet));
+
+            // If the parent rule set's scope contains no meaningful content, replace it with the line breaks it contains
+            if (_parentScope.getChildren().size() ==
+                    (NodeTreeUtils.getChildren(_parentScope, LineBreakNode.class).size() + NodeTreeUtils.getChildrenWithVisibility(_parentScope, false).size())) {
+                InternalNode grandparentScope = _parentRuleSet.getParent();
+                grandparentScope.getLatestChildIterator().set(-1, new LineBreakNode(_parentRuleSet.toString()));
+            }
+
+            return true;
+        }
+
+        @Override
+        public boolean enter(SelectorGroupNode node) {
+            // Reset the list of updated selector nodes and enter
+            _updatedSelectors = new ArrayList<Node>();
+            return true;
+        }
+
+        @Override
+        public boolean exit(SelectorGroupNode selectorGroup) {
             // Replace old selectors
             selectorGroup.clearChildren();
             selectorGroup.addChildren(_updatedSelectors);
+            return true;
         }
 
-        return true;
-    }
+        @Override
+        public boolean enter(final SelectorNode selector) {
+            // Visit the parent rule set and clone its selector nodes
+            _parentRuleSet.traverse(new InclusiveNodeVisitor() {
+                @Override
+                public boolean enter(ScopeNode node) {
+                    return false; // Don't need to touch the parent's scope
+                }
 
-    @Override
-    public boolean enter(final SelectorNode selector) {
-        // We've reached a selector in a nested rule set, create a new selector working set
-        final List<SelectorNode> selectorWorkingSet = new ArrayList<SelectorNode>();
+                @Override
+                public boolean exit(SelectorNode parentSelector) {
+                    SelectorNode parentSelectorClone = parentSelector.clone();
 
-        // Visit the parent rule set and clone its selector nodes
-        _ruleSetStack.get(0).traverse(new InclusiveNodeVisitor() {
-            @Override
-            public boolean enter(ScopeNode node) {
-                return false; // Don't need to touch the parent's scope
+                    // Add the current selector from the nested rule set to the cloned selector node from the parent.
+                    // SelectorNode listens for additions of other SelectorNodes, and will absorb its children properly.
+                    parentSelectorClone.addChild(selector.clone());
+
+                    _updatedSelectors.add(parentSelectorClone);
+                    return true;
+                }
+            });
+
+            return false;
+        }
+
+        @Override
+        public boolean enter(ScopeNode node) {
+            // Only enter the initial scope (inside the parent rule set)
+            return node == _parentScope;
+        }
+
+        @Override
+        public boolean enter(PropertyNode node) {
+            return false;
+        }
+
+        /**
+         * Add the input nodes after the current node in its parent's list of children, but yet
+         * also ensure that they will be included in the current iteration of those children.
+         */
+        private void addSiblingAfter(Node node, List<Node> siblings) {
+            InternalNode parent = node.getParent();
+
+            // Add the sibling nodes after the current node (also the parent iterator's current node)
+            RandomAccessListIterator<Node> childIterator = parent.getLatestChildIterator();
+
+            // If nodes added is 0, then the iterator will advance with each add
+            if (_nodesAddedToParentRuleSet == 0) {
+                // The iterator adds each element at its current position and increments
+                for (Node sibling : siblings) {
+                    childIterator.add(sibling);
+                    _nodesAddedToParentRuleSet++;
+                }
+
+                // Rewind the iterator so that the added nodes are visited
+                for (Node sibling : siblings) {
+                    childIterator.previous();
+                }
+            } else {
+                // The iterator won't advance, so increment the relative offset each time
+                for (Node sibling : siblings) {
+                    childIterator.add(_nodesAddedToParentRuleSet++, sibling);
+                }
+            }
+        }
+
+        private List<Node> surroundWithContext(RuleSetNode parent, RuleSetNode node) {
+            String parentSelector = NodeTreeUtils.getFirstChild(parent, SelectorGroupNode.class).toString();
+
+            List<Node> nodeList = new ArrayList<Node>();
+
+            // Add rule set header comment
+            nodeList.add(new MultipleLineCommentNode(" " + parentSelector + " { "));
+
+            // Grab line breaks just inside the parent rule set's scope, if any
+            Node enterScopeLineBreak = NodeTreeUtils.getFirstChild(parent, ScopeNode.class).getChildren().get(0);
+            if (enterScopeLineBreak instanceof LineBreakNode) {
+                nodeList.add(enterScopeLineBreak);
             }
 
-            @Override
-            public boolean exit(SelectorNode parentSelector) {
-                SelectorNode parentSelectorClone = parentSelector.clone();
+            // Add rule set itself
+            nodeList.add(node);
 
-                // Add the current selector from the nested rule set to the cloned selector node from the parent.
-                // SelectorNode listens for additions of other SelectorNodes, and will absorb its children properly.
-                parentSelectorClone.addChild(selector.clone());
+            // Add rule set footer comment
+            nodeList.add(new MultipleLineCommentNode(" } " + parentSelector + " "));
 
-                selectorWorkingSet.add(parentSelectorClone);
-                return true;
+            // Grab line breaks just at the end of the parent rule set, if any
+            Node exitScopeLineBreak = GraphUtils.getLastChild((Node) parent);
+            if (exitScopeLineBreak instanceof LineBreakNode) {
+                nodeList.add(exitScopeLineBreak);
             }
-        });
 
-        // Add the current selector working set to the larger collection of selectors for the nested rule set
-        _updatedSelectors.addAll(selectorWorkingSet);
-
-        return false;
-    }
-
-    @Override
-    public boolean enter(PropertyNode node) {
-        return false;
-    }
-
-    /**
-     * Add the input nodes after the current node in its parent's list of children, but yet
-     * also ensure that they will be included in the current iteration of those children.
-     */
-    private void addSiblingAfter(Node node, List<Node> siblings) {
-        InternalNode parent = node.getParent();
-
-        // Add the sibling nodes after the current node (also the parent iterator's current node)
-        RandomAccessListIterator<Node> childIterator = parent.getLatestChildIterator();
-        int index = childIterator.nextIndex() + _nodesAddedToParentRuleSet;
-        for (Node sibling : siblings) {
-            childIterator.add(index++, sibling);
+            return nodeList;
         }
-
-        // If the offset was 0, then the iterator advanced with each add
-        if (_nodesAddedToParentRuleSet == 0) {
-            // Rewind the iterator so that the added nodes are visited
-            for (Node sibling : siblings) {
-                childIterator.previous();
-            }
-        }
-
-        // Update offset for future add operations
-        _nodesAddedToParentRuleSet += siblings.size();
-    }
-
-    private List<Node> surroundWithContext(RuleSetNode parent, RuleSetNode node) {
-        String parentSelector = NodeTreeUtils.getFirstChild(parent, SelectorGroupNode.class).toString();
-
-        List<Node> nodeList = new ArrayList<Node>();
-
-        // Add rule set header comment
-        nodeList.add(new MultipleLineCommentNode(" " + parentSelector + " { "));
-
-        // Grab line breaks just inside the parent rule set's scope, if any
-        Node enterScopeLineBreak = NodeTreeUtils.getFirstChild(parent, ScopeNode.class).getChildren().get(0);
-        if (enterScopeLineBreak instanceof LineBreakNode) {
-            nodeList.add(enterScopeLineBreak);
-        }
-
-        // Add rule set itself
-        nodeList.add(node);
-
-        // Add rule set footer comment
-        nodeList.add(new MultipleLineCommentNode(" } " + parentSelector + " "));
-
-        // Grab line breaks just at the end of the parent rule set, if any
-        Node exitScopeLineBreak = GraphUtils.getLastChild((Node) parent);
-        if (exitScopeLineBreak instanceof LineBreakNode) {
-            nodeList.add(exitScopeLineBreak);
-        }
-
-        return nodeList;
     }
 }

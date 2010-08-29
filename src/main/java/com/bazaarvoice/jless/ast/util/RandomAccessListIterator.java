@@ -9,9 +9,18 @@ import java.util.ListIterator;
  */
 public interface RandomAccessListIterator<T> extends ListIterator<T> {
 
-    T remove(int index);
+    /**
+     * Remove an element at the position {@link #nextIndex} plus relativeIndex.
+     */
+    T remove(int relativeIndex);
 
-    void set(int index, T child);
+    /**
+     * Replace an element at the position {@link #nextIndex} plus relativeIndex.
+     */
+    void set(int relativeIndex, T child);
 
-    void add(int index, T child);
+    /**
+     * Add an element at the position {@link #nextIndex} plus relativeIndex.
+     */
+    void add(int relativeIndex, T child);
 }

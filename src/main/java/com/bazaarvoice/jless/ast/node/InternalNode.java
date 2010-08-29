@@ -80,11 +80,12 @@ public abstract class InternalNode extends Node {
         }
 
         // detach new child from old parent
-        if (child.getParent() == this) {
+        InternalNode parent = child.getParent();
+        if (parent == this) {
             return;
         }
-        if (child.getParent() != null) {
-            TreeUtils.removeChild(child.getParent(), child);
+        if (parent != null) {
+            TreeUtils.removeChild(parent, child);
         }
 
         // attach new child
@@ -102,7 +103,7 @@ public abstract class InternalNode extends Node {
         Preconditions.checkElementIndex(index, _children.size());
 
         // ignore empty nodes
-        if (child == null || !child.hasData()) {
+        if (child == null) {
             return;
         }
 
@@ -114,8 +115,9 @@ public abstract class InternalNode extends Node {
         old.setParent(null);
 
         // detach new child from old parent
-        if (child.getParent() != this) {
-            TreeUtils.removeChild(child.getParent(), child);
+        InternalNode parent = child.getParent();
+        if (parent != null && parent != this) {
+            TreeUtils.removeChild(parent, child);
         }
 
         // attach new child
@@ -286,8 +288,8 @@ public abstract class InternalNode extends Node {
         }
 
         @Override
-        public Node remove(int index) {
-            return removeChild(index);
+        public Node remove(int relativeIndex) {
+            return removeChild(_cursor + relativeIndex);
         }
 
         private void removeEvent(int index) {
@@ -304,8 +306,8 @@ public abstract class InternalNode extends Node {
         }
 
         @Override
-        public void set(int index, Node child) {
-            setChild(index, child);
+        public void set(int relativeIndex, Node child) {
+            setChild(_cursor + relativeIndex, child);
         }
 
         @Override
@@ -314,8 +316,8 @@ public abstract class InternalNode extends Node {
         }
 
         @Override
-        public void add(int index, Node child) {
-            addChild(index, child);
+        public void add(int relativeIndex, Node child) {
+            addChild(_cursor + relativeIndex, child);
         }   
 
         private void addEvent(int index, Node child) {

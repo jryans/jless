@@ -12,7 +12,7 @@ public class ExclusiveNodeVisitor extends DefaultNodeVisitor {
     }
 
     @Override
-    protected boolean defaultValue() {
+    protected final boolean defaultValue() {
         return false;
     }
 }

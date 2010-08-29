@@ -12,7 +12,7 @@ public class InclusiveNodeVisitor extends DefaultNodeVisitor {
     }
 
     @Override
-    protected boolean defaultValue() {
+    protected final boolean defaultValue() {
         return true;
     }
 }

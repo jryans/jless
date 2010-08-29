@@ -51,6 +51,19 @@ public final class NodeTreeUtils {
         return filteredChildren;
     }
 
+    public static List<Node> getChildrenWithVisibility(InternalNode parent, boolean visibility) {
+        List<Node> filteredChildren = new ArrayList<Node>();
+
+        for (Node child : parent.getChildren()) {
+            if (child.isVisible() == visibility) {
+                //noinspection unchecked
+                filteredChildren.add(child);
+            }
+        }
+
+        return filteredChildren;
+    }
+
     public static <C extends Node> C getFirstChild(InternalNode parent, Class<C> targetClass) {
         for (Node child : parent.getChildren()) {
             if (targetClass.isInstance(child)) {
