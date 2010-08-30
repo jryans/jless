@@ -529,7 +529,7 @@ public class Parser extends BaseParser<Node> {
     }
 
     /**
-     * 'expression(' (!');' .)* ');'
+     * 'expression(' (!(')' Ws0 [;}]) .)* ');'
      */
     Rule ExpressionFunction() {
         return Sequence(

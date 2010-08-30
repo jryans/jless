@@ -15,18 +15,10 @@ import java.util.List;
 @Test
 public class ProcessingTest {
 
-    private boolean _translationEnabled;
-
-    protected boolean isTranslationEnabled() {
-        return _translationEnabled;
-    }
-
-    protected void setTranslationEnabled(boolean translationEnabled) {
-        _translationEnabled = translationEnabled;
-    }
+    protected static final LessProcessor PROCESSOR = new LessProcessor();
 
     protected void runTestFor(String... fileNames) {
-        setTranslationEnabled(false);
+        PROCESSOR.setTranslationEnabled(false);
         List<InputStream> inputs = assembleInputs(fileNames);
         saveOutput(fileNames[fileNames.length - 1], runProcessor(inputs)); // Parsing errors will cause an exception to be thrown
     }
@@ -43,7 +35,7 @@ public class ProcessingTest {
 
     protected String runProcessor(List<InputStream> inputs) {
         try {
-            return new LessProcessor(_translationEnabled).process(inputs).toString();
+            return PROCESSOR.process(inputs).toString();
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

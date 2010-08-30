@@ -20,9 +20,9 @@ public class TimingTest extends ProcessingTest {
             warmUp();
         }
 
-        setTranslationEnabled(false);
+        PROCESSOR.setTranslationEnabled(false);
         timeProcessor(fileNames);
-        setTranslationEnabled(true);
+        PROCESSOR.setTranslationEnabled(true);
         timeProcessor(fileNames);
     }
 
@@ -31,7 +31,7 @@ public class TimingTest extends ProcessingTest {
      * the JVM and helps reach steady-state performance.
      */
     private void warmUp() {
-        setTranslationEnabled(true);
+        PROCESSOR.setTranslationEnabled(true);
         for (int i = 0; i < RUNS_PER_TIMED_SET; i++) {
             runProcessor(assembleInputs(WARM_UP_FILES));
         }
@@ -43,7 +43,7 @@ public class TimingTest extends ProcessingTest {
         float totalTime = 0, minTime = Float.MAX_VALUE, maxTime = 0, avgTime;
         int i;
 
-        TestUtils.getLog().println("Processing times for " + outputFileName + ", translation " + (isTranslationEnabled() ? "on" : "off"));
+        TestUtils.getLog().println("Processing times for " + outputFileName + ", translation " + (PROCESSOR.isTranslationEnabled() ? "on" : "off"));
 
         for (i = 0; i < RUNS_PER_TIMED_SET; i++) {
             List<InputStream> inputs = assembleInputs(fileNames);

@@ -61,14 +61,26 @@ import java.util.List;
 public class LessProcessor {
 
     // Controls whether only parsing or both parsing and translation are performed.
-    private boolean _translationEnabled;
+    private boolean _translationEnabled = true;
 
-    public LessProcessor() {
-        this(true);
+    // Controls whether a compressed version of the output is printed.
+    // There is no performance penalty for enabling compression.
+    private boolean _compressionEnabled = false;
+
+    public boolean isTranslationEnabled() {
+        return _translationEnabled;
     }
 
-    public LessProcessor(boolean translationEnabled) {
+    public void setTranslationEnabled(boolean translationEnabled) {
         _translationEnabled = translationEnabled;
+    }
+
+    public boolean isCompressionEnabled() {
+        return _compressionEnabled;
+    }
+
+    public void setCompressionEnabled(boolean compressionEnabled) {
+        _compressionEnabled = compressionEnabled;
     }
 
     public Result process(InputStream input) throws IOException {
@@ -172,7 +184,7 @@ public class LessProcessor {
                     }
 
                     // Print the output nodes
-                    Printer printer = new Printer();
+                    Printer printer = new Printer(_compressionEnabled);
                     _scope.traverse(printer);
                     return printer.toString();
                 }

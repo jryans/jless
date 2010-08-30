@@ -17,7 +17,7 @@ public class TranslatedDiffTest extends ProcessingTest {
 
     @Override
     protected void runTestFor(String... fileNames) {
-        setTranslationEnabled(true);
+        PROCESSOR.setTranslationEnabled(true);
         List<InputStream> inputs = assembleInputs(fileNames);
         String output = runProcessor(inputs);
         saveOutput(fileNames[fileNames.length - 1], output);
