@@ -10,6 +10,7 @@ import com.bazaarvoice.jless.ast.node.LineBreakNode;
 import com.bazaarvoice.jless.ast.node.MultipleLineCommentNode;
 import com.bazaarvoice.jless.ast.node.Node;
 import com.bazaarvoice.jless.ast.node.PropertyNode;
+import com.bazaarvoice.jless.ast.node.RuleSetNode;
 import com.bazaarvoice.jless.ast.node.ScopeNode;
 import com.bazaarvoice.jless.ast.node.SelectorNode;
 import com.bazaarvoice.jless.ast.node.SelectorSegmentNode;
@@ -24,11 +25,23 @@ import java.util.List;
 public class Printer extends InclusiveNodeVisitor {
 
     private static final int INDENT_STEP = 4;
+    private static final int COMPRESSED_LINE_BREAK_POSITION = 4000;
+
+    private boolean _compress;
 
     private StringBuilder _sb = new StringBuilder();
     private int _indent = 0;
     private boolean _lastPrintedIndent = false;
+    private int _lastCompressedLineBreak = 0;
 
+    public Printer() {
+        this(false);
+    }
+
+    public Printer(boolean compress) {
+        _compress = compress;
+    }
+    
     // Node output
 
     @Override
@@ -46,7 +59,7 @@ public class Printer extends InclusiveNodeVisitor {
     @Override
     public boolean exit(ExpressionGroupNode node) {
         if (NodeTreeUtils.parentHasNext(node)) {
-            print(", ");
+            print(',').printOptional(' ');
         }
         return super.exit(node);
     }
@@ -62,7 +75,7 @@ public class Printer extends InclusiveNodeVisitor {
     @Override
     public boolean exit(ExpressionPhraseNode node) {
         if (NodeTreeUtils.parentHasNext(node)) {
-            print(", ");
+            print(',').printOptional(' ');
         }
         return super.exit(node);
     }
@@ -82,18 +95,20 @@ public class Printer extends InclusiveNodeVisitor {
     @Override
     public boolean exit(FilterArgumentNode node) {
         if (NodeTreeUtils.parentHasNext(node)) {
-            print(", ");
+            print(',').printOptional(' ');
         }
         return super.exit(node);
     }
 
     @Override
     public boolean visit(LineBreakNode node) {
-        for (int i = 0; i < node.getLineBreaks(); i++) {
-            printLine();
-        }
-        if (node.getLineBreaks() > 0) {
-            printIndent();
+        if (!_compress) {
+            for (int i = 0; i < node.getLineBreaks(); i++) {
+                printLine();
+            }
+            if (node.getLineBreaks() > 0) {
+                printIndent();
+            }
         }
         return super.visit(node);
     }
@@ -106,23 +121,37 @@ public class Printer extends InclusiveNodeVisitor {
 
     @Override
     public boolean enter(PropertyNode node) {
-        print(node.getName()).print(": ");
+        print(node.getName()).print(':').printOptional(' ');
         return super.enter(node);
     }
 
     @Override
     public boolean exit(PropertyNode node) {
-        print(";");
+        if (NodeTreeUtils.parentHasNext(node)) {
+            print(";");
+        } else {
+            printOptional(";");
+        }
         if (node.getParent().getChildren().size() > 1 && NodeTreeUtils.parentHasNext(node)) {
-            print(' ');
+            printOptional(' ');
         }
         return super.exit(node);
     }
 
     @Override
+    public boolean enter(RuleSetNode ruleSet) {
+        if (_compress) {
+            // Check if the inner scope contains nodes
+            ScopeNode scope = NodeTreeUtils.getFirstChild(ruleSet, ScopeNode.class);
+            return !scope.getChildren().isEmpty();
+        }
+        return super.enter(ruleSet);
+    }
+
+    @Override
     public boolean enter(ScopeNode node) {
         if (node.getParent() != null) {
-            print(" {");
+            printOptional(' ').print('{');
             List<Node> children = node.getChildren();
             if (children.isEmpty()) {
                 // do nothing
@@ -143,6 +172,13 @@ public class Printer extends InclusiveNodeVisitor {
                 removeIndent();
             }
             deleteIndent().print('}');
+
+            // Some editors and version control systems don't like extremely long lines, so add
+            // line breaks every so often when compressing. 
+            if (_compress && _sb.length() - _lastCompressedLineBreak > COMPRESSED_LINE_BREAK_POSITION) {
+                printLine();
+                _lastCompressedLineBreak = _sb.length();
+            }
         }
         return super.exit(node);
     }
@@ -150,7 +186,7 @@ public class Printer extends InclusiveNodeVisitor {
     @Override
     public boolean exit(SelectorNode node) {
         if (NodeTreeUtils.parentHasNext(node)) {
-            print(", ");
+            print(',').printOptional(' ');
         }
         return super.exit(node);
     }
@@ -211,6 +247,20 @@ public class Printer extends InclusiveNodeVisitor {
     private Printer print(Character c) {
         _sb.append(c);
         _lastPrintedIndent = false;
+        return this;
+    }
+
+    private Printer printOptional(String s) {
+        if (!_compress) {
+            print(s);
+        }
+        return this;
+    }
+
+    private Printer printOptional(Character c) {
+        if (!_compress) {
+            print(c);
+        }
         return this;
     }
 
