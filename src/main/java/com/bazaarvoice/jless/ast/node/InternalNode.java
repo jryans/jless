@@ -194,7 +194,7 @@ public abstract class InternalNode extends Node {
 
     @Override
     public final boolean traverse(NodeNavigationVisitor visitor) {
-        if (!isVisible() && !visitor.visitInvisible(this)) {
+        if (!isVisible() && !visitInvisible(visitor)) {
             return true;
         }
 

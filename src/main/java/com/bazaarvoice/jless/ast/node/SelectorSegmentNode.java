@@ -11,7 +11,7 @@ public class SelectorSegmentNode extends LeafNode {
     private String _combinator;
     private String _simpleSelector;
     private boolean _subElementSelector;
-    private boolean _universalHtml;
+    private boolean _universal;
 
     public SelectorSegmentNode(String combinator) {
         _combinator = combinator;
@@ -52,22 +52,27 @@ public class SelectorSegmentNode extends LeafNode {
         return true;
     }
 
-    public boolean isUniversalHtml() {
-        return _universalHtml;
+    public boolean isUniversal() {
+        return _universal;
     }
 
-    public boolean setUniversalHtml(boolean universalHtml) {
-        _universalHtml = universalHtml;
+    public boolean setUniversal(boolean universal) {
+        _universal = universal;
         return true;
     }
 
     @Override
-    public boolean add(NodeAdditionVisitor visitor) {
+    protected boolean add(NodeAdditionVisitor visitor) {
         return visitor.add(this);
     }
 
     @Override
     protected boolean visit(NodeNavigationVisitor visitor) {
         return visitor.visit(this);
+    }
+
+    @Override
+    protected boolean visitInvisible(NodeNavigationVisitor visitor) {
+        return visitor.visitInvisible(this);
     }
 }

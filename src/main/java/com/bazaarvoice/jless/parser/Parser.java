@@ -244,8 +244,13 @@ public class Parser extends BaseParser<Node> {
                 Sequence(
                         FirstOf(
                                 ElementName(),
-                                Sequence(UniversalHtml(), selectorSegmentNode.get().setUniversalHtml(true)), 
-                                Universal()
+                                Sequence(
+                                        FirstOf(
+                                                UniversalHtml(),
+                                                Universal()
+                                        ),
+                                        selectorSegmentNode.get().setUniversal(true)
+                                )
                         ),
                         ZeroOrMore(FirstOf(ID(), Class(), Attribute(), Negation(), Pseudo()))
                 ),
@@ -428,7 +433,7 @@ public class Parser extends BaseParser<Node> {
         return Sequence(
                 Sequence(
                         "progid:",
-                        OneOrMore(FirstOf('.', Alpha()))
+                        OneOrMore(FirstOf('.', Ident()))
                 ),
                 push(new FunctionNode(match())),
                 FilterArguments(),
@@ -461,7 +466,7 @@ public class Parser extends BaseParser<Node> {
      */
     Rule FilterArgument() {
         return Sequence(
-                OneOrMore(Alpha()), push(new FilterArgumentNode(match())), Ws0(),
+                Ident(), push(new FilterArgumentNode(match())), Ws0(),
                 '=', Ws0(),
                 Value(), peek(1).addChild(pop())
         );

@@ -41,7 +41,9 @@ public abstract class Node implements MutableTreeNode<Node>, Cloneable {
 
     public abstract boolean addChild(Node child);
 
-    public abstract boolean add(NodeAdditionVisitor visitor);
+    protected abstract boolean add(NodeAdditionVisitor visitor);
+
+    protected abstract boolean visitInvisible(NodeNavigationVisitor visitor);
 
     public abstract boolean filter(NodeNavigationVisitor visitor);
 

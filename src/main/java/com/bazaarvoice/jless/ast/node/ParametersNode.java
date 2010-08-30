@@ -3,8 +3,6 @@ package com.bazaarvoice.jless.ast.node;
 import com.bazaarvoice.jless.ast.visitor.NodeAdditionVisitor;
 import com.bazaarvoice.jless.ast.visitor.NodeNavigationVisitor;
 
-import java.util.ListIterator;
-
 public class ParametersNode extends InternalNode {
 
     public ParametersNode() {
@@ -16,7 +14,7 @@ public class ParametersNode extends InternalNode {
     }
 
     @Override
-    public boolean add(NodeAdditionVisitor visitor) {
+    protected boolean add(NodeAdditionVisitor visitor) {
         return visitor.add(this);
     }
 
@@ -28,5 +26,10 @@ public class ParametersNode extends InternalNode {
     @Override
     protected boolean exit(NodeNavigationVisitor visitor) {
         return visitor.exit(this);
+    }
+
+    @Override
+    protected boolean visitInvisible(NodeNavigationVisitor visitor) {
+        return visitor.visitInvisible(this);
     }
 }

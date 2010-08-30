@@ -25,12 +25,17 @@ public class LineBreakNode extends LeafNode {
     }
 
     @Override
-    public boolean add(NodeAdditionVisitor visitor) {
+    protected boolean add(NodeAdditionVisitor visitor) {
         return visitor.add(this);
     }
 
     @Override
     protected boolean visit(NodeNavigationVisitor visitor) {
         return visitor.visit(this);
+    }
+
+    @Override
+    protected boolean visitInvisible(NodeNavigationVisitor visitor) {
+        return visitor.visitInvisible(this);
     }
 }

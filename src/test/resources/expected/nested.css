@@ -26,6 +26,10 @@
 /* } .nested *//* .nested { */* html .nested .test {
     height: 10px; 
 }
+
+/* } .nested *//* .nested { */* .nested .test {
+    height: 5px; 
+}
 /* } .nested *//* .cat, .dog { */
 .cat:hover, .dog:hover, .cat .bob, .dog .bob {
     color: blue; 

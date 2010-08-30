@@ -9,33 +9,35 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
-import java.util.ArrayList;
-import java.util.List;
 
 @Test
 public class ProcessingTest {
 
     protected static final LessProcessor PROCESSOR = new LessProcessor();
 
-    protected void runTestFor(String... fileNames) {
+    protected void runTestFor(String fileName) {
         PROCESSOR.setTranslationEnabled(false);
-        List<InputStream> inputs = assembleInputs(fileNames);
-        saveOutput(fileNames[fileNames.length - 1], runProcessor(inputs)); // Parsing errors will cause an exception to be thrown
+        saveOutput(fileName, runProcessor(assembleInput(fileName)).toString());
     }
 
-    protected List<InputStream> assembleInputs(String[] fileNames) {
-        List<InputStream> inputs = new ArrayList<InputStream>();
-        for (String fileName : fileNames) {
-            InputStream stream = getClass().getResourceAsStream("/less/" + fileName + ".less");
-            Assert.assertNotNull(stream, "Unable to read " + fileName + ".less");
-            inputs.add(stream);
-        }
-        return inputs;
+    protected void runTestFor(String parentFileName, String fileName) {
+        PROCESSOR.setTranslationEnabled(false);
+        saveOutput(fileName, runProcessor(runProcessor(assembleInput(parentFileName)), assembleInput(fileName)).toString());
     }
 
-    protected String runProcessor(List<InputStream> inputs) {
+    protected InputStream assembleInput(String fileName) {
+        InputStream stream = getClass().getResourceAsStream("/less/" + fileName + ".less");
+        Assert.assertNotNull(stream, "Unable to read " + fileName + ".less");
+        return stream;
+    }
+
+    protected LessProcessor.Result runProcessor(InputStream input) {
+        return runProcessor(null, input);
+    }
+
+    protected LessProcessor.Result runProcessor(LessProcessor.Result parent, InputStream input) {
         try {
-            return PROCESSOR.process(inputs).toString();
+            return PROCESSOR.process(parent, input);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

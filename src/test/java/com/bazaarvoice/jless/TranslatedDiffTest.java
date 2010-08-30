@@ -16,12 +16,19 @@ import java.util.List;
 public class TranslatedDiffTest extends ProcessingTest {
 
     @Override
-    protected void runTestFor(String... fileNames) {
+    protected void runTestFor(String fileName) {
         PROCESSOR.setTranslationEnabled(true);
-        List<InputStream> inputs = assembleInputs(fileNames);
-        String output = runProcessor(inputs);
-        saveOutput(fileNames[fileNames.length - 1], output);
-        diffOutput(fileNames[fileNames.length - 1], output);
+        LessProcessor.Result result = runProcessor(assembleInput(fileName));
+        saveOutput(fileName, result.toString());
+        diffOutput(fileName, result.toString());
+    }
+
+    @Override
+    protected void runTestFor(String parentFileName, String fileName) {
+        PROCESSOR.setTranslationEnabled(true);
+        LessProcessor.Result result = runProcessor(runProcessor(assembleInput(parentFileName)), assembleInput(fileName));
+        saveOutput(fileName, result.toString());
+        diffOutput(fileName, result.toString());
     }
 
     private void diffOutput(String fileName, String output) {

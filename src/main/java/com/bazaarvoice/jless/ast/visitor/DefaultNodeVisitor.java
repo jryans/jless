@@ -21,9 +21,6 @@ import com.bazaarvoice.jless.ast.node.SingleLineCommentNode;
 import com.bazaarvoice.jless.ast.node.VariableDefinitionNode;
 import com.bazaarvoice.jless.ast.node.VariableReferenceNode;
 
-/**
- *
- */
 public abstract class DefaultNodeVisitor implements NodeAdditionVisitor, NodeNavigationVisitor {
     
     protected abstract boolean defaultValue();

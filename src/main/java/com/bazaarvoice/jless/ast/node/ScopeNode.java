@@ -143,7 +143,7 @@ public class ScopeNode extends InternalNode {
     }
 
     @Override
-    public boolean add(NodeAdditionVisitor visitor) {
+    protected boolean add(NodeAdditionVisitor visitor) {
         return visitor.add(this);
     }
 
@@ -155,6 +155,11 @@ public class ScopeNode extends InternalNode {
     @Override
     protected boolean exit(NodeNavigationVisitor visitor) {
         return visitor.exit(this);
+    }
+
+    @Override
+    protected boolean visitInvisible(NodeNavigationVisitor visitor) {
+        return visitor.visitInvisible(this);
     }
 
     /**

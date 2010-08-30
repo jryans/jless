@@ -162,24 +162,15 @@ public class FlattenNestedRuleSets extends InclusiveNodeVisitor {
 
             // Add the sibling nodes after the current node (also the parent iterator's current node)
             RandomAccessListIterator<Node> childIterator = parent.getLatestChildIterator();
+            for (Node sibling : siblings) {
+                childIterator.add(_nodesAddedToParentRuleSet, sibling);
 
-            // If nodes added is 0, then the iterator will advance with each add
-            if (_nodesAddedToParentRuleSet == 0) {
-                // The iterator adds each element at its current position and increments
-                for (Node sibling : siblings) {
-                    childIterator.add(sibling);
-                    _nodesAddedToParentRuleSet++;
-                }
-
-                // Rewind the iterator so that the added nodes are visited
-                for (Node sibling : siblings) {
+                // If nodes added is 0, then the iterator will advance. Rewind so that the added nodes are visited.
+                if (_nodesAddedToParentRuleSet == 0) {
                     childIterator.previous();
                 }
-            } else {
-                // The iterator won't advance, so increment the relative offset each time
-                for (Node sibling : siblings) {
-                    childIterator.add(_nodesAddedToParentRuleSet++, sibling);
-                }
+
+                _nodesAddedToParentRuleSet++;
             }
         }
 

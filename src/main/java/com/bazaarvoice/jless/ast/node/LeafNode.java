@@ -44,6 +44,6 @@ public abstract class LeafNode extends Node {
 
     @Override
     public final boolean traverse(NodeNavigationVisitor visitor) {
-        return !isVisible() && !visitor.visitInvisible(this) || visit(visitor);
+        return (!isVisible() && !visitInvisible(visitor)) || visit(visitor);
     }
 }

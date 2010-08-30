@@ -24,25 +24,19 @@ public class SelectorNode extends InternalNode {
              */
             @Override
             public boolean add(SelectorNode selector) {
-                // If the first segment is a universal HTML ("* html") segment, it must remain first in the list
+                // If the first segment is a universal ("*") segment, it must remain first in the list
                 SelectorSegmentNode sourceSegment = NodeTreeUtils.getFirstChild(selector, SelectorSegmentNode.class);
-                if (sourceSegment.isUniversalHtml()) {
+                if (sourceSegment.isUniversal()) {
                     // If the first destination segment is not a sub-element selector and it has no combinator,
-                    // switch it to the descendant combinator before absorbing the universal HTML segment.
-                    SelectorSegmentNode destinationSegment = NodeTreeUtils.getFirstChild(SelectorNode.this, SelectorSegmentNode.class);
-                    if (!destinationSegment.isSubElementSelector() && destinationSegment.getCombinator().equals(SelectorSegmentNode.NO_COMBINATOR)) {
-                        destinationSegment.setCombinator(SelectorSegmentNode.DESCENDANT_COMBINATOR);
-                    }
+                    // switch it to the descendant combinator before absorbing the universal segment.
+                    setCombinatorIfNotSubElement(SelectorNode.this);
                     // Add the universal HTML segment at the front of the list
                     addChild(0, sourceSegment);
                 }
 
                 // If the first source segment is not a sub-element selector and it has no combinator,
                 // switch it to the descendant combinator before absorbing the segments.
-                sourceSegment = NodeTreeUtils.getFirstChild(selector, SelectorSegmentNode.class);
-                if (!sourceSegment.isSubElementSelector() && sourceSegment.getCombinator().equals(SelectorSegmentNode.NO_COMBINATOR)) {
-                    sourceSegment.setCombinator(SelectorSegmentNode.DESCENDANT_COMBINATOR);
-                }
+                setCombinatorIfNotSubElement(selector);
 
                 NodeTreeUtils.moveChildren(selector, SelectorNode.this);
                 return false; // Don't add the original selector itself
@@ -50,8 +44,15 @@ public class SelectorNode extends InternalNode {
         });
     }
 
+    private void setCombinatorIfNotSubElement(SelectorNode selector) {
+        SelectorSegmentNode sourceSegment = NodeTreeUtils.getFirstChild(selector, SelectorSegmentNode.class);
+        if (!sourceSegment.isSubElementSelector() && sourceSegment.getCombinator().equals(SelectorSegmentNode.NO_COMBINATOR)) {
+            sourceSegment.setCombinator(SelectorSegmentNode.DESCENDANT_COMBINATOR);
+        }
+    }
+
     @Override
-    public boolean add(NodeAdditionVisitor visitor) {
+    protected boolean add(NodeAdditionVisitor visitor) {
         return visitor.add(this);
     }
 
@@ -63,6 +64,11 @@ public class SelectorNode extends InternalNode {
     @Override
     protected boolean exit(NodeNavigationVisitor visitor) {
         return visitor.exit(this);
+    }
+
+    @Override
+    protected boolean visitInvisible(NodeNavigationVisitor visitor) {
+        return visitor.visitInvisible(this);
     }
 
     /**
