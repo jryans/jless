@@ -38,7 +38,7 @@ public class FlattenNestedRuleSets extends InclusiveNodeVisitor {
     private int _nodesAddedToParentRuleSet;
 
     @Override
-    public boolean enter(final ScopeNode scope) {
+    public boolean enter(ScopeNode scope) {
         // If there's already a parent rule set, then use a new visitor for nested rule sets in this scope.
         if (_parentRuleSet != null) {
             scope.traverse(new NestedRuleSetVisitor(scope));
@@ -88,11 +88,10 @@ public class FlattenNestedRuleSets extends InclusiveNodeVisitor {
             // Move this rule set up to be a sibling of its parent with comments that describe the parent
             addSiblingAfter(_parentRuleSet, surroundWithContext(_parentRuleSet, ruleSet));
 
-            // If the parent rule set's scope contains no meaningful content, replace it with the line breaks it contains
+            // If the parent rule set's scope contains no meaningful content, mark it as invisible
             if (_parentScope.getChildren().size() ==
                     (NodeTreeUtils.getChildren(_parentScope, LineBreakNode.class).size() + NodeTreeUtils.getChildrenWithVisibility(_parentScope, false).size())) {
-                InternalNode grandparentScope = _parentRuleSet.getParent();
-                grandparentScope.getLatestChildIterator().set(-1, new LineBreakNode(_parentRuleSet.toString()));
+                _parentRuleSet.setVisible(false);
             }
 
             return true;
@@ -146,6 +145,11 @@ public class FlattenNestedRuleSets extends InclusiveNodeVisitor {
 
         @Override
         public boolean enter(PropertyNode node) {
+            return false;
+        }
+
+        @Override
+        public boolean visitInvisible(Node node) {
             return false;
         }
 

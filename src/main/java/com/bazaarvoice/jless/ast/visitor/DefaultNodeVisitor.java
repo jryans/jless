@@ -1,8 +1,10 @@
 package com.bazaarvoice.jless.ast.visitor;
 
+import com.bazaarvoice.jless.ast.node.ArgumentsNode;
 import com.bazaarvoice.jless.ast.node.ExpressionGroupNode;
 import com.bazaarvoice.jless.ast.node.ExpressionNode;
 import com.bazaarvoice.jless.ast.node.ExpressionPhraseNode;
+import com.bazaarvoice.jless.ast.node.FilterArgumentNode;
 import com.bazaarvoice.jless.ast.node.FunctionNode;
 import com.bazaarvoice.jless.ast.node.LineBreakNode;
 import com.bazaarvoice.jless.ast.node.MultipleLineCommentNode;
@@ -49,8 +51,12 @@ public abstract class DefaultNodeVisitor implements NodeAdditionVisitor, NodeNav
         return defaultValue();
     }
 
-    // Concrete visit methods (NodeAdditionVisitor)
+    @Override
+    public boolean visitInvisible(Node node) {
+        return defaultValue();
+    }
 
+    // Concrete visit methods (NodeAdditionVisitor)
 
     @Override
     public boolean add(ParametersNode node) {
@@ -80,6 +86,16 @@ public abstract class DefaultNodeVisitor implements NodeAdditionVisitor, NodeNav
     // Concrete visit methods (NodeTraversalVisitor)
 
     @Override
+    public boolean enter(ArgumentsNode node) {
+        return defaultValue();
+    }
+
+    @Override
+    public boolean exit(ArgumentsNode node) {
+        return defaultValue();
+    }
+
+    @Override
     public boolean enter(ExpressionGroupNode node) {
         return defaultValue();
     }
@@ -106,6 +122,16 @@ public abstract class DefaultNodeVisitor implements NodeAdditionVisitor, NodeNav
 
     @Override
     public boolean exit(FunctionNode node) {
+        return defaultValue();
+    }
+
+    @Override
+    public boolean enter(FilterArgumentNode node) {
+        return defaultValue();
+    }
+
+    @Override
+    public boolean exit(FilterArgumentNode node) {
         return defaultValue();
     }
 

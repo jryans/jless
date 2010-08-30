@@ -66,7 +66,12 @@ public abstract class Node implements MutableTreeNode<Node>, Cloneable {
 
     @Override
     public String toString() {
-        Printer p = new Printer();
+        Printer p = new Printer() {
+            @Override
+            public boolean visitInvisible(Node node) {
+                return true; // Always print invisible nodes
+            }
+        };
         traverse(p);
         return p.toString();
     }

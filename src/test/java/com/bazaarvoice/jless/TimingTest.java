@@ -10,7 +10,7 @@ import java.util.List;
 public class TimingTest extends ProcessingTest {
 
     private static final int RUNS_PER_TIMED_SET = 25;
-    private static final String[] WARM_UP_FILES = {"css", "css-3", "strings", "whitespace"};
+    private static final String[] WARM_UP_FILES = {"theme", "bazaarvoice", "css", "css-3", "strings", "whitespace"};
 
     private boolean _warm = false;
 
@@ -20,12 +20,10 @@ public class TimingTest extends ProcessingTest {
             warmUp();
         }
 
-        List<InputStream> inputs = assembleInputs(fileNames);
-
         setTranslationEnabled(false);
-        timeProcessor(fileNames[fileNames.length - 1], inputs);
+        timeProcessor(fileNames);
         setTranslationEnabled(true);
-        timeProcessor(fileNames[fileNames.length - 1], inputs);
+        timeProcessor(fileNames);
     }
 
     /**
@@ -34,24 +32,24 @@ public class TimingTest extends ProcessingTest {
      */
     private void warmUp() {
         setTranslationEnabled(true);
-        List<InputStream> inputs = assembleInputs(WARM_UP_FILES);
-
         for (int i = 0; i < RUNS_PER_TIMED_SET; i++) {
-            runProcessor(inputs);
+            runProcessor(assembleInputs(WARM_UP_FILES));
         }
         _warm = true;
     }
 
-    private void timeProcessor(String fileName, List<InputStream> inputs) {
-        float totalTime = 0, minTime = Long.MAX_VALUE, maxTime = 0, avgTime = 0;
+    private void timeProcessor(String... fileNames) {
+        String outputFileName = fileNames[fileNames.length - 1];
+        float totalTime = 0, minTime = Float.MAX_VALUE, maxTime = 0, avgTime;
         int i;
 
-        TestUtils.getLog().println("Processing times for " + fileName + ", translation " + (isTranslationEnabled() ? "on" : "off"));
+        TestUtils.getLog().println("Processing times for " + outputFileName + ", translation " + (isTranslationEnabled() ? "on" : "off"));
 
         for (i = 0; i < RUNS_PER_TIMED_SET; i++) {
+            List<InputStream> inputs = assembleInputs(fileNames);
             long startTime = System.nanoTime();
             runProcessor(inputs);
-            long runTime = System.nanoTime() - startTime;
+            float runTime = System.nanoTime() - startTime;
             runTime /= 1000000;
             totalTime += runTime;
             if (runTime < minTime) {
@@ -68,6 +66,6 @@ public class TimingTest extends ProcessingTest {
         TestUtils.getLog().format("Max. Time: %.3f ms%n", maxTime);
         TestUtils.getLog().format("Avg. Time: %.3f ms%n", avgTime);
 
-        Assert.assertTrue(avgTime <= 60, "Average parsing time for " + fileName + " is larger than 60 ms");
+        Assert.assertTrue(avgTime <= 60, "Average parsing time for " + outputFileName + " is larger than 60 ms");
     }
 }

@@ -4,6 +4,7 @@ import com.bazaarvoice.jless.ast.node.ArgumentsNode;
 import com.bazaarvoice.jless.ast.node.ExpressionGroupNode;
 import com.bazaarvoice.jless.ast.node.ExpressionNode;
 import com.bazaarvoice.jless.ast.node.ExpressionPhraseNode;
+import com.bazaarvoice.jless.ast.node.FilterArgumentNode;
 import com.bazaarvoice.jless.ast.node.FunctionNode;
 import com.bazaarvoice.jless.ast.node.LineBreakNode;
 import com.bazaarvoice.jless.ast.node.Node;
@@ -241,7 +242,11 @@ public class Parser extends BaseParser<Node> {
     Rule SimpleSelector(Var<SelectorSegmentNode> selectorSegmentNode) {
         return FirstOf(
                 Sequence(
-                        FirstOf(ElementName(), UniversalHtml(), Universal()),
+                        FirstOf(
+                                ElementName(),
+                                Sequence(UniversalHtml(), selectorSegmentNode.get().setUniversalHtml(true)), 
+                                Universal()
+                        ),
                         ZeroOrMore(FirstOf(ID(), Class(), Attribute(), Negation(), Pseudo()))
                 ),
                 OneOrMore(FirstOf(
@@ -362,7 +367,7 @@ public class Parser extends BaseParser<Node> {
     }
 
     Rule UniversalHtml() {
-        return Sequence(Universal(), "html");
+        return Sequence(Universal(), Ws0(), "html");
     }
 
     // ********** CSS Entities **********
@@ -416,6 +421,52 @@ public class Parser extends BaseParser<Node> {
         );
     }
 
+    /**
+     * Ex: progid:DXImageTransform.Microsoft.gradient(startColorstr=@lightColor, endColorstr=@darkColor)
+     */
+    Rule FilterFunction() {
+        return Sequence(
+                Sequence(
+                        "progid:",
+                        OneOrMore(FirstOf('.', Alpha()))
+                ),
+                push(new FunctionNode(match())),
+                FilterArguments(),
+                peek(1).addChild(pop())
+        );
+    }
+
+    /**
+     * '(' Ws0 FilterArgument Ws0 (',' Ws0 FilterArgument Ws0)* ')' / '(' Ws0 ')'
+     */
+    Rule FilterArguments() {
+        return FirstOf(
+                Sequence(
+                        '(', Ws0(),
+                        FilterArgument(), push(new ArgumentsNode(pop())),
+                        Ws0(),
+                        ZeroOrMore(
+                                ',', Ws0(),
+                                FilterArgument(), peek(1).addChild(pop()),
+                                Ws0()
+                        ),
+                        ')'
+                ),
+                Sequence('(', Ws0(), ')', push(new ArgumentsNode()))
+        );
+    }
+
+    /**
+     * Ex: startColorstr=@lightColor
+     */
+    Rule FilterArgument() {
+        return Sequence(
+                OneOrMore(Alpha()), push(new FilterArgumentNode(match())), Ws0(),
+                '=', Ws0(),
+                Value(), peek(1).addChild(pop())
+        );
+    }
+
     // ********** LESS Entities **********
 
     /**
@@ -431,7 +482,8 @@ public class Parser extends BaseParser<Node> {
                 URL(),
                 Font(),
                 AlphaFilter(),
-                ExpressionFunction()
+                ExpressionFunction(),
+                FilterFunction()
         );
     }
 
@@ -705,8 +757,6 @@ public class Parser extends BaseParser<Node> {
      * Locates the referenced mixin in one of the scope nodes on the stack. If found, the mixin's
      * scope is cloned and placed onto the stack in place of the mixin reference. Additionally,
      * any arguments are applied to the mixin's scope.
-     *
-     * Future: Hide referenced mixins from output
      */
     boolean resolveMixinReference(String name, ArgumentsNode arguments) {
         if (!isParserTranslationEnabled()) {

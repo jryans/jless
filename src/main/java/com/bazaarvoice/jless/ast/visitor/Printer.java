@@ -1,15 +1,16 @@
 package com.bazaarvoice.jless.ast.visitor;
 
+import com.bazaarvoice.jless.ast.node.ArgumentsNode;
 import com.bazaarvoice.jless.ast.node.ExpressionGroupNode;
 import com.bazaarvoice.jless.ast.node.ExpressionNode;
 import com.bazaarvoice.jless.ast.node.ExpressionPhraseNode;
+import com.bazaarvoice.jless.ast.node.FilterArgumentNode;
 import com.bazaarvoice.jless.ast.node.FunctionNode;
 import com.bazaarvoice.jless.ast.node.LineBreakNode;
 import com.bazaarvoice.jless.ast.node.MultipleLineCommentNode;
 import com.bazaarvoice.jless.ast.node.Node;
 import com.bazaarvoice.jless.ast.node.PropertyNode;
 import com.bazaarvoice.jless.ast.node.ScopeNode;
-import com.bazaarvoice.jless.ast.node.SelectorGroupNode;
 import com.bazaarvoice.jless.ast.node.SelectorNode;
 import com.bazaarvoice.jless.ast.node.SelectorSegmentNode;
 import com.bazaarvoice.jless.ast.node.SimpleNode;
@@ -29,6 +30,18 @@ public class Printer extends InclusiveNodeVisitor {
     private boolean _lastPrintedIndent = false;
 
     // Node output
+
+    @Override
+    public boolean enter(ArgumentsNode node) {
+        print('(');
+        return super.enter(node);
+    }
+
+    @Override
+    public boolean exit(ArgumentsNode node) {
+        print(')');
+        return super.exit(node);
+    }
 
     @Override
     public boolean exit(ExpressionGroupNode node) {
@@ -56,13 +69,21 @@ public class Printer extends InclusiveNodeVisitor {
 
     @Override
     public boolean enter(FunctionNode node) {
-        print(node.getName()).print('(');
+        print(node.getName());
         return super.enter(node);
     }
 
     @Override
-    public boolean exit(FunctionNode node) {
-        print(')');
+    public boolean enter(FilterArgumentNode node) {
+        print(node.getName()).print('=');
+        return super.enter(node);
+    }
+
+    @Override
+    public boolean exit(FilterArgumentNode node) {
+        if (NodeTreeUtils.parentHasNext(node)) {
+            print(", ");
+        }
         return super.exit(node);
     }
 
@@ -135,11 +156,6 @@ public class Printer extends InclusiveNodeVisitor {
     }
 
     @Override
-    public boolean exit(SelectorGroupNode node) {
-        return super.exit(node);
-    }
-
-    @Override
     public boolean visit(SelectorSegmentNode node) {
         print(node.getCombinator()).print(node.getSimpleSelector());
         return super.visit(node);
@@ -176,6 +192,12 @@ public class Printer extends InclusiveNodeVisitor {
     public boolean visit(VariableReferenceNode node) {
         print(node.getValue());
         return super.visit(node);
+    }
+
+    @Override
+    public boolean visitInvisible(Node node) {
+        visit(new LineBreakNode(node.toString()));
+        return false;
     }
 
     // Printing methods

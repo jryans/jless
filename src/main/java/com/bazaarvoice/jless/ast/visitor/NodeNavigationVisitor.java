@@ -1,8 +1,10 @@
 package com.bazaarvoice.jless.ast.visitor;
 
+import com.bazaarvoice.jless.ast.node.ArgumentsNode;
 import com.bazaarvoice.jless.ast.node.ExpressionGroupNode;
 import com.bazaarvoice.jless.ast.node.ExpressionNode;
 import com.bazaarvoice.jless.ast.node.ExpressionPhraseNode;
+import com.bazaarvoice.jless.ast.node.FilterArgumentNode;
 import com.bazaarvoice.jless.ast.node.FunctionNode;
 import com.bazaarvoice.jless.ast.node.LineBreakNode;
 import com.bazaarvoice.jless.ast.node.MultipleLineCommentNode;
@@ -47,7 +49,17 @@ public interface NodeNavigationVisitor {
      */
     boolean exit(Node node);
 
+    /**
+     * Called when the visitor reaches an invisible node.
+     * @return Determines whether the navigation applied to visible nodes should also apply here.
+     */
+    boolean visitInvisible(Node node);
+
     // Concrete visitor methods
+
+    boolean enter(ArgumentsNode node);
+
+    boolean exit(ArgumentsNode node);
 
     boolean enter(ExpressionGroupNode node);
 
@@ -60,6 +72,10 @@ public interface NodeNavigationVisitor {
     boolean enter(FunctionNode node);
 
     boolean exit(FunctionNode node);
+
+    boolean enter(FilterArgumentNode node);
+
+    boolean exit(FilterArgumentNode node);
 
     boolean visit(LineBreakNode node);
 

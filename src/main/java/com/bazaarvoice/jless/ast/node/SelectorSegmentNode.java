@@ -11,6 +11,7 @@ public class SelectorSegmentNode extends LeafNode {
     private String _combinator;
     private String _simpleSelector;
     private boolean _subElementSelector;
+    private boolean _universalHtml;
 
     public SelectorSegmentNode(String combinator) {
         _combinator = combinator;
@@ -48,6 +49,15 @@ public class SelectorSegmentNode extends LeafNode {
 
     public boolean setSubElementSelector(boolean subElementSelector) {
         _subElementSelector = subElementSelector;
+        return true;
+    }
+
+    public boolean isUniversalHtml() {
+        return _universalHtml;
+    }
+
+    public boolean setUniversalHtml(boolean universalHtml) {
+        _universalHtml = universalHtml;
         return true;
     }
 

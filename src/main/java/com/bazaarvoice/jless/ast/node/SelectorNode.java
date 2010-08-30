@@ -23,15 +23,28 @@ public class SelectorNode extends InternalNode {
              * Absorb all children of the given selector. This assumes that cloning is not necessary.
              */
             @Override
-            public boolean add(SelectorNode node) {
-                // If the first segment is not a sub-element selector and it has no combinator,
-                // switch it to the descendant combinator before absorbing the segments.
-                SelectorSegmentNode segment = NodeTreeUtils.getFirstChild(node, SelectorSegmentNode.class);
-                if (!segment.isSubElementSelector() && segment.getCombinator().equals(SelectorSegmentNode.NO_COMBINATOR)) {
-                    segment.setCombinator(SelectorSegmentNode.DESCENDANT_COMBINATOR);
+            public boolean add(SelectorNode selector) {
+                // If the first segment is a universal HTML ("* html") segment, it must remain first in the list
+                SelectorSegmentNode sourceSegment = NodeTreeUtils.getFirstChild(selector, SelectorSegmentNode.class);
+                if (sourceSegment.isUniversalHtml()) {
+                    // If the first destination segment is not a sub-element selector and it has no combinator,
+                    // switch it to the descendant combinator before absorbing the universal HTML segment.
+                    SelectorSegmentNode destinationSegment = NodeTreeUtils.getFirstChild(SelectorNode.this, SelectorSegmentNode.class);
+                    if (!destinationSegment.isSubElementSelector() && destinationSegment.getCombinator().equals(SelectorSegmentNode.NO_COMBINATOR)) {
+                        destinationSegment.setCombinator(SelectorSegmentNode.DESCENDANT_COMBINATOR);
+                    }
+                    // Add the universal HTML segment at the front of the list
+                    addChild(0, sourceSegment);
                 }
 
-                NodeTreeUtils.moveChildren(node, SelectorNode.this);
+                // If the first source segment is not a sub-element selector and it has no combinator,
+                // switch it to the descendant combinator before absorbing the segments.
+                sourceSegment = NodeTreeUtils.getFirstChild(selector, SelectorSegmentNode.class);
+                if (!sourceSegment.isSubElementSelector() && sourceSegment.getCombinator().equals(SelectorSegmentNode.NO_COMBINATOR)) {
+                    sourceSegment.setCombinator(SelectorSegmentNode.DESCENDANT_COMBINATOR);
+                }
+
+                NodeTreeUtils.moveChildren(selector, SelectorNode.this);
                 return false; // Don't add the original selector itself
             }
         });

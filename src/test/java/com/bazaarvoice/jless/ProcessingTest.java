@@ -107,6 +107,10 @@ public class ProcessingTest {
         runTestFor("dash-prefix");
     }
 
+    public void testIE() {
+        runTestFor("ie");
+    }
+
     public void testNested() {
         runTestFor("nested");
     }

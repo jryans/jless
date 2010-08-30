@@ -75,6 +75,9 @@ public class ScopeNode extends InternalNode {
             mixinScope._variableNameToValueMap.put(_parameterNames.get(i), argument);
         }
 
+        // Mark this scope's containing rule set as invisible since it has been used as a mixin
+        getParent().setVisible(false);
+
         return mixinScope;
     }
 
