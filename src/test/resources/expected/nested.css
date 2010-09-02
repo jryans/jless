@@ -15,7 +15,7 @@
 /* } .nested */
 
 /* .nested { */.nested .test2 {
-    background-image: -moz-linear-gradient(top, bottom, from(#030303), to(#010101)); background-image: -webkit-gradient(linear, left top, left bottom, from(#030303), to(#010101)); 
+    background-image: -moz-linear-gradient(top, bottom, from(#020202), to(#010101)); background-image: -webkit-gradient(linear, left top, left bottom, from(#020202), to(#010101)); 
 }
 
 /* } .nested *//* .nested { */.nested .test3 {

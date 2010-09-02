@@ -16,7 +16,7 @@ public class ScopeNode extends InternalNode {
 
     private Map<String, ExpressionGroupNode> _variableNameToValueMap = new HashMap<String, ExpressionGroupNode>();
     private Map<String, RuleSetNode> _selectorToRuleSetMap = new HashMap<String, RuleSetNode>();
-    private List<String> _parameterNames = new ArrayList<String>();
+    private List<VariableDefinitionNode> _parameterDefinitions = new ArrayList<VariableDefinitionNode>();
     private ScopeNode _parentScope;
 
     public ScopeNode() {
@@ -55,8 +55,8 @@ public class ScopeNode extends InternalNode {
      */
     public ScopeNode callMixin(String name, ArgumentsNode arguments) {
         List<ExpressionGroupNode> argumentList = (arguments != null) ? NodeTreeUtils.getChildren(arguments, ExpressionGroupNode.class) : Collections.<ExpressionGroupNode>emptyList();
-        if (argumentList.size() > _parameterNames.size()) {
-            throw new IllegalMixinArgumentException(name, _parameterNames.size());
+        if (argumentList.size() > _parameterDefinitions.size()) {
+            throw new IllegalMixinArgumentException(name, _parameterDefinitions.size());
         }
 
         ScopeNode mixinScope = clone();
@@ -72,7 +72,10 @@ public class ScopeNode extends InternalNode {
         // If arguments were passed, apply them
         for (int i = 0; i < argumentList.size(); i++) {
             ExpressionGroupNode argument = argumentList.get(i);
-            mixinScope._variableNameToValueMap.put(_parameterNames.get(i), argument);
+            // Replace the value of the definition
+            VariableDefinitionNode parameter = mixinScope._parameterDefinitions.get(i);
+            parameter.clearChildren();
+            parameter.addChild(argument);
         }
 
         // Mark this scope's containing rule set as invisible since it has been used as a mixin
@@ -92,7 +95,7 @@ public class ScopeNode extends InternalNode {
             @Override
             public boolean add(ParametersNode node) {
                 for (VariableDefinitionNode variable : NodeTreeUtils.getChildren(node, VariableDefinitionNode.class)) {
-                    _parameterNames.add(variable.getName());
+                    _parameterDefinitions.add(variable);
                     add(variable);
                 }
                 return super.add(node);
@@ -180,7 +183,7 @@ public class ScopeNode extends InternalNode {
         // Reset internal state
         scope._variableNameToValueMap = new HashMap<String, ExpressionGroupNode>();
         scope._selectorToRuleSetMap = new HashMap<String, RuleSetNode>();
-        scope._parameterNames = new ArrayList<String>();
+        scope._parameterDefinitions = new ArrayList<VariableDefinitionNode>();
         scope.setAdditionVisitor();
 
         super.cloneChildren(node);
