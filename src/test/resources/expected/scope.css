@@ -11,7 +11,7 @@
     
 }
 
-/* .scope1 { */
+
 
 
 .scope1 {color: blue; 
@@ -19,7 +19,7 @@
 .scope1 .hidden {
     
 }
-/* .scope1 .scope2 { */
+
 
 .scope1 .scope2 {color: blue;}
 .scope1 .scope2 .scope3 {
@@ -28,5 +28,5 @@
     border-color: black; 
     background-color: white; 
 }
-/* } .scope1 .scope2 */
-/* } .scope1 */
+
+

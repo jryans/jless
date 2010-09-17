@@ -1,4 +1,4 @@
-/* .nested { */
+
 
 
 
@@ -40,11 +40,11 @@
 .nested [href].inner {
     color: blue; 
 }
-/* } .nested */
 
-/* .cat, .dog { */
+
+
 .cat:hover, .dog:hover, .cat .bob, .dog .bob {
     color: blue; 
 }
-/* } .cat, .dog */
+
 

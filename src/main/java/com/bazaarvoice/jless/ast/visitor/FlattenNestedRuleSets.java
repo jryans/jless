@@ -1,6 +1,5 @@
 package com.bazaarvoice.jless.ast.visitor;
 
-import com.bazaarvoice.jless.ast.node.MultipleLineCommentNode;
 import com.bazaarvoice.jless.ast.node.Node;
 import com.bazaarvoice.jless.ast.node.PropertyNode;
 import com.bazaarvoice.jless.ast.node.RuleSetNode;
@@ -39,7 +38,7 @@ public class FlattenNestedRuleSets extends InclusiveNodeVisitor {
     public boolean enter(ScopeNode scope) {
         // If there's already a parent rule set, then use a new visitor for nested rule sets in this scope.
         if (_parentRuleSet != null) {
-            scope.traverse(new NestedRuleSetVisitor(_parentRuleSet, _parentSelectorGroup, scope));
+            scope.traverse(new NestedRuleSetVisitor(_parentSelectorGroup, scope));
 
             // Don't enter the scope in this visitor
             return false;
@@ -70,18 +69,15 @@ public class FlattenNestedRuleSets extends InclusiveNodeVisitor {
 
     private static class NestedRuleSetVisitor extends InclusiveNodeVisitor {
 
-        private final RuleSetNode _parentRuleSet;
         private final SelectorGroupNode _parentSelectorGroup;
         private final ScopeNode _parentScope;
 
         private boolean _foundNestedRuleSets = false;
-        private RuleSetNode _nestedRuleSet;
         private SelectorGroupNode _nestedSelectorGroup;
         private PropertyGroup _currentPropertyGroup = null;
         private Stack<PropertyGroup> _propertyGroups = new Stack<PropertyGroup>();
 
-        private NestedRuleSetVisitor(RuleSetNode parentRuleSet, SelectorGroupNode parentSelectorGroup, ScopeNode parentScope) {
-            _parentRuleSet = parentRuleSet;
+        private NestedRuleSetVisitor(SelectorGroupNode parentSelectorGroup, ScopeNode parentScope) {
             _parentSelectorGroup = parentSelectorGroup;
             _parentScope = parentScope;
         }
@@ -89,8 +85,7 @@ public class FlattenNestedRuleSets extends InclusiveNodeVisitor {
         @Override
         public boolean enter(RuleSetNode node) {
             _foundNestedRuleSets = true;
-            _nestedRuleSet = node;
-            recordPropertyGroup();
+            recordCurrentPropertyGroup();
             return true;
         }
 
@@ -107,13 +102,8 @@ public class FlattenNestedRuleSets extends InclusiveNodeVisitor {
             // Remove current selector node from its parent
             selectorGroupIterator.remove();
 
-            // Visit the parent rule set and clone its selector nodes
-            _parentRuleSet.traverse(new InclusiveNodeVisitor() {
-                @Override
-                public boolean enter(ScopeNode node) {
-                    return false; // Don't need to touch the parent's scope
-                }
-
+            // Visit the parent selector group and clone its selector nodes
+            _parentSelectorGroup.traverse(new InclusiveNodeVisitor() {
                 @Override
                 public boolean exit(SelectorNode parentSelector) {
                     SelectorNode parentSelectorClone = parentSelector.clone();
@@ -146,7 +136,7 @@ public class FlattenNestedRuleSets extends InclusiveNodeVisitor {
                 }
 
                 // Record a possible property group at the end of the scope
-                recordPropertyGroup();
+                recordCurrentPropertyGroup();
 
                 // Surround all properties
                 surroundPropertyGroups();
@@ -154,13 +144,8 @@ public class FlattenNestedRuleSets extends InclusiveNodeVisitor {
                 // Hide the parent rule set's selector and scope brackets
                 _parentSelectorGroup.setVisible(false);
                 _parentScope.setBracketsDisplayed(false);
-
-                // Add comments to show the parent scope's start and end
-                String parentSelector = NodeTreeUtils.filterLineBreaks(_parentSelectorGroup.clone()).toString();
-                _parentScope.addChild(0, new MultipleLineCommentNode(" " + parentSelector + " { "));
-                _parentScope.addChild(new MultipleLineCommentNode(" } " + parentSelector + " "));
             } else { // Leaving a nested rule set's scope
-                scope.traverse(new NestedRuleSetVisitor(_nestedRuleSet, _nestedSelectorGroup, scope));
+                scope.traverse(new NestedRuleSetVisitor(_nestedSelectorGroup, scope));
             }
 
             return true;
@@ -185,7 +170,7 @@ public class FlattenNestedRuleSets extends InclusiveNodeVisitor {
             return false;
         }
 
-        private void recordPropertyGroup() {
+        private void recordCurrentPropertyGroup() {
             // Only have work to do if we have encountered property nodes previously
             if (_currentPropertyGroup == null) {
                 return;
