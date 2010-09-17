@@ -1,37 +1,50 @@
-
-
-
-
-
-
-
-
-
 /* .nested { */
+
+
+
+
+
+
+
+
+
 .nested .test1 {
     background-image: -moz-linear-gradient(top, bottom, from(#030303), to(#010101)); background-image: -webkit-gradient(linear, left top, left bottom, from(#030303), to(#010101)); 
 }
 
-/* } .nested */
-
-/* .nested { */.nested .test2 {
+.nested .test2 {
     background-image: -moz-linear-gradient(top, bottom, from(#020202), to(#010101)); background-image: -webkit-gradient(linear, left top, left bottom, from(#020202), to(#010101)); 
 }
 
-/* } .nested *//* .nested { */.nested .test3 {
+.nested .test3 {
     background-image: -moz-linear-gradient(top, bottom, from(red), to(green)); 
     background-image: -webkit-gradient(linear, left top, left bottom, from(red), to(green)); 
 }
 
-/* } .nested *//* .nested { */* html .nested .test {
+* html .nested .test {
     height: 10px; 
 }
 
-/* } .nested *//* .nested { */* .nested .test {
+* .nested .test {
     height: 5px; 
 }
-/* } .nested *//* .cat, .dog { */
+
+.nested .inner:hover, .nested:hover, .nested::first-line {
+    height: 10px; 
+}
+
+.nested .inner.body {
+    color: red; 
+}
+
+.nested [href].inner {
+    color: blue; 
+}
+/* } .nested */
+
+/* .cat, .dog { */
 .cat:hover, .dog:hover, .cat .bob, .dog .bob {
     color: blue; 
 }
 /* } .cat, .dog */
+

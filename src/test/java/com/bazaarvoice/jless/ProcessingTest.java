@@ -109,6 +109,10 @@ public class ProcessingTest {
         runTestFor("nested");
     }
 
+    public void testNestedHybrid() {
+        runTestFor("nested-hybrid");
+    }
+
     public void testRuleSets() {
         runTestFor("rulesets");
     }

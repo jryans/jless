@@ -7,6 +7,7 @@ import com.bazaarvoice.jless.ast.visitor.NodeNavigationVisitor;
 import com.bazaarvoice.jless.exception.IllegalMixinArgumentException;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -18,6 +19,7 @@ public class ScopeNode extends InternalNode {
     private Map<String, RuleSetNode> _selectorToRuleSetMap = new HashMap<String, RuleSetNode>();
     private List<VariableDefinitionNode> _parameterDefinitions = new ArrayList<VariableDefinitionNode>();
     private ScopeNode _parentScope;
+    private boolean _bracketsDisplayed = true;
 
     public ScopeNode() {
         super();
@@ -27,6 +29,11 @@ public class ScopeNode extends InternalNode {
     public ScopeNode(Node node) {
         this();
         addChild(node);
+    }
+
+    public ScopeNode(Collection<Node> nodeCollection) {
+        this();
+        addChildren(nodeCollection);
     }
 
     public boolean isVariableDefined(String name) {
@@ -49,6 +56,14 @@ public class ScopeNode extends InternalNode {
         _parentScope = parentScope;
     }
 
+    public boolean isBracketsDisplayed() {
+        return _bracketsDisplayed;
+    }
+
+    public void setBracketsDisplayed(boolean bracketsDisplayed) {
+        _bracketsDisplayed = bracketsDisplayed;
+    }
+
     /**
      * Creates a clone of this scope to be attached to the tree at the site of a mixin reference. If an ArgumentsNode is passed,
      * each of its values override those defined by the mixin's parameters.
@@ -59,15 +74,9 @@ public class ScopeNode extends InternalNode {
             throw new IllegalMixinArgumentException(name, _parameterDefinitions.size());
         }
 
+        // Clone scope and filter out any line breaks
         ScopeNode mixinScope = clone();
-
-        // Filter out any line breaks
-        mixinScope.filter(new InclusiveNodeVisitor() {
-            @Override
-            public boolean visit(LineBreakNode node) {
-                return false;
-            }
-        });
+        NodeTreeUtils.filterLineBreaks(mixinScope);
 
         // If arguments were passed, apply them
         for (int i = 0; i < argumentList.size(); i++) {

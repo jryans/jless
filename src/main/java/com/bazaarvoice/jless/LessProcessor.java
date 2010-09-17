@@ -137,18 +137,11 @@ public class LessProcessor {
     
     public class Result {
         private final ScopeNode _scope;
+        private final Supplier<String> _toStringSupplier;
 
         public Result(ScopeNode scope) {
             _scope = scope;
-        }
-
-        public ScopeNode getScope() {
-            return _scope;
-        }
-
-        @Override
-        public String toString() {
-            return Suppliers.memoize(new Supplier<String>() {
+            _toStringSupplier = Suppliers.memoize(new Supplier<String>() {
                 @Override
                 public String get() {
                     // Perform additional translation steps if needed
@@ -161,7 +154,16 @@ public class LessProcessor {
                     _scope.traverse(printer);
                     return printer.toString();
                 }
-            }).get();
+            });
+        }
+
+        public ScopeNode getScope() {
+            return _scope;
+        }
+
+        @Override
+        public String toString() {
+            return _toStringSupplier.get();
         }
     }
 }

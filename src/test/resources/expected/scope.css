@@ -11,17 +11,17 @@
     
 }
 
-.scope1 {
-    
-    color: blue; 
-    border-color: black; 
-}/* .scope1 { */
+/* .scope1 { */
+
+
+.scope1 {color: blue; 
+    border-color: black;}
 .scope1 .hidden {
     
 }
-/* } .scope1 *//* .scope1 { */.scope1 .scope2 {
-    color: blue; 
-}/* .scope1 .scope2 { */
+/* .scope1 .scope2 { */
+
+.scope1 .scope2 {color: blue;}
 .scope1 .scope2 .scope3 {
     
     color: red; 

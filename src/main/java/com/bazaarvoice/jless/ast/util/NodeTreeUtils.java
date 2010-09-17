@@ -1,8 +1,10 @@
 package com.bazaarvoice.jless.ast.util;
 
 import com.bazaarvoice.jless.ast.node.InternalNode;
+import com.bazaarvoice.jless.ast.node.LineBreakNode;
 import com.bazaarvoice.jless.ast.node.Node;
 import com.bazaarvoice.jless.ast.node.ScopeNode;
+import com.bazaarvoice.jless.ast.visitor.InclusiveNodeVisitor;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -14,7 +16,6 @@ import java.util.ListIterator;
 public final class NodeTreeUtils {
 
     private NodeTreeUtils() {}
-
 
     public static boolean parentHasNext(Node node) {
         InternalNode parent = node.getParent();
@@ -82,5 +83,15 @@ public final class NodeTreeUtils {
             destination.addChild(child);
         }
         source.popChildIterator();
+    }
+
+    public static InternalNode filterLineBreaks(InternalNode node) {
+        node.filter(new InclusiveNodeVisitor() {
+            @Override
+            public boolean visit(LineBreakNode node) {
+                return false;
+            }
+        });
+        return node;
     }
 }

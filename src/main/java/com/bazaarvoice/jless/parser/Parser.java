@@ -243,24 +243,21 @@ public class Parser extends BaseParser<Node> {
         return FirstOf(
                 Sequence(
                         FirstOf(
-                                ElementName(),
+                                ID(), Class(), Attribute(), Negation(), ElementName(),
                                 Sequence(
                                         FirstOf(
                                                 UniversalHtml(),
                                                 Universal()
                                         ),
                                         selectorSegmentNode.get().setUniversal(true)
+                                ),
+                                Sequence(
+                                        Pseudo(),
+                                        selectorSegmentNode.get().setSubElementSelector(true)
                                 )
                         ),
                         ZeroOrMore(FirstOf(ID(), Class(), Attribute(), Negation(), Pseudo()))
                 ),
-                OneOrMore(FirstOf(
-                        ID(), Class(),
-                        Sequence(
-                                FirstOf(Attribute(), Negation(), Pseudo()),
-                                selectorSegmentNode.get().setSubElementSelector(true)
-                        )
-                )),
                 "@media",
                 "@font-face"
         );

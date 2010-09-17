@@ -115,7 +115,7 @@ public class Printer extends InclusiveNodeVisitor {
 
     @Override
     public boolean visit(MultipleLineCommentNode node) {
-        print("/*").print(node.getValue()).print("*/");
+        printOptional("/*").printOptional(node.getValue()).printOptional("*/");
         return super.visit(node);
     }
 
@@ -150,7 +150,7 @@ public class Printer extends InclusiveNodeVisitor {
 
     @Override
     public boolean enter(ScopeNode node) {
-        if (node.getParent() != null) {
+        if (node.getParent() != null && node.isBracketsDisplayed()) {
             printOptional(' ').print('{');
             List<Node> children = node.getChildren();
             if (children.isEmpty()) {
@@ -164,7 +164,7 @@ public class Printer extends InclusiveNodeVisitor {
 
     @Override
     public boolean exit(ScopeNode node) {
-        if (node.getParent() != null) {
+        if (node.getParent() != null && node.isBracketsDisplayed()) {
             List<Node> children = node.getChildren();
             if (children.isEmpty()) {
                 // do nothing

@@ -5,6 +5,10 @@ import com.bazaarvoice.jless.ast.visitor.NodeNavigationVisitor;
 
 public class RuleSetNode extends InternalNode {
 
+    public RuleSetNode() {
+        super();
+    }
+
     public RuleSetNode(Node child) {
         super(child);
     }
