@@ -70,10 +70,13 @@ public class FlattenNestedRuleSets extends InclusiveNodeVisitor {
 
     private static class NestedRuleSetVisitor extends InclusiveNodeVisitor {
 
-        private RuleSetNode _parentRuleSet;
-        private SelectorGroupNode _parentSelectorGroup;
-        private ScopeNode _parentScope;
+        private final RuleSetNode _parentRuleSet;
+        private final SelectorGroupNode _parentSelectorGroup;
+        private final ScopeNode _parentScope;
+
         private boolean _foundNestedRuleSets = false;
+        private RuleSetNode _nestedRuleSet;
+        private SelectorGroupNode _nestedSelectorGroup;
         private PropertyGroup _currentPropertyGroup = null;
         private Stack<PropertyGroup> _propertyGroups = new Stack<PropertyGroup>();
 
@@ -86,17 +89,14 @@ public class FlattenNestedRuleSets extends InclusiveNodeVisitor {
         @Override
         public boolean enter(RuleSetNode node) {
             _foundNestedRuleSets = true;
+            _nestedRuleSet = node;
             recordPropertyGroup();
             return true;
         }
 
         @Override
-        public boolean exit(RuleSetNode ruleSet) {
-            // This nested rule set may contain nested rule sets of its own, so visit those
-            SelectorGroupNode selectorGroup = NodeTreeUtils.getFirstChild(ruleSet, SelectorGroupNode.class);
-            ScopeNode scope = NodeTreeUtils.getFirstChild(ruleSet, ScopeNode.class);
-            scope.traverse(new NestedRuleSetVisitor(ruleSet, selectorGroup, scope));
-
+        public boolean enter(SelectorGroupNode node) {
+            _nestedSelectorGroup = node;
             return true;
         }
 
@@ -138,26 +138,30 @@ public class FlattenNestedRuleSets extends InclusiveNodeVisitor {
         }
 
         @Override
-        public boolean exit(ScopeNode node) {
-            // Ensure we are leaving the initial scope (inside the parent rule set) and nested rule sets are present
-            if (node != _parentScope || !_foundNestedRuleSets) {
-                return true;
+        public boolean exit(ScopeNode scope) {
+            if (scope == _parentScope) { // Leaving the initial scope (inside the parent rule set)
+                // Nothing to do if there are no nested rule sets present
+                if (!_foundNestedRuleSets) {
+                    return true;
+                }
+
+                // Record a possible property group at the end of the scope
+                recordPropertyGroup();
+
+                // Surround all properties
+                surroundPropertyGroups();
+
+                // Hide the parent rule set's selector and scope brackets
+                _parentSelectorGroup.setVisible(false);
+                _parentScope.setBracketsDisplayed(false);
+
+                // Add comments to show the parent scope's start and end
+                String parentSelector = NodeTreeUtils.filterLineBreaks(_parentSelectorGroup.clone()).toString();
+                _parentScope.addChild(0, new MultipleLineCommentNode(" " + parentSelector + " { "));
+                _parentScope.addChild(new MultipleLineCommentNode(" } " + parentSelector + " "));
+            } else { // Leaving a nested rule set's scope
+                scope.traverse(new NestedRuleSetVisitor(_nestedRuleSet, _nestedSelectorGroup, scope));
             }
-
-            // Record a possible property group at the end of the scope
-            recordPropertyGroup();
-
-            // Surround all properties
-            surroundPropertyGroups();
-
-            // Hide the parent rule set's selector and scope brackets
-            _parentSelectorGroup.setVisible(false);
-            _parentScope.setBracketsDisplayed(false);
-
-            // Add comments to show the parent scope's start and end
-            String parentSelector = NodeTreeUtils.filterLineBreaks(_parentSelectorGroup.clone()).toString();
-            _parentScope.addChild(0, new MultipleLineCommentNode(" " + parentSelector + " { "));
-            _parentScope.addChild(new MultipleLineCommentNode(" } " + parentSelector + " "));
 
             return true;
         }
