@@ -127,12 +127,13 @@ public class Parser extends BaseParser<Node> {
     Rule Parameters() {
         return Sequence(
                 '(',
-                Parameter(), push(new ScopeNode(new ParametersNode(pop()))), Ws0(),
+                Parameter(), push(new ParametersNode(pop())), Ws0(),
                 ZeroOrMore(
                         ',', Ws0(),
                         Parameter(), peek(1).addChild(pop())
                 ),
-                ')'
+                ')',
+                push(new ScopeNode(pop()))
         );
     }
 

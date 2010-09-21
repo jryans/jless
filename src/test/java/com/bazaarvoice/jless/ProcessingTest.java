@@ -105,6 +105,10 @@ public class ProcessingTest {
         runTestFor("ie");
     }
 
+    public void testMixinsArgsMinimal() {
+        runTestFor("mixins-args-minimal");
+    }
+
     public void testNested() {
         runTestFor("nested");
     }
