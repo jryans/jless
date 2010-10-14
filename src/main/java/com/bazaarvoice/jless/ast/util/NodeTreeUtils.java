@@ -4,6 +4,7 @@ import com.bazaarvoice.jless.ast.node.InternalNode;
 import com.bazaarvoice.jless.ast.node.LineBreakNode;
 import com.bazaarvoice.jless.ast.node.Node;
 import com.bazaarvoice.jless.ast.node.ScopeNode;
+import com.bazaarvoice.jless.ast.node.SpacingNode;
 import com.bazaarvoice.jless.ast.visitor.InclusiveNodeVisitor;
 
 import java.util.ArrayList;
@@ -89,6 +90,11 @@ public final class NodeTreeUtils {
         node.filter(new InclusiveNodeVisitor() {
             @Override
             public boolean visit(LineBreakNode node) {
+                return false;
+            }
+
+            @Override
+            public boolean visit(SpacingNode node) {
                 return false;
             }
         });

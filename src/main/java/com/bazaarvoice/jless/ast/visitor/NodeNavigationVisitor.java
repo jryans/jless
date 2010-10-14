@@ -17,6 +17,7 @@ import com.bazaarvoice.jless.ast.node.SelectorNode;
 import com.bazaarvoice.jless.ast.node.SelectorSegmentNode;
 import com.bazaarvoice.jless.ast.node.SimpleNode;
 import com.bazaarvoice.jless.ast.node.SingleLineCommentNode;
+import com.bazaarvoice.jless.ast.node.SpacingNode;
 import com.bazaarvoice.jless.ast.node.VariableDefinitionNode;
 import com.bazaarvoice.jless.ast.node.VariableReferenceNode;
 
@@ -106,6 +107,8 @@ public interface NodeNavigationVisitor {
     boolean visit(SimpleNode node);
 
     boolean visit(SingleLineCommentNode node);
+
+    boolean visit(SpacingNode node);
 
     boolean enter(VariableDefinitionNode node);
 

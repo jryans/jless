@@ -16,6 +16,7 @@ import com.bazaarvoice.jless.ast.node.SelectorNode;
 import com.bazaarvoice.jless.ast.node.SelectorSegmentNode;
 import com.bazaarvoice.jless.ast.node.SimpleNode;
 import com.bazaarvoice.jless.ast.node.SingleLineCommentNode;
+import com.bazaarvoice.jless.ast.node.SpacingNode;
 import com.bazaarvoice.jless.ast.node.VariableDefinitionNode;
 import com.bazaarvoice.jless.ast.node.VariableReferenceNode;
 import com.bazaarvoice.jless.ast.util.NodeTreeUtils;
@@ -206,6 +207,12 @@ public class Printer extends InclusiveNodeVisitor {
     @Override
     public boolean visit(SingleLineCommentNode node) {
         // C-style single line comments are not part of the CSS spec, so don't print them
+        return super.visit(node);
+    }
+
+    @Override
+    public boolean visit(SpacingNode node) {
+        printOptional(node.getValue());
         return super.visit(node);
     }
 

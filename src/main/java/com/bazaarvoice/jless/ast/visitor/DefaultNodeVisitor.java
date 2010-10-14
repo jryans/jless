@@ -18,6 +18,7 @@ import com.bazaarvoice.jless.ast.node.SelectorNode;
 import com.bazaarvoice.jless.ast.node.SelectorSegmentNode;
 import com.bazaarvoice.jless.ast.node.SimpleNode;
 import com.bazaarvoice.jless.ast.node.SingleLineCommentNode;
+import com.bazaarvoice.jless.ast.node.SpacingNode;
 import com.bazaarvoice.jless.ast.node.VariableDefinitionNode;
 import com.bazaarvoice.jless.ast.node.VariableReferenceNode;
 
@@ -204,6 +205,11 @@ public abstract class DefaultNodeVisitor implements NodeAdditionVisitor, NodeNav
 
     @Override
     public boolean visit(SingleLineCommentNode node) {
+        return defaultValue();
+    }
+
+    @Override
+    public boolean visit(SpacingNode node) {
         return defaultValue();
     }
 

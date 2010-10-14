@@ -51,7 +51,7 @@ public class ProcessingTest {
             }
 
             PrintStream generatedOutput = new PrintStream(new FileOutputStream(
-                    new File(generatedDir, outputFileName + ".out" + getGeneratedFileExtension())));
+                    new File(generatedDir, outputFileName + getGeneratedFileExtension())));
             generatedOutput.println(output);
             generatedOutput.close();
         } catch (IOException e) {

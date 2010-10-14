@@ -17,6 +17,7 @@ import com.bazaarvoice.jless.ast.node.SelectorGroupNode;
 import com.bazaarvoice.jless.ast.node.SelectorNode;
 import com.bazaarvoice.jless.ast.node.SelectorSegmentNode;
 import com.bazaarvoice.jless.ast.node.SimpleNode;
+import com.bazaarvoice.jless.ast.node.SpacingNode;
 import com.bazaarvoice.jless.ast.node.VariableDefinitionNode;
 import com.bazaarvoice.jless.ast.node.VariableReferenceNode;
 import com.bazaarvoice.jless.ast.util.NodeTreeUtils;
@@ -66,6 +67,10 @@ public class Parser extends BaseParser<Node> {
         return _parserTranslationEnabled;
     }
 
+    protected Node makeSpacingNode() {
+        return new LineBreakNode(match());
+    }
+
     // ********** Document **********
 
     public Rule Document() {
@@ -84,7 +89,7 @@ public class Parser extends BaseParser<Node> {
                                 Declaration(),
                                 RuleSet(),
                                 MixinReference(),
-                                Sequence(Sp1(), push(new LineBreakNode(match())))
+                                Sequence(Sp1(), push(new SpacingNode(match())))
                         ),
                         peek(1).addChild(pop())
                 )
@@ -117,7 +122,7 @@ public class Parser extends BaseParser<Node> {
                                 Scope(), peek(1).addChild(pop()), peek(1).addChild(pop()), Ws0()
                         )
                 ),
-                '}', Ws0(), peek().addChild(new LineBreakNode(match()))
+                '}', Ws0(), peek().addChild(makeSpacingNode())
         );
     }
 
@@ -160,13 +165,13 @@ public class Parser extends BaseParser<Node> {
                 Sequence(
                         SelectorGroup(), ';',
                         resolveMixinReference(pop().toString(), null),
-                        Ws0(), peek().addChild(new LineBreakNode(match()))
+                        Ws0(), peek().addChild(makeSpacingNode())
                 ),
                 // Call a mixin, passing along some arguments
                 Sequence(
                         Class(), name.set(match()), Arguments(), ';',
                         resolveMixinReference(name.get(), (ArgumentsNode) pop()),
-                        Ws0(), peek().addChild(new LineBreakNode(match()))
+                        Ws0(), peek().addChild(makeSpacingNode())
                 )
         );
     }
@@ -181,10 +186,10 @@ public class Parser extends BaseParser<Node> {
         return Sequence(
                 Selector(), push(new SelectorGroupNode(pop())), Ws0(),
                 ZeroOrMore(
-                        ',', Ws0(), peek().addChild(new LineBreakNode(match())),
+                        ',', Ws0(), peek().addChild(makeSpacingNode()),
                         Selector(), peek(1).addChild(pop())
                 ),
-                Ws0(), peek().addChild(new LineBreakNode(match()))
+                Ws0(), peek().addChild(makeSpacingNode())
         );
     }
 
@@ -316,7 +321,7 @@ public class Parser extends BaseParser<Node> {
                         push(new ExpressionGroupNode()),
                         ExpressionPhrase(), peek(1).addChild(pop()),
                         ZeroOrMore(
-                                Ws0(), ',', Ws0(), peek().addChild(new LineBreakNode(match())),
+                                Ws0(), ',', Ws0(), peek().addChild(makeSpacingNode()),
                                 ExpressionPhrase(), peek(1).addChild(pop())
                         ),
                         Sp0(), FirstOf(';', Sequence(Ws0(), Test('}'))),
