@@ -4,25 +4,25 @@
 
 
 .two-args {
-    color: blue; 
-    width: 2px; height: 100%; 
+  color: blue;
+  width: 2px;height: 100%;
 }
 
 .one-arg {
-    width: 3px; height: 50%; 
+  width: 3px;height: 50%;
 }
 
 .no-parens {
-    width: 1px; height: 50%; 
+  width: 1px;height: 50%;
 }
 
 .no-args {
-    width: 1px; height: 50%; 
+  width: 1px;height: 50%;
 }
 
 .var-args {
-    
-    width: 9; height: 9; 
+  
+  width: 9;height: 9;
 }
 
 
@@ -32,6 +32,6 @@
 
 
 .scope-mix {
-    width: 5; height: 3; 
+  width: 5;height: 3;
 }
 

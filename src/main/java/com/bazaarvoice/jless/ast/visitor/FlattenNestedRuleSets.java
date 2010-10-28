@@ -188,7 +188,7 @@ public class FlattenNestedRuleSets extends InclusiveNodeVisitor {
 
                 // Construct a simple rule set using the parent's selector
                 RuleSetNode propertyRuleSet = new RuleSetNode();
-                propertyRuleSet.addChild(NodeTreeUtils.filterLineBreaks(_parentSelectorGroup.clone()));
+                propertyRuleSet.addChild(NodeTreeUtils.filterWhiteSpace(_parentSelectorGroup.clone()));
 
                 // Move all the properties into this new rule set
                 List<Node> propertyNodes = new ArrayList<Node>(_parentScope.getChildren().subList(group.getStart(), group.getEnd() + 1));

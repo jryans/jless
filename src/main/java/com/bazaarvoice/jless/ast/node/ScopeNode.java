@@ -76,7 +76,7 @@ public class ScopeNode extends InternalNode {
 
         // Clone scope and filter out any line breaks
         ScopeNode mixinScope = clone();
-        NodeTreeUtils.filterLineBreaks(mixinScope);
+        NodeTreeUtils.filterWhiteSpace(mixinScope);
 
         // If arguments were passed, apply them
         for (int i = 0; i < argumentList.size(); i++) {

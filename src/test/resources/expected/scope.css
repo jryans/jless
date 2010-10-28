@@ -7,26 +7,26 @@
 
 
 .tiny-scope {
-    color: #989; 
-    
+  color: #989; // #989
+  
 }
 
 
-
-
-.scope1 {color: blue; 
-    border-color: black;}
-.scope1 .hidden {
+  
+  
+  .scope1 {color: blue; // blue
+  border-color: black;} // black
+  .scope1 .hidden {
     
-}
-
-
-.scope1 .scope2 {color: blue;}
-.scope1 .scope2 .scope3 {
+  }
+  
     
-    color: red; 
-    border-color: black; 
-    background-color: white; 
-}
-
+    .scope1 .scope2 {color: blue;} // blue
+    .scope1 .scope2 .scope3 {
+      
+      color: red; // red
+      border-color: black; // black
+      background-color: white; // white
+    }
+  
 

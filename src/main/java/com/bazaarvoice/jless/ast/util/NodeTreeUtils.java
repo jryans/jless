@@ -23,6 +23,35 @@ public final class NodeTreeUtils {
         return parent.isIterating() && parent.getLatestChildIterator().hasNext();
     }
 
+    public static boolean parentHasAnyFollowing(Node node, Class targetClass) {
+        InternalNode parent = node.getParent();
+
+        if (!parent.isIterating()) {
+            return false;
+        }
+
+        boolean found = false;
+        int steps = 0;
+        ListIterator<Node> it = parent.getLatestChildIterator();
+
+        // Search ahead for an instance of the target class
+        while (it.hasNext()) {
+            Node sibling = it.next();
+            steps++;
+            if (targetClass.isInstance(sibling)) {
+                found = true;
+                break;
+            }
+        }
+
+        // Rollback
+        for (; steps > 0; steps--) {
+            it.previous();
+        }
+
+        return found;
+    }
+
     public static ScopeNode getParentScope(Node node) {
         if (node instanceof ScopeNode) {
             ScopeNode parentScope = ((ScopeNode) node).getParentScope();
@@ -86,7 +115,7 @@ public final class NodeTreeUtils {
         source.popChildIterator();
     }
 
-    public static InternalNode filterLineBreaks(InternalNode node) {
+    public static InternalNode filterWhiteSpace(InternalNode node) {
         node.filter(new InclusiveNodeVisitor() {
             @Override
             public boolean visit(LineBreakNode node) {

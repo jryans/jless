@@ -133,9 +133,6 @@ public class Printer extends InclusiveNodeVisitor {
         } else {
             printOptional(";");
         }
-        if (node.getParent().getChildren().size() > 1 && NodeTreeUtils.parentHasNext(node)) {
-            printOptional(' ');
-        }
         return super.exit(node);
     }
 
@@ -186,8 +183,8 @@ public class Printer extends InclusiveNodeVisitor {
 
     @Override
     public boolean exit(SelectorNode node) {
-        if (NodeTreeUtils.parentHasNext(node)) {
-            print(',').printOptional(' ');
+        if (NodeTreeUtils.parentHasAnyFollowing(node, SelectorNode.class)) {
+            print(',');
         }
         return super.exit(node);
     }
@@ -243,7 +240,7 @@ public class Printer extends InclusiveNodeVisitor {
         return false;
     }
 
-    // Printing methods
+    // Printing
 
     private Printer print(String s) {
         _sb.append(s);
@@ -284,6 +281,8 @@ public class Printer extends InclusiveNodeVisitor {
         _lastPrintedIndent = false;
         return this;
     }
+
+    // Indentation
 
     private Printer addIndent() {
         _indent += INDENT_STEP;
