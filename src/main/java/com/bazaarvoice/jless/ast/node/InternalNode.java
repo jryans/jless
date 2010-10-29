@@ -159,7 +159,15 @@ public abstract class InternalNode extends Node {
     }
 
     public RandomAccessListIterator<Node> pushChildIterator() {
+        return pushChildIterator(false);
+    }
+
+    public RandomAccessListIterator<Node> pushChildIterator(boolean copyState) {
         MutableChildIterator it = new MutableChildIterator();
+        
+        if (copyState) {
+            it.copy(getLatestChildIterator());
+        }
 
         _childIteratorStack.push(it);
 
@@ -326,6 +334,11 @@ public abstract class InternalNode extends Node {
                 _cursor++;
             }
             _lastReturned = -1;
+        }
+
+        @Override
+        public void copy(ListIterator<Node> iterator) {
+            _cursor = iterator.nextIndex();
         }
     }
 }

@@ -31,22 +31,15 @@ public final class NodeTreeUtils {
         }
 
         boolean found = false;
-        int steps = 0;
-        ListIterator<Node> it = parent.getLatestChildIterator();
+
+        RandomAccessListIterator<Node> it = parent.pushChildIterator(true);
 
         // Search ahead for an instance of the target class
         while (it.hasNext()) {
-            Node sibling = it.next();
-            steps++;
-            if (targetClass.isInstance(sibling)) {
+            if (targetClass.isInstance(it.next())) {
                 found = true;
                 break;
             }
-        }
-
-        // Rollback
-        for (; steps > 0; steps--) {
-            it.previous();
         }
 
         return found;

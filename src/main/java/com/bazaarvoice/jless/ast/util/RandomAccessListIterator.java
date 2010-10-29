@@ -23,4 +23,9 @@ public interface RandomAccessListIterator<T> extends ListIterator<T> {
      * Add an element at the position {@link #nextIndex} plus relativeIndex.
      */
     void add(int relativeIndex, T child);
+
+    /**
+     * Copy the current position of the supplied iterator.
+     */
+    void copy(ListIterator<T> iterator);
 }

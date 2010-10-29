@@ -74,7 +74,7 @@ public class ScopeNode extends InternalNode {
             throw new IllegalMixinArgumentException(name, _parameterDefinitions.size());
         }
 
-        // Clone scope and filter out any line breaks
+        // Clone scope and filter out any white space
         ScopeNode mixinScope = clone();
         NodeTreeUtils.filterWhiteSpace(mixinScope);
 
