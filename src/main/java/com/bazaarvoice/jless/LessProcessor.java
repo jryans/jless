@@ -138,16 +138,27 @@ public class LessProcessor {
 
     public static void main(String[] args) {
         if (args.length == 0) {
-            System.err.println("You must specify at least one input file.");
+            System.err.println("You must specify an input file.");
             System.exit(1);
-        } else if (args.length > 1) {
-            System.err.println("Only the first input file will be used.");
         }
 
         LessProcessor translator = new LessProcessor();
+        String inputPath = null;
+
+        for (String arg : args) {
+            if (arg.equals("-c")) {
+                translator.setCompressionEnabled(true);
+            } else {
+                if (inputPath != null) {
+                    System.err.println("Only one input file can be used.");
+                    System.exit(1);
+                }
+                inputPath = arg;
+            }
+        }
 
         try {
-            System.out.println(translator.process(new FileInputStream(args[0])));
+            System.out.println(translator.process(new FileInputStream(inputPath)));
         } catch (IOException e) {
             System.err.println("Unable to read input file.");
         }
