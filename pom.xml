@@ -7,8 +7,10 @@
     <version>0.4.5</version>
     <packaging>jar</packaging>
 
-    <name>jless</name>
-    <url>http://maven.apache.org</url>
+    <name>${project.artifactId}</name>
+    <description>A Java implementation of the LESS CSS framework</description>
+    <url>https://github.com/jryans/jless</url>
+    <inceptionYear>2010</inceptionYear>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -42,7 +44,7 @@
         <dependency>
             <groupId>org.parboiled</groupId>
             <artifactId>parboiled</artifactId>
-            <version>snapshot</version>
+            <version>0.9.8.2</version>
         </dependency>
         <dependency>
             <groupId>com.google.collections</groupId>
@@ -73,4 +75,45 @@
             <scope>test</scope>
         </dependency>
     </dependencies>
+
+    <repositories>
+        <repository>
+            <id>libraries</id>
+            <url>file://lib</url>
+        </repository>
+    </repositories>
+
+    <scm>
+        <connection>scm:git:git://github.com/jryans/jless.git</connection>
+        <developerConnection>scm:git:ssh://git@github.com/jryans/jless.git</developerConnection>
+        <url>https://github.com/jryans/jless</url>
+    </scm>
+
+    <developers>
+        <developer>
+            <name>J. Ryan Stinnett</name>
+            <organization>Bazaarvoice</organization>
+            <organizationUrl>http://www.bazaarvoice.com</organizationUrl>
+            <email>ryan.stinnett@bazaarvoice.com</email>
+            <timezone>-6</timezone>
+        </developer>
+    </developers>
+
+    <organization>
+        <name>Bazaarvoice</name>
+        <url>http://www.bazaarvoice.com</url>
+    </organization>
+
+    <issueManagement>
+        <system>GitHub</system>
+        <url>https://github.com/jryans/jless/issues</url>
+    </issueManagement>
+
+    <licenses>
+        <license>
+            <name>Apache 2</name>
+            <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+            <distribution>repo</distribution>
+        </license>
+    </licenses>
 </project>
