@@ -684,12 +684,12 @@ public class Parser extends BaseParser<Node> {
     }
 
     /**
-     * '//' (!'\n' .)* '\n' Ws0
+     * '//' (!LB .)* LB Ws0
      */
     Rule SingleLineComment() {
         return Sequence(
-                "//", ZeroOrMore(TestNot('\n'), ANY),
-                '\n', Ws0()
+                "//", ZeroOrMore(TestNot(AnyOf("\r\n")), ANY),
+                FirstOf('\n', "\r\n", '\r'), Ws0()
         );
     }
 
@@ -740,7 +740,7 @@ public class Parser extends BaseParser<Node> {
     }
 
     Rule Whitespace() {
-        return AnyOf(" \n\t");
+        return AnyOf(" \r\n\t");
     }
 
     Rule Sp0() {

@@ -107,6 +107,14 @@ public class ProcessingTest {
         runTestFor("comments");
     }
 
+    public void testCommentsMac() {
+        runTestFor("comments-mac");
+    }
+
+    public void testCommentsWindows() {
+        runTestFor("comments-windows");
+    }
+
     public void testCss() {
         runTestFor("css");
     }

@@ -19,4 +19,3 @@
   background-image: -moz-linear-gradient(top, bottom, from(red), to(green));
   background-image: -webkit-gradient(linear, left top, left bottom, from(red), to(green));
 }
-

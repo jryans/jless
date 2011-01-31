@@ -21,13 +21,12 @@ package com.bazaarvoice.jless;
 import difflib.DiffUtils;
 import difflib.Patch;
 import org.apache.commons.io.IOUtils;
-import org.apache.commons.lang.StringUtils;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Arrays;
+import java.io.StringReader;
 import java.util.List;
 
 @Test
@@ -61,7 +60,15 @@ public class TranslatedDiffTest extends ProcessingTest {
             e.printStackTrace();
         }
 
-        List<String> outputLines = Arrays.asList(StringUtils.splitPreserveAllTokens(output, '\n'));
+        List<String> outputLines = null;
+
+        try {
+            //noinspection unchecked
+            outputLines = IOUtils.readLines(new StringReader(output));
+        } catch (IOException e) {
+            TestUtils.getLog().println("Unable to break up output into lines");
+            e.printStackTrace();
+        }
 
         Patch diff = DiffUtils.diff(referenceLines, outputLines);
 
