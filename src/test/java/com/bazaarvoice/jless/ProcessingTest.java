@@ -92,22 +92,6 @@ public class ProcessingTest {
         return ".less";
     }
 
-    public void testBazaarvoice() {
-        runTestFor("theme", "bazaarvoice");
-    }
-
-    public void testBazaarvoiceDisplayShared() {
-        runTestFor("theme", "bazaarvoiceDisplayShared");
-    }
-
-    public void testBazaarvoiceQA() {
-        runTestFor("theme", "bazaarvoiceQA");
-    }
-
-    public void testBazaarvoiceSubmitShared() {
-        runTestFor("theme", "bazaarvoiceSubmitShared");
-    }
-
     public void testComments() {
         runTestFor("comments");
     }

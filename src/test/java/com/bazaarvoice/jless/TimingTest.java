@@ -27,7 +27,7 @@ import java.io.InputStream;
 public class TimingTest extends ProcessingTest {
 
     private static final int RUNS_PER_TIMED_SET = 25;
-    private static final String[] WARM_UP_FILES = {"bazaarvoice", "css", "css-3", "strings", "whitespace"};
+    private static final String[] WARM_UP_FILES = {"css", "css-3", "strings", "whitespace"};
 
     private boolean _warm = false;
 
@@ -56,7 +56,7 @@ public class TimingTest extends ProcessingTest {
         PROCESSOR.setTranslationEnabled(true);
         for (int i = 0; i < RUNS_PER_TIMED_SET; i++) {
             for (String fileName : WARM_UP_FILES) {
-                runProcessor(runProcessor(assembleInput("theme")), assembleInput(fileName));
+                runProcessor(assembleInput(fileName));
             }
         }
         _warm = true;
