@@ -24,6 +24,7 @@ import com.bazaarvoice.jless.ast.node.ExpressionNode;
 import com.bazaarvoice.jless.ast.node.ExpressionPhraseNode;
 import com.bazaarvoice.jless.ast.node.FilterArgumentNode;
 import com.bazaarvoice.jless.ast.node.FunctionNode;
+import com.bazaarvoice.jless.ast.node.LineBreakNode;
 import com.bazaarvoice.jless.ast.node.Node;
 import com.bazaarvoice.jless.ast.node.ParametersNode;
 import com.bazaarvoice.jless.ast.node.PlaceholderNode;
@@ -37,6 +38,7 @@ import com.bazaarvoice.jless.ast.node.SimpleNode;
 import com.bazaarvoice.jless.ast.node.SpacingNode;
 import com.bazaarvoice.jless.ast.node.VariableDefinitionNode;
 import com.bazaarvoice.jless.ast.node.VariableReferenceNode;
+import com.bazaarvoice.jless.ast.node.WhiteSpaceCollectionNode;
 import com.bazaarvoice.jless.ast.util.NodeTreeUtils;
 import com.bazaarvoice.jless.exception.UndefinedMixinException;
 import com.bazaarvoice.jless.exception.UndefinedVariableException;
@@ -84,10 +86,6 @@ public class Parser extends BaseParser<Node> {
         return _parserTranslationEnabled;
     }
 
-    protected Node makeWhiteSpaceNode() {
-        return new SpacingNode(match());
-    }
-
     // ********** Document **********
 
     public Rule Document() {
@@ -106,7 +104,7 @@ public class Parser extends BaseParser<Node> {
                                 Declaration(),
                                 RuleSet(),
                                 MixinReference(),
-                                Sequence(Sp1(), push(makeWhiteSpaceNode()))
+                                Sequence(push(new WhiteSpaceCollectionNode()), Sp1Nodes())
                         ),
                         peek(1).addChild(pop())
                 )
@@ -139,7 +137,7 @@ public class Parser extends BaseParser<Node> {
                                 Scope(), peek(1).addChild(pop()), peek(1).addChild(pop()), Ws0()
                         )
                 ),
-                '}', Ws0(), peek().addChild(makeWhiteSpaceNode())
+                '}', Ws0Nodes()
         );
     }
 
@@ -182,13 +180,13 @@ public class Parser extends BaseParser<Node> {
                 Sequence(
                         SelectorGroup(), ';',
                         resolveMixinReference(pop().toString(), null),
-                        Ws0(), peek().addChild(makeWhiteSpaceNode())
+                        Ws0Nodes()
                 ),
                 // Call a mixin, passing along some arguments
                 Sequence(
                         Class(), name.set(match()), Arguments(), ';',
                         resolveMixinReference(name.get(), (ArgumentsNode) pop()),
-                        Ws0(), peek().addChild(makeWhiteSpaceNode())
+                        Ws0Nodes()
                 )
         );
     }
@@ -201,12 +199,12 @@ public class Parser extends BaseParser<Node> {
     @MemoMismatches
     Rule SelectorGroup() {
         return Sequence(
-                Selector(), push(new SelectorGroupNode(pop())), Ws0(),
+                Selector(), push(new SelectorGroupNode(pop())), Ws0Nodes(),
                 ZeroOrMore(
-                        ',', Ws0(), peek().addChild(makeWhiteSpaceNode()),
+                        ',', Ws0Nodes(),
                         Selector(), peek(1).addChild(pop())
                 ),
-                Ws0(), peek().addChild(makeWhiteSpaceNode())
+                Ws0Nodes()
         );
     }
 
@@ -338,7 +336,7 @@ public class Parser extends BaseParser<Node> {
                         push(new ExpressionGroupNode()),
                         ExpressionPhrase(), peek(1).addChild(pop()),
                         ZeroOrMore(
-                                Ws0(), ',', Ws0(), peek().addChild(makeWhiteSpaceNode()),
+                                Ws0(), ',', Ws0Nodes(),
                                 ExpressionPhrase(), peek(1).addChild(pop())
                         ),
                         Sp0(), FirstOf(';', Sequence(Ws0(), Test('}'))),
@@ -689,7 +687,7 @@ public class Parser extends BaseParser<Node> {
     Rule SingleLineComment() {
         return Sequence(
                 "//", ZeroOrMore(TestNot(AnyOf("\r\n")), ANY),
-                FirstOf('\n', "\r\n", '\r'), Ws0()
+                FirstOf('\n', "\r\n"), Ws0()
         );
     }
 
@@ -729,10 +727,12 @@ public class Parser extends BaseParser<Node> {
         return FirstOf(CharRange('a', 'f'), CharRange('A', 'F'), Digit());
     }
 
-    // Avoid storing whitespace / spacing in the AST whenever possible
-
     Rule Ws0() {
         return ZeroOrMore(Whitespace());
+    }
+
+    Rule Ws0Nodes() {
+        return ZeroOrMore(WhitespaceNode());
     }
 
     Rule Ws1() {
@@ -743,6 +743,13 @@ public class Parser extends BaseParser<Node> {
         return AnyOf(" \r\n\t");
     }
 
+    Rule WhitespaceNode() {
+        return FirstOf(
+                Sequence(OneOrMore(AnyOf(" \t")), peek().addChild(new SpacingNode(match()))),
+                Sequence(FirstOf('\n', "\r\n"), peek().addChild(new LineBreakNode(1)))
+        );
+    }
+
     Rule Sp0() {
         return ZeroOrMore(Spacing());
     }
@@ -751,8 +758,19 @@ public class Parser extends BaseParser<Node> {
         return OneOrMore(Spacing());
     }
 
+    Rule Sp1Nodes() {
+        return OneOrMore(SpacingNode());
+    }
+
     Rule Spacing() {
         return FirstOf(Whitespace(), Comment());
+    }
+
+    Rule SpacingNode() {
+        return FirstOf(
+                WhitespaceNode(),
+                Sequence(Comment(), peek().addChild(new SpacingNode(match())))
+        );
     }
 
     Rule Delimiter() {

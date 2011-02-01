@@ -1,0 +1,19 @@
+.example {border: 1px solid gray; font-size: 12px; border-color: red; font-size: 10px;}
+
+.include {border: 1px solid gray; font-size: 12px; border-color: red;}
+.example2 {.include; font-size: 10px;}
+
+@from: #000000;
+@to: #ffffff;
+.gradient {background: -moz-linear-gradient(top, @from, @to); background: -webkit-gradient(linear, left top, left bottom, from(@from), to(@to));}
+
+@less_text_colorNormal: #333333;
+.less_text_icon {padding-left: 20px; background-image: url(iconText.gif); background-repeat: no-repeat; background-position: 0 0; text-decoration: none;}
+.less_text_iconFilter {.less_text_icon; background-image: url(iconFilters.gif);}
+.less_text_checkFilterOff {.less_text_iconFilter; color: @less_text_colorNormal; background-position: 0 -120px;}
+
+@less_text_colorLow: #999999;
+.less_text_size6 {font-size: 11px;}
+.less_text_helper {color: @less_text_colorLow; .less_text_size6; line-height: 1.5;}
+.less_text_emphasis {font-style: italic;}
+.BVDI_AFFilterAttributeContentTitle {.less_text_helper; .less_text_emphasis; margin-left: 5px; margin-right: 5px; line-height: 14px; max-width: 100px;}

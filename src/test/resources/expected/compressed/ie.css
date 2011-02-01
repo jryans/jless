@@ -1,0 +1,1 @@
+#BVLBOverlay{height:expression(document.body.scrollHeight > document.body.offsetHeight ? document.body.scrollHeight : document.body.offsetHeight + 'px')}.gradientBox{filter:progid:DXImageTransform.Microsoft.gradient(startColorstr=#ccc,endColorstr=#000)}

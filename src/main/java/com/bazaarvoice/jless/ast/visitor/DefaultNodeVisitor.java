@@ -162,6 +162,11 @@ public abstract class DefaultNodeVisitor implements NodeAdditionVisitor, NodeNav
     }
 
     @Override
+    public boolean add(PropertyNode node) {
+        return defaultValue();
+    }
+
+    @Override
     public boolean enter(PropertyNode node) {
         return defaultValue();
     }

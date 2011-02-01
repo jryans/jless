@@ -18,33 +18,17 @@
 
 package com.bazaarvoice.jless.ast.node;
 
-import com.bazaarvoice.jless.ast.util.NodeTreeUtils;
 import com.bazaarvoice.jless.ast.visitor.NodeAdditionVisitor;
 import com.bazaarvoice.jless.ast.visitor.NodeNavigationVisitor;
 
-public class VariableReferenceNode extends LeafNode {
+public class WhiteSpaceCollectionNode extends InternalNode {
 
-    private String _name;
-
-    public VariableReferenceNode(String name) {
-        _name = name;
+    public WhiteSpaceCollectionNode() {
+        super();
     }
 
-    /**
-     * Search up the scope tree to locate the variable's value. The parser has already verified that
-     * the variable is defined.
-     */
-    public String getValue() {
-        for (ScopeNode scope = NodeTreeUtils.getParentScope(this); scope != null; scope = NodeTreeUtils.getParentScope(scope)) {
-            ExpressionGroupNode value = scope.getVariable(_name);
-            if (value == null) {
-                continue;
-            }
-
-            return value.toString();
-        }
-
-        return _name; // Unable to find the variable's value, return the name for now (helpful for debugging)
+    public WhiteSpaceCollectionNode(Node child) {
+        super(child);
     }
 
     @Override
@@ -53,8 +37,13 @@ public class VariableReferenceNode extends LeafNode {
     }
 
     @Override
-    protected boolean visit(NodeNavigationVisitor visitor) {
-        return visitor.visit(this);
+    protected boolean enter(NodeNavigationVisitor visitor) {
+        return visitor.enter(this);
+    }
+
+    @Override
+    protected boolean exit(NodeNavigationVisitor visitor) {
+        return visitor.exit(this);
     }
 
     @Override

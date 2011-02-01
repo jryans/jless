@@ -33,6 +33,10 @@ public class LineBreakNode extends LeafNode {
         _lineBreaks = StringUtils.countMatches(text, "\n");
     }
 
+    public LineBreakNode(int count) {
+        _lineBreaks = count;
+    }
+
     @Override
     protected boolean hasData() {
         return _lineBreaks > 0;

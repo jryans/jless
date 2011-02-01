@@ -21,16 +21,16 @@ package com.bazaarvoice.jless;
 import org.testng.annotations.Test;
 
 @Test
-public class TranslatedDiffTest extends DiffTest {
+public class CompressedDiffTest extends DiffTest {
 
     @Override
     protected void setProcessorOptions() {
         PROCESSOR.setTranslationEnabled(true);
-        PROCESSOR.setCompressionEnabled(false);
+        PROCESSOR.setCompressionEnabled(true);
     }
 
     @Override
     protected String getGeneratedDirName() {
-        return "translated";
+        return "compressed";
     }
 }

@@ -33,13 +33,18 @@ public class ProcessingTest {
 
     protected static final LessProcessor PROCESSOR = new LessProcessor();
 
-    protected void runTestFor(String fileName) {
+    protected void setProcessorOptions() {
         PROCESSOR.setTranslationEnabled(false);
+        PROCESSOR.setCompressionEnabled(false);
+    }
+
+    protected void runTestFor(String fileName) {
+        setProcessorOptions();
         saveOutput(fileName, runProcessor(assembleInput(fileName)).toString());
     }
 
     protected void runTestFor(String parentFileName, String fileName) {
-        PROCESSOR.setTranslationEnabled(false);
+        setProcessorOptions();
         saveOutput(fileName, runProcessor(runProcessor(assembleInput(parentFileName)), assembleInput(fileName)).toString());
     }
 
@@ -70,7 +75,7 @@ public class ProcessingTest {
 
             PrintStream generatedOutput = new PrintStream(new FileOutputStream(
                     new File(generatedDir, outputFileName + getGeneratedFileExtension())));
-            generatedOutput.println(output);
+            generatedOutput.print(output);
             generatedOutput.close();
         } catch (IOException e) {
             throw new RuntimeException(e);
@@ -107,10 +112,6 @@ public class ProcessingTest {
         runTestFor("comments");
     }
 
-    public void testCommentsMac() {
-        runTestFor("comments-mac");
-    }
-
     public void testCommentsWindows() {
         runTestFor("comments-windows");
     }
@@ -141,6 +142,14 @@ public class ProcessingTest {
 
     public void testNestedHybrid() {
         runTestFor("nested-hybrid");
+    }
+
+    public void testNestedWindows() {
+        runTestFor("nested-windows");
+    }
+
+    public void testRedundant() {
+        runTestFor("redundant");
     }
 
     public void testRuleSets() {

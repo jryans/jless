@@ -1,19 +1,22 @@
 
 
-.whitespace { color: white; }  
+.whitespace
+  { color: white; }  
   
-.whitespace {
+.whitespace
+{
   color: white;
 }
-  .whitespace { color: white; }
+  .whitespace
+{ color: white; }
 
-.whitespace {color: white;}  
+.whitespace{color: white;}  
 .whitespace { color: white; }
 
 .white,
 .space,
 .mania
- { color: white; }
+{ color: white; }
 
 .no-semi-column { color: white;}
 .no-semi-column {

@@ -45,6 +45,7 @@ public class Printer extends InclusiveNodeVisitor {
 
     private static final int INDENT_STEP = 4;
     private static final int COMPRESSED_LINE_BREAK_POSITION = 4000;
+    private static final String LINE_SEPARATOR = System.getProperty("line.separator");
 
     private boolean _compress;
 
@@ -94,7 +95,7 @@ public class Printer extends InclusiveNodeVisitor {
     @Override
     public boolean exit(ExpressionPhraseNode node) {
         if (NodeTreeUtils.parentHasNext(node)) {
-            print(',').printOptional(' ');
+            print(',');
         }
         return super.exit(node);
     }
@@ -124,9 +125,6 @@ public class Printer extends InclusiveNodeVisitor {
         if (!_compress) {
             for (int i = 0; i < node.getLineBreaks(); i++) {
                 printLine();
-            }
-            if (node.getLineBreaks() > 0) {
-                printIndent();
             }
         }
         return super.visit(node);
@@ -167,7 +165,7 @@ public class Printer extends InclusiveNodeVisitor {
     @Override
     public boolean enter(ScopeNode node) {
         if (node.getParent() != null && node.isBracketsDisplayed()) {
-            printOptional(' ').print('{');
+            print('{');
             List<Node> children = node.getChildren();
             if (children.isEmpty()) {
                 // do nothing
@@ -295,7 +293,7 @@ public class Printer extends InclusiveNodeVisitor {
     }
 
     private Printer printLine() {
-        _sb.append('\n');
+        _sb.append(LINE_SEPARATOR);
         _lastPrintedIndent = false;
         return this;
     }

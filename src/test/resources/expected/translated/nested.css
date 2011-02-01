@@ -9,11 +9,11 @@
 
 
 .nested .test1 {
-        background-image: -moz-linear-gradient(top, bottom, from(#030303), to(#010101));background-image: -webkit-gradient(linear, left top, left bottom, from(#030303), to(#010101));
+                background-image: -moz-linear-gradient(top, bottom, from(#030303), to(#010101));        background-image: -webkit-gradient(linear, left top, left bottom, from(#030303), to(#010101));    
     }
 
     .nested .test2 {
-        background-image: -moz-linear-gradient(top, bottom, from(#020202), to(#010101));background-image: -webkit-gradient(linear, left top, left bottom, from(#020202), to(#010101));
+                background-image: -moz-linear-gradient(top, bottom, from(#020202), to(#010101));        background-image: -webkit-gradient(linear, left top, left bottom, from(#020202), to(#010101));    
     }
 
     .nested .test3 {
@@ -29,7 +29,7 @@
         height: 5px;
     }
 
-    .nested .inner:hover, .nested:hover, .nested::first-line  {
+    .nested .inner:hover, .nested:hover, .nested::first-line {
         height: 10px;
     }
 
@@ -43,7 +43,7 @@
 
 
 
-    .cat:hover,.dog:hover, .cat .bob,.dog .bob  {
+    .cat:hover,.dog:hover, .cat .bob,.dog .bob {
         color: blue;
     }
 

@@ -11,7 +11,7 @@ div { width: 99%; }
   min-width: 45em;
 }
 
-h1, h2 > a > p, h3  {
+h1, h2 > a > p, h3 {
   color: none;
 }
 
@@ -44,11 +44,11 @@ div#id {
   src: url("/fonts/garamond-pro.ttf");
 }
 
-a:hover, a:link  {
+a:hover, a:link {
   color: #999;
 }
 
-p, p:first-child  {
+p, p:first-child {
   text-transform: none;
 }
 
@@ -83,7 +83,7 @@ h2[title] {
 #more-shorthands {
   margin: 0;
   padding: 1px 0 2px 0;
-  font: normal small/20px 'Trebuchet MS',  Verdana,  sans-serif; 
+  font: normal small/20px 'Trebuchet MS', Verdana, sans-serif; 
 }
 
 .misc {

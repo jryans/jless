@@ -22,7 +22,6 @@ import com.bazaarvoice.jless.ast.node.InternalNode;
 import com.bazaarvoice.jless.ast.node.LineBreakNode;
 import com.bazaarvoice.jless.ast.node.Node;
 import com.bazaarvoice.jless.ast.node.ScopeNode;
-import com.bazaarvoice.jless.ast.node.SpacingNode;
 import com.bazaarvoice.jless.ast.visitor.InclusiveNodeVisitor;
 
 import java.util.ArrayList;
@@ -38,7 +37,7 @@ public final class NodeTreeUtils {
 
     public static boolean parentHasNext(Node node) {
         InternalNode parent = node.getParent();
-        return parent.isIterating() && parent.getLatestChildIterator().hasNext();
+        return parent != null && parent.isIterating() && parent.getLatestChildIterator().hasNext();
     }
 
     public static boolean parentHasAnyFollowing(Node node, Class targetClass) {
@@ -126,15 +125,10 @@ public final class NodeTreeUtils {
         source.popChildIterator();
     }
 
-    public static InternalNode filterWhiteSpace(InternalNode node) {
+    public static InternalNode filterLineBreaks(InternalNode node) {
         node.filter(new InclusiveNodeVisitor() {
             @Override
             public boolean visit(LineBreakNode node) {
-                return false;
-            }
-
-            @Override
-            public boolean visit(SpacingNode node) {
                 return false;
             }
         });

@@ -33,9 +33,12 @@ import java.util.Map;
 
 public class ScopeNode extends InternalNode {
 
+    private static final String FILTER_PROPERTY = "filter";
+
     private Map<String, ExpressionGroupNode> _variableNameToValueMap = new HashMap<String, ExpressionGroupNode>();
     private Map<String, RuleSetNode> _selectorToRuleSetMap = new HashMap<String, RuleSetNode>();
     private List<VariableDefinitionNode> _parameterDefinitions = new ArrayList<VariableDefinitionNode>();
+    private Map<String, PropertyNode> _propertyNameToNodeMap = new HashMap<String, PropertyNode>();
     private ScopeNode _parentScope;
     private boolean _bracketsDisplayed = true;
 
@@ -94,7 +97,7 @@ public class ScopeNode extends InternalNode {
 
         // Clone scope and filter out any white space
         ScopeNode mixinScope = clone();
-        NodeTreeUtils.filterWhiteSpace(mixinScope);
+        NodeTreeUtils.filterLineBreaks(mixinScope);
 
         // If arguments were passed, apply them
         for (int i = 0; i < argumentList.size(); i++) {
@@ -169,7 +172,60 @@ public class ScopeNode extends InternalNode {
                 }
                 return super.add(node);
             }
+
+            /**
+             * Store property nodes by name. If there are multiple properties for a given name, only retain the last one.
+             */
+            @Override
+            public boolean add(PropertyNode node) {
+                String name = node.getName();
+
+                // If this is the IE-specific "filter" property, always add it
+                if (name.equals(FILTER_PROPERTY)) {
+                    return super.add(node);
+                }
+
+                // If the value of this property node is a vendor-specific keyword, always add it
+                if (node.getChildren().get(0).toString().startsWith("-")) {
+                    return super.add(node);
+                }
+
+                // Check if this property has been seen before
+                if (_propertyNameToNodeMap.containsKey(name)) {
+                    PropertyNode oldPropertyNode = _propertyNameToNodeMap.get(name);
+                    int oldPropertyIndex = getChildren().indexOf(oldPropertyNode);
+
+                    if (oldPropertyNode.isVisible()) {
+                        // Hide the unneeded property
+                        oldPropertyNode.setVisible(false);
+
+                        // Attempt to hide one surrounding white space node
+                        if (!hideWhiteSpaceNode(oldPropertyIndex - 1)) {
+                            hideWhiteSpaceNode(oldPropertyIndex + 1);
+                        }
+                    }
+                }
+
+                // Store the property as the latest for this name
+                _propertyNameToNodeMap.put(name, node);
+
+                return super.add(node);
+            }
         });
+    }
+
+    private boolean hideWhiteSpaceNode(int index) {
+        if (index < 0 || index >= getChildren().size()) {
+            return false;
+        }
+
+        Node node = getChildren().get(index);
+        if (!(node instanceof WhiteSpaceCollectionNode || node instanceof SpacingNode) || !node.isVisible()) {
+            return false;
+        }
+
+        node.setVisible(false);
+        return true;
     }
 
     @Override
@@ -211,6 +267,7 @@ public class ScopeNode extends InternalNode {
         scope._variableNameToValueMap = new HashMap<String, ExpressionGroupNode>();
         scope._selectorToRuleSetMap = new HashMap<String, RuleSetNode>();
         scope._parameterDefinitions = new ArrayList<VariableDefinitionNode>();
+        scope._propertyNameToNodeMap = new HashMap<String, PropertyNode>();
         scope.setAdditionVisitor();
 
         super.cloneChildren(node);

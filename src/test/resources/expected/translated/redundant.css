@@ -1,0 +1,19 @@
+.example {border: 1px solid gray; border-color: red; font-size: 10px;}
+
+
+.example2 {border: 1px solid gray; border-color: red; font-size: 10px;}
+
+
+
+.gradient {background: -moz-linear-gradient(top, #000000, #ffffff); background: -webkit-gradient(linear, left top, left bottom, from(#000000), to(#ffffff));}
+
+
+
+
+.less_text_checkFilterOff {padding-left: 20px; background-repeat: no-repeat; text-decoration: none; background-image: url(iconFilters.gif); color: #333333; background-position: 0 -120px;}
+
+
+
+
+
+.BVDI_AFFilterAttributeContentTitle {color: #999999; font-size: 11px; font-style: italic; margin-left: 5px; margin-right: 5px; line-height: 14px; max-width: 100px;}
