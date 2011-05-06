@@ -178,13 +178,13 @@ public class Parser extends BaseParser<Node> {
         return FirstOf(
                 // No arguments, reference an existing rule set's properties
                 Sequence(
-                        SelectorGroup(), ';',
-                        resolveMixinReference(pop().toString(), null),
+                        SelectorGroup(), Ws0Nodes(), ';',
+                        resolveMixinReference(popMixinName(), null),
                         Ws0Nodes()
                 ),
                 // Call a mixin, passing along some arguments
                 Sequence(
-                        Class(), name.set(match()), Arguments(), ';',
+                        Class(), name.set(matchMixinName()), Arguments(), Ws0Nodes(), ';',
                         resolveMixinReference(name.get(), (ArgumentsNode) pop()),
                         Ws0Nodes()
                 )
@@ -857,6 +857,21 @@ public class Parser extends BaseParser<Node> {
 
         // Record error location
         throw new UndefinedVariableException(name);
+    }
+
+    /**
+     * Method returns trimmed mixin name
+     */
+    String matchMixinName() {
+        return super.match().trim();
+    }
+
+    /**
+     * Method pops trimmed mixin name
+     * @return
+     */
+    String popMixinName() {
+        return pop().toString().trim();
     }
 
     // ********** Debugging **********
