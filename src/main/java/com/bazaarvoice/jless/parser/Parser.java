@@ -24,6 +24,7 @@ import com.bazaarvoice.jless.ast.node.ExpressionNode;
 import com.bazaarvoice.jless.ast.node.ExpressionPhraseNode;
 import com.bazaarvoice.jless.ast.node.FilterArgumentNode;
 import com.bazaarvoice.jless.ast.node.FunctionNode;
+import com.bazaarvoice.jless.ast.node.InternalNode;
 import com.bazaarvoice.jless.ast.node.LineBreakNode;
 import com.bazaarvoice.jless.ast.node.Node;
 import com.bazaarvoice.jless.ast.node.ParametersNode;
@@ -178,13 +179,13 @@ public class Parser extends BaseParser<Node> {
         return FirstOf(
                 // No arguments, reference an existing rule set's properties
                 Sequence(
-                        SelectorGroup(), Ws0Nodes(), ';',
-                        resolveMixinReference(popMixinName(), null),
+                        SelectorGroup(), ';',
+                        resolveMixinReference(NodeTreeUtils.getFirstChild((InternalNode) pop(), SelectorNode.class).toString(), null),
                         Ws0Nodes()
                 ),
                 // Call a mixin, passing along some arguments
                 Sequence(
-                        Class(), name.set(matchMixinName()), Arguments(), Ws0Nodes(), ';',
+                        Class(), name.set(match()), Arguments(), Ws0Nodes(), ';',
                         resolveMixinReference(name.get(), (ArgumentsNode) pop()),
                         Ws0Nodes()
                 )
@@ -430,7 +431,7 @@ public class Parser extends BaseParser<Node> {
     Rule Arguments() {
         return FirstOf(
                 Sequence(
-                        '(', Ws0(),
+                        Ws0(), '(', Ws0(),
                         ExpressionPhrase(), push(new ArgumentsNode(new ExpressionGroupNode(pop()))),
                         Ws0(),
                         ZeroOrMore(
@@ -440,7 +441,7 @@ public class Parser extends BaseParser<Node> {
                         ),
                         ')'
                 ),
-                Sequence('(', Ws0(), ')', push(new ArgumentsNode()))
+                Sequence(Ws0(), '(', Ws0(), ')', push(new ArgumentsNode()))
         );
     }
 
@@ -857,21 +858,6 @@ public class Parser extends BaseParser<Node> {
 
         // Record error location
         throw new UndefinedVariableException(name);
-    }
-
-    /**
-     * Method returns trimmed mixin name
-     */
-    String matchMixinName() {
-        return super.match().trim();
-    }
-
-    /**
-     * Method pops trimmed mixin name
-     * @return
-     */
-    String popMixinName() {
-        return pop().toString().trim();
     }
 
     // ********** Debugging **********
