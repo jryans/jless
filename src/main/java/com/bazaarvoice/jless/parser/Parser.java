@@ -185,7 +185,7 @@ public class Parser extends BaseParser<Node> {
                 ),
                 // Call a mixin, passing along some arguments
                 Sequence(
-                        Class(), name.set(match()), Arguments(), Ws0Nodes(), ';',
+                        Class(), name.set(match()), Arguments(), Ws0(), ';',
                         resolveMixinReference(name.get(), (ArgumentsNode) pop()),
                         Ws0Nodes()
                 )
