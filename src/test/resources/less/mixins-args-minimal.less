@@ -34,3 +34,21 @@
 .scope-mix {
   .global-mixin(3);
 }
+
+/*
+ * Test whitespace handling between mixin name, terminator and arguments
+ */
+.mixin-no-args {
+  font-family: Arial, sans-serif;
+  font-size: 11px;
+}
+
+.mixin-with-args (@param:1px) {
+  font-size: @param;
+}
+
+#test-whitespace          { .mixin-no-args   ;}
+
+#test-args-whitespace     { .mixin-with-args   ( 10px    )     ; }
+
+#test-def-args-whitespace { .mixin-with-args  ( ) ; }

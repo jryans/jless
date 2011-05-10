@@ -34,3 +34,21 @@
 .scope-mix {
     width: 5;  height: 3;
 }
+
+/*
+ * Test whitespace handling between mixin name, terminator and arguments
+ */
+
+
+
+
+
+
+
+
+
+#test-whitespace          {   font-family: Arial, sans-serif;  font-size: 11px;}
+
+#test-args-whitespace     {   font-size: 10px; }
+
+#test-def-args-whitespace {   font-size: 1px; }
