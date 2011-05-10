@@ -4,7 +4,7 @@
 
     <groupId>com.bazaarvoice</groupId>
     <artifactId>jless</artifactId>
-    <version>0.4.7</version>
+    <version>0.4.8</version>
     <packaging>jar</packaging>
 
     <name>${project.artifactId}</name>
@@ -44,6 +44,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-jar-plugin</artifactId>
+                <version>2.3.1</version>
                 <configuration>
                     <archive>
                         <manifest>
@@ -56,6 +57,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
+                <version>2.3.2</version>
                 <configuration>
                     <source>1.6</source>
                     <target>1.6</target>
@@ -64,6 +66,7 @@
             <plugin>
                 <groupId>com.mycila.maven-license-plugin</groupId>
                 <artifactId>maven-license-plugin</artifactId>
+                <version>1.9.0</version>
                 <configuration>
                     <header>src/etc/header.txt</header>
                     <includes>

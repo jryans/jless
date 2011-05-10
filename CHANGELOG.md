@@ -1,3 +1,6 @@
+# Version 0.4.8 (May 10, 2011)
+* Whitespace now allowed between mixin call, arguments, and terminator
+
 # Version 0.4.7 (Feb. 1, 2011)
 * Fixed parsing of files with Windows line endings
 * Restored spaces between properties that come from referencing a mixin
