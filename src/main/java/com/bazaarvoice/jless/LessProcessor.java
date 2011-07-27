@@ -28,9 +28,9 @@ import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import org.apache.commons.io.IOUtils;
 import org.parboiled.Parboiled;
-import org.parboiled.ParseRunner;
-import org.parboiled.ReportingParseRunner;
 import org.parboiled.errors.ErrorUtils;
+import org.parboiled.parserunners.ParseRunner;
+import org.parboiled.parserunners.ReportingParseRunner;
 import org.parboiled.support.DefaultValueStack;
 import org.parboiled.support.ParsingResult;
 import org.parboiled.support.ValueStack;
@@ -117,7 +117,7 @@ public class LessProcessor {
         }
 
         // Parse the input
-        ParseRunner<Node> parseRunner = new ReportingParseRunner<Node>(Parboiled.createParser(Parser.class, _translationEnabled).Document(), stack);
+        ParseRunner<Node> parseRunner = new ReportingParseRunner<Node>(Parboiled.createParser(Parser.class, _translationEnabled).Document()).withValueStack(stack);
         ParsingResult<Node> result = parseRunner.run(IOUtils.toString(input, "UTF-8"));
 
         if (result.hasErrors()) {

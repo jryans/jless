@@ -4,13 +4,47 @@
 
     <groupId>com.bazaarvoice</groupId>
     <artifactId>jless</artifactId>
-    <version>0.4.8</version>
+    <version>0.6.0-SNAPSHOT</version>
     <packaging>jar</packaging>
 
     <name>${project.artifactId}</name>
     <description>A Java implementation of the LESS CSS framework</description>
     <url>https://github.com/jryans/jless</url>
     <inceptionYear>2010</inceptionYear>
+
+    <licenses>
+        <license>
+            <name>Apache 2</name>
+            <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+            <distribution>repo</distribution>
+        </license>
+    </licenses>
+
+    <developers>
+        <developer>
+            <name>J. Ryan Stinnett</name>
+            <organization>Bazaarvoice</organization>
+            <organizationUrl>http://www.bazaarvoice.com</organizationUrl>
+            <email>ryan.stinnett@bazaarvoice.com</email>
+            <timezone>-6</timezone>
+        </developer>
+    </developers>
+
+    <scm>
+        <connection>scm:git:git://github.com/jryans/jless.git</connection>
+        <developerConnection>scm:git:ssh://git@github.com/jryans/jless.git</developerConnection>
+        <url>https://github.com/jryans/jless</url>
+    </scm>
+
+    <organization>
+        <name>Bazaarvoice</name>
+        <url>http://www.bazaarvoice.com</url>
+    </organization>
+
+    <issueManagement>
+        <system>GitHub</system>
+        <url>https://github.com/jryans/jless/issues</url>
+    </issueManagement>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -20,24 +54,34 @@
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-assembly-plugin</artifactId>
-                <version>2.2</version>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>2.3.2</version>
+                <configuration>
+                    <source>1.6</source>
+                    <target>1.6</target>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-source-plugin</artifactId>
+                <version>2.1.2</version>
                 <executions>
                     <execution>
-                        <phase>package</phase>
                         <goals>
-                            <goal>attached</goal>
+                            <goal>jar-no-fork</goal>
                         </goals>
-                        <configuration>
-                            <descriptorRefs>
-                                <descriptorRef>jar-with-dependencies</descriptorRef>
-                            </descriptorRefs>
-                            <archive>
-                                <manifest>
-                                    <mainClass>com.bazaarvoice.jless.LessProcessor</mainClass>
-                                </manifest>
-                            </archive>
-                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-javadoc-plugin</artifactId>
+                <version>2.8</version>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>jar</goal>
+                        </goals>
                     </execution>
                 </executions>
             </plugin>
@@ -56,23 +100,27 @@
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-compiler-plugin</artifactId>
-                <version>2.3.2</version>
-                <configuration>
-                    <source>1.6</source>
-                    <target>1.6</target>
-                </configuration>
-            </plugin>
-            <plugin>
-                <groupId>com.mycila.maven-license-plugin</groupId>
-                <artifactId>maven-license-plugin</artifactId>
-                <version>1.9.0</version>
-                <configuration>
-                    <header>src/etc/header.txt</header>
-                    <includes>
-                        <include>**/*.java</include>
-                    </includes>
-                </configuration>
+                <artifactId>maven-assembly-plugin</artifactId>
+                <version>2.2</version>
+                <executions>
+                    <execution>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>single</goal>
+                        </goals>
+                        <configuration>
+                            <attach>false</attach>
+                            <descriptorRefs>
+                                <descriptorRef>jar-with-dependencies</descriptorRef>
+                            </descriptorRefs>
+                            <archive>
+                                <manifest>
+                                    <mainClass>com.bazaarvoice.jless.LessProcessor</mainClass>
+                                </manifest>
+                            </archive>
+                        </configuration>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
     </build>
@@ -80,8 +128,8 @@
     <dependencies>
         <dependency>
             <groupId>org.parboiled</groupId>
-            <artifactId>parboiled</artifactId>
-            <version>0.9.8.2</version>
+            <artifactId>parboiled-java</artifactId>
+            <version>1.0.1</version>
         </dependency>
         <dependency>
             <groupId>com.google.collections</groupId>
@@ -108,49 +156,9 @@
         <dependency>
             <groupId>com.googlecode.java-diff-utils</groupId>
             <artifactId>diffutils</artifactId>
-            <version>1.2</version>
+            <version>1.2.1</version>
             <scope>test</scope>
         </dependency>
     </dependencies>
 
-    <repositories>
-        <repository>
-            <id>libraries</id>
-            <url>file://lib</url>
-        </repository>
-    </repositories>
-
-    <scm>
-        <connection>scm:git:git://github.com/jryans/jless.git</connection>
-        <developerConnection>scm:git:ssh://git@github.com/jryans/jless.git</developerConnection>
-        <url>https://github.com/jryans/jless</url>
-    </scm>
-
-    <developers>
-        <developer>
-            <name>J. Ryan Stinnett</name>
-            <organization>Bazaarvoice</organization>
-            <organizationUrl>http://www.bazaarvoice.com</organizationUrl>
-            <email>ryan.stinnett@bazaarvoice.com</email>
-            <timezone>-6</timezone>
-        </developer>
-    </developers>
-
-    <organization>
-        <name>Bazaarvoice</name>
-        <url>http://www.bazaarvoice.com</url>
-    </organization>
-
-    <issueManagement>
-        <system>GitHub</system>
-        <url>https://github.com/jryans/jless/issues</url>
-    </issueManagement>
-
-    <licenses>
-        <license>
-            <name>Apache 2</name>
-            <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
-            <distribution>repo</distribution>
-        </license>
-    </licenses>
 </project>
