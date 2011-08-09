@@ -299,7 +299,7 @@ public class Parser extends BaseParser<Node> {
     }
 
     Rule Pseudo() {
-        return Sequence(':', Optional(':'), FirstOf(FunctionalPseudo(), Ident()));
+        return Sequence(':', Optional(':' ), FirstOf(FunctionalPseudo(), Ident()));
     }
 
     Rule FunctionalPseudo() {
@@ -340,7 +340,7 @@ public class Parser extends BaseParser<Node> {
                                 Ws0(), ',', Ws0Nodes(),
                                 ExpressionPhrase(), peek(1).addChild(pop())
                         ),
-                        Sp0(), FirstOf(';', Sequence(Ws0(), Test('}'))),
+                        Sp0(), FirstOf(';', Sequence(Ws0(), Test('}' ))),
                         peek(1).addChild(pop())
                 ),
                 // Empty rules are ignored
@@ -401,7 +401,7 @@ public class Parser extends BaseParser<Node> {
     }
 
     Rule Universal() {
-        return Ch('*');
+        return Ch('*' );
     }
 
     Rule ID() {
@@ -613,8 +613,8 @@ public class Parser extends BaseParser<Node> {
      */
     Rule String() {
         return FirstOf(
-                Sequence('\'', ZeroOrMore(TestNot('\''), ANY), '\''),
-                Sequence('"', ZeroOrMore(TestNot('"'), ANY), '"')
+                Sequence('\'', ZeroOrMore(TestNot('\'' ), ANY), '\'' ),
+                Sequence('"', ZeroOrMore(TestNot('"' ), ANY), '"' )
         );
     }
 
@@ -652,11 +652,8 @@ public class Parser extends BaseParser<Node> {
         );
     }
 
-    /**
-     * ('px' / 'em' / 'pc' / '%' / 'ex' / 'in' / 'deg' / 's' / 'pt' / 'cm' / 'mm')?
-     */
     Rule Unit() {
-        return Optional(FirstOf("px", "em", "pc", '%', "ex", "in", "deg", 's', "pt", "cm", "mm"));
+        return Optional(FirstOf('%', Ident()));
     }
 
     /**
@@ -709,7 +706,7 @@ public class Parser extends BaseParser<Node> {
     }
 
     Rule Alpha() {
-        return FirstOf(CharRange('a', 'z'), CharRange('A', 'Z'));
+        return FirstOf(CharRange('a', 'z' ), CharRange('A', 'Z' ));
     }
 
     Rule Digit0() {
@@ -721,11 +718,11 @@ public class Parser extends BaseParser<Node> {
     }
 
     Rule Digit() {
-        return CharRange('0', '9');
+        return CharRange('0', '9' );
     }
 
     Rule Hex() {
-        return FirstOf(CharRange('a', 'f'), CharRange('A', 'F'), Digit());
+        return FirstOf(CharRange('a', 'f' ), CharRange('A', 'F' ), Digit());
     }
 
     Rule Ws0() {
@@ -741,13 +738,13 @@ public class Parser extends BaseParser<Node> {
     }
 
     Rule Whitespace() {
-        return AnyOf(" \r\n\t");
+        return AnyOf(" \r\n\t\f");
     }
 
     Rule WhitespaceNode() {
         return FirstOf(
                 Sequence(OneOrMore(AnyOf(" \t")), peek().addChild(new SpacingNode(match()))),
-                Sequence(FirstOf('\n', "\r\n"), peek().addChild(new LineBreakNode(1)))
+                Sequence(FirstOf('\n', "\r\n", '\r', '\f' ), peek().addChild(new LineBreakNode(1)))
         );
     }
 
@@ -779,11 +776,42 @@ public class Parser extends BaseParser<Node> {
     }
 
     Rule NameStart() {
-        return FirstOf('_', Alpha());
+        return FirstOf('_', Alpha(), NonAscii(), Escape());
     }
 
     Rule NameCharacter() {
-        return FirstOf(AnyOf("-_"), Alphanumeric());
+        return FirstOf(AnyOf("-_"), Alphanumeric(), NonAscii(), Escape());
+    }
+
+    /**
+     * nonascii [^\0-\177]
+     */
+    Rule NonAscii() {
+        return Sequence(TestNot(CharRange((char) 0, (char) 127)), ANY);
+    }
+
+    /**
+     * '\' [0-9a-fA-F]{1,6} wc?
+     */
+    Rule Unicode() {
+        return Sequence(
+                '\\',
+                Hex(), Optional(Hex(), Optional(Hex(), Optional(Hex(), Optional(Hex(), Optional(Hex()))))),
+                Optional(Whitespace())
+        );
+    }
+
+    /**
+     * unicode | '\' [^\x0-\x1F]
+     */
+    Rule Escape() {
+        return Sequence(
+                Test('\\'), // for performance
+                FirstOf(
+                        Unicode(),
+                        Sequence('\\', Sequence(TestNot(CharRange((char) 0, (char) 31)), ANY))
+                )
+        );
     }
 
     @MemoMismatches

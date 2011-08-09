@@ -4,7 +4,7 @@
 
     <groupId>com.bazaarvoice</groupId>
     <artifactId>jless</artifactId>
-    <version>0.6.0-SNAPSHOT</version>
+    <version>0.4.9-SNAPSHOT</version>
     <packaging>jar</packaging>
 
     <name>${project.artifactId}</name>
@@ -132,9 +132,9 @@
             <version>1.0.1</version>
         </dependency>
         <dependency>
-            <groupId>com.google.collections</groupId>
-            <artifactId>google-collections</artifactId>
-            <version>1.0</version>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava</artifactId>
+            <version>r09</version>
         </dependency>
         <dependency>
             <groupId>commons-lang</groupId>
@@ -149,8 +149,7 @@
         <dependency>
             <groupId>org.testng</groupId>
             <artifactId>testng</artifactId>
-            <version>5.10</version>
-            <classifier>jdk15</classifier>
+            <version>6.1.1</version>
             <scope>test</scope>
         </dependency>
         <dependency>
