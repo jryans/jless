@@ -1,3 +1,6 @@
+# Version 0.4.9 (Aug. 9, 2011)
+* Added support for Unicode characters and escapes in identifiers (per CSS spec)
+
 # Version 0.4.8 (May 10, 2011)
 * Whitespace now allowed between mixin call, arguments, and terminator
 
