@@ -26,6 +26,9 @@ import com.bazaarvoice.jless.ast.node.FilterArgumentNode;
 import com.bazaarvoice.jless.ast.node.FunctionNode;
 import com.bazaarvoice.jless.ast.node.InternalNode;
 import com.bazaarvoice.jless.ast.node.LineBreakNode;
+import com.bazaarvoice.jless.ast.node.MediaQueryNode;
+import com.bazaarvoice.jless.ast.node.MediaTypeNode;
+import com.bazaarvoice.jless.ast.node.MediaTypeRestriction;
 import com.bazaarvoice.jless.ast.node.Node;
 import com.bazaarvoice.jless.ast.node.ParametersNode;
 import com.bazaarvoice.jless.ast.node.PlaceholderNode;
@@ -48,6 +51,8 @@ import org.parboiled.Context;
 import org.parboiled.Rule;
 import org.parboiled.annotations.MemoMismatches;
 import org.parboiled.support.Var;
+
+import java.util.List;
 
 /**
  * Initially transcribed into Parboiled from the
@@ -103,6 +108,7 @@ public class Parser extends BaseParser<Node> {
                 ZeroOrMore(
                         FirstOf(
                                 Declaration(),
+                                MediaQuery(),
                                 RuleSet(),
                                 MixinReference(),
                                 Sequence(push(new WhiteSpaceCollectionNode()), Sp1Nodes())
@@ -113,6 +119,77 @@ public class Parser extends BaseParser<Node> {
     }
 
     // ********** CSS Rule Sets & Mixins **********
+
+    /**
+     * "@media" Ws0 "only "? MediaType
+     */
+    Rule MediaQuery() {
+        return Sequence(
+            push(new MediaQueryNode()),
+            MediaQueryDefinition(), peek(1).addChild(pop()),
+            Ws0(),
+            Optional(OnlyIndicator()),
+            OneOrMore(MediaType()), Ws0(),
+            '{', Scope(), '}',
+            peek(1).addChild(pop()),
+            Ws0Nodes()
+        );
+    }
+
+    /**
+     * media type name Optional( and "(" Css property ")")
+     */
+    Rule MediaType() {
+        return Sequence(
+            push(new MediaTypeNode()),
+            MediaTypeName(),
+            peek(1).addChild(pop()),
+            peek().addChild(new SpacingNode(" ")),
+            Optional(
+                    MediaTypeRestriction(),
+                    peek(1).addChild(pop())
+            ),
+            peek(1).addChild(pop())
+        );
+    }
+
+    /**
+    * simple media type name
+    */
+    Rule MediaTypeName() {
+        return Sequence(
+              OneOrMore(NameCharacter()),
+              push(new SimpleNode(match()))
+        );
+    }
+
+    /**
+     * Sequence ( Whitespace "and" Whitespace "(" Css Property ")" )
+     */
+    Rule MediaTypeRestriction() {
+        return Sequence(
+            Ws0(), "and", Ws0(), '(',
+            Sequence(Ident(), Optional(Ws0()), ':', Optional(Ws0())),
+            push(new SimpleNode(match())),
+            ExpressionPhrase(),
+            ')',
+            push(new MediaTypeRestriction()),
+            peek().addChild(pop(2)),
+            peek().addChild(pop(1))
+        );
+    }
+
+    /**
+     * "only" Whitespace
+     */
+    Rule OnlyIndicator() {
+        return Sequence(
+                peek().addChild(new SpacingNode(" ")),
+                "only",
+                peek().addChild(new SimpleNode(match())),
+                Ws0()
+        );
+    }
 
     /**
      * (Selectors '{' Ws0 / Class Ws0 Parameters Ws0 '{' Ws0) Scope Ws0 '}' Ws0
@@ -138,7 +215,8 @@ public class Parser extends BaseParser<Node> {
                                 Scope(), peek(1).addChild(pop()), peek(1).addChild(pop()), Ws0()
                         )
                 ),
-                '}', Ws0Nodes()
+                '}', Ws0Nodes(),
+                checkAndFixNestedMediaQuery((InternalNode)peek())
         );
     }
 
@@ -519,6 +597,13 @@ public class Parser extends BaseParser<Node> {
         );
     }
 
+    Rule MediaQueryDefinition() {
+        return Sequence(
+                "@media",
+                push(new SimpleNode(match()))
+        );
+    }
+
     /**
      * 'url(' (String / [-_%$/.&=:;#+?Alphanumeric]+) ')'
      */
@@ -824,6 +909,88 @@ public class Parser extends BaseParser<Node> {
     }
 
     // ********** Translation Actions **********
+
+    /**
+     * Locates nested MediaQueryNode inside RuleSetNode,
+     * separates RuleSetNode and MediaQueryNode
+     *
+     * If MediaQueryNode has nested RuleSetNodes than to every
+     * nested selectors will added selector of input RuleSetNode
+     *
+     * If MediaQueryNode has other nodes except WhiteSpaceCollectionNode and
+     * RuleSetNode than all of that will be wrapped with new RuleSetNode with
+     * the same selectors as has input RuleSetNode
+     */
+    boolean checkAndFixNestedMediaQuery(InternalNode ruleSetNode) {
+        if (!(ruleSetNode instanceof RuleSetNode)) {
+            return true;
+        }
+
+        ScopeNode scopeNode = NodeTreeUtils.getFirstChild(ruleSetNode, ScopeNode.class);
+        SelectorGroupNode selectorGroupNode = NodeTreeUtils.getFirstChild(ruleSetNode, SelectorGroupNode.class);
+
+        if (selectorGroupNode == null) {
+            return true;
+        }
+
+        List<SelectorNode> selectorNodes = NodeTreeUtils.getChildren(selectorGroupNode, SelectorNode.class);
+
+        if (selectorNodes.size() < 0) {
+            return true;
+        }
+
+        List<MediaQueryNode> mediaQueryNodes = NodeTreeUtils.getAndRemoveChildren(scopeNode, MediaQueryNode.class);
+
+        for (MediaQueryNode mediaQueryNode : mediaQueryNodes) {
+            ScopeNode mediaScopeNode = NodeTreeUtils.getFirstChild(mediaQueryNode, ScopeNode.class);
+
+            List<RuleSetNode> nestedRuleSets = NodeTreeUtils.getAndRemoveChildren(mediaScopeNode, RuleSetNode.class);
+
+            // if scope node for media query has anything more but whitespaces and rule sets than wrap it with rule set with the same selector group as outer rule set has
+            if (mediaScopeNode.getChildren().size() > NodeTreeUtils.getChildren(mediaScopeNode, WhiteSpaceCollectionNode.class).size()) {
+                RuleSetNode newRuleSetNode = new RuleSetNode();
+                ScopeNode newScopeNode = new ScopeNode();
+                newRuleSetNode.addChild(selectorGroupNode.clone());
+                newRuleSetNode.addChild(newScopeNode);
+
+                NodeTreeUtils.moveChildren(mediaScopeNode, newScopeNode);
+
+                mediaScopeNode.clearChildren();
+                mediaScopeNode.addChild(newRuleSetNode);
+            }
+
+            // adding outer selectors to every nested selectors
+            for (RuleSetNode nestedRuleSet : nestedRuleSets) {
+                List<SelectorGroupNode> nestedSelectorGroupNodes = NodeTreeUtils.getChildren(nestedRuleSet, SelectorGroupNode.class);
+
+                for (SelectorGroupNode nestedSelectorGroupNode : nestedSelectorGroupNodes) {
+                    List<SelectorNode> nestedSelectorNodes = NodeTreeUtils.getAndRemoveChildren(nestedSelectorGroupNode, SelectorNode.class);
+                    NodeTreeUtils.getAndRemoveChildren(nestedSelectorGroupNode, SpacingNode.class);
+
+                    for (SelectorNode selectorNode : selectorNodes) {
+                        for (SelectorNode nestedSelectorNode : nestedSelectorNodes) {
+
+                            for (int j = selectorNode.getChildren().size() - 1; j >= 0; j--) {
+                                nestedSelectorNode.addChild(0, new SpacingNode(" "));
+                                nestedSelectorNode.addChild(0, selectorNode.getChildren().get(j).clone());
+                            }
+                            nestedSelectorGroupNode.addChild(nestedSelectorNode);
+                            nestedSelectorGroupNode.addChild(new SpacingNode(" "));
+                        }
+                    }
+                }
+                mediaScopeNode.addChild(nestedRuleSet);
+            }
+
+            if (ruleSetNode.getParent() != null) {
+                ruleSetNode.getParent().addChild(mediaQueryNode);
+            } else {
+                getContext().getValueStack().peek( getContext().getValueStack().size() - 1).addChild(mediaQueryNode);
+            }
+        }
+
+        return true;
+    }
 
     /**
      * Locates the referenced mixin in one of the scope nodes on the stack. If found, the mixin's

@@ -18,6 +18,9 @@
 
 package com.bazaarvoice.jless.ast.visitor;
 
+import com.bazaarvoice.jless.ast.node.MediaQueryNode;
+import com.bazaarvoice.jless.ast.node.MediaTypeNode;
+import com.bazaarvoice.jless.ast.node.MediaTypeRestriction;
 import com.bazaarvoice.jless.ast.node.Node;
 import com.bazaarvoice.jless.ast.node.ParametersNode;
 import com.bazaarvoice.jless.ast.node.PropertyNode;
@@ -53,6 +56,12 @@ public interface NodeAdditionVisitor {
     boolean add(ScopeNode node);
 
     boolean add(SelectorNode node);
+
+    boolean add(MediaQueryNode node);
+
+    boolean add(MediaTypeNode node);
+
+    boolean add(MediaTypeRestriction node);
 
     boolean add(VariableDefinitionNode node);
 }

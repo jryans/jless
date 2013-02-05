@@ -92,6 +92,28 @@ public final class NodeTreeUtils {
         return filteredChildren;
     }
 
+    public static <C extends Node> List<C> getAndRemoveChildren(InternalNode parent, Class<C> targetClass) {
+        List<C> filteredChildren = new ArrayList<C>();
+        List<Node> children = parent.getChildren();
+        boolean founded;
+
+        do {
+            founded = false;
+            for (int i = 0; i < children.size(); i++) {
+                Node child = children.get(i);
+                if (targetClass.isInstance(child)) {
+                    //noinspection unchecked
+                    filteredChildren.add((C) child);
+                    parent.removeChild(i);
+                    founded = true;
+                    break;
+                }
+            }
+        } while (founded);
+
+        return filteredChildren;
+    }
+
     public static List<Node> getChildrenWithVisibility(InternalNode parent, boolean visibility) {
         List<Node> filteredChildren = new ArrayList<Node>();
 
