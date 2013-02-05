@@ -922,7 +922,7 @@ public class Parser extends BaseParser<Node> {
      * the same selectors as has input RuleSetNode
      */
     boolean checkAndFixNestedMediaQuery(InternalNode ruleSetNode) {
-        if (!(ruleSetNode instanceof RuleSetNode)) {
+        if (!(ruleSetNode instanceof RuleSetNode) || !isParserTranslationEnabled()) {
             return true;
         }
 
