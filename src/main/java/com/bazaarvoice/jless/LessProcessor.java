@@ -21,6 +21,7 @@ package com.bazaarvoice.jless;
 import com.bazaarvoice.jless.ast.node.Node;
 import com.bazaarvoice.jless.ast.node.ScopeNode;
 import com.bazaarvoice.jless.ast.visitor.FlattenNestedRuleSets;
+import com.bazaarvoice.jless.ast.visitor.NestedMediaQueries;
 import com.bazaarvoice.jless.ast.visitor.Printer;
 import com.bazaarvoice.jless.exception.LessTranslationException;
 import com.bazaarvoice.jless.parser.Parser;
@@ -175,6 +176,7 @@ public class LessProcessor {
                 public String get() {
                     // Perform additional translation steps if needed
                     if (_translationEnabled) {
+                        _scope.traverse(new NestedMediaQueries());
                         _scope.traverse(new FlattenNestedRuleSets());
                     }
 
