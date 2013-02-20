@@ -69,8 +69,6 @@ public abstract class DiffTest extends ProcessingTest {
         }
 
         Patch diff = DiffUtils.diff(referenceLines, outputLines);
-        System.out.println(referenceLines);
-        System.out.println(outputLines);
 
         if (!diff.getDeltas().isEmpty()) {
             TestUtils.getLog().println("Reference output diff:");

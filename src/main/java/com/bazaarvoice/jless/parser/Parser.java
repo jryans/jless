@@ -180,11 +180,6 @@ public class Parser extends BaseParser<Node> {
                     ExpressionPhrase()
             ),
             ')',
-//            peek(5).addChild(pop(4)),
-//            peek(4).addChild(pop(3)),
-//            peek(3).addChild(pop(2)),
-//            peek(2).addChild(pop(1)),
-//            peek(1).addChild(pop()),
             peek(1).addChild(pop())
         );
     }
