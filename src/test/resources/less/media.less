@@ -1,0 +1,13 @@
+.OuterClass .OuterSubClass {
+  padding: 25px;
+  @media only screen and (width: 1024px) {
+    margin: 5px;
+  }
+
+  @media all and (max-width: 600px) {
+    .InnerClass, .InnerClass1, .InnerClass2 {width: auto; float: none;}
+    .InnerClass1 .InnerSubClass1 {display: none;}
+    .InnerClass2 .InnerSubClass2 {width: auto;}
+    .InnerClass1 .InnerClass2, .InnerClass .InnerClass1 .InnerClass3 {display: none;}
+  }
+}

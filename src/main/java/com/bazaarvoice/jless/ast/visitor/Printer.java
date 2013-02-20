@@ -25,6 +25,7 @@ import com.bazaarvoice.jless.ast.node.ExpressionPhraseNode;
 import com.bazaarvoice.jless.ast.node.FilterArgumentNode;
 import com.bazaarvoice.jless.ast.node.FunctionNode;
 import com.bazaarvoice.jless.ast.node.LineBreakNode;
+import com.bazaarvoice.jless.ast.node.MediaTypeRestriction;
 import com.bazaarvoice.jless.ast.node.MultipleLineCommentNode;
 import com.bazaarvoice.jless.ast.node.Node;
 import com.bazaarvoice.jless.ast.node.PropertyNode;
@@ -63,6 +64,17 @@ public class Printer extends InclusiveNodeVisitor {
     }
     
     // Node output
+    @Override
+    public boolean enter(MediaTypeRestriction node) {
+        print(_compress ? " and(" : " and (");
+        return super.enter(node);
+    }
+
+    @Override
+    public boolean exit(MediaTypeRestriction node) {
+        print(_compress ? ")" : ") ");
+        return super.exit(node);
+    }
 
     @Override
     public boolean enter(ArgumentsNode node) {

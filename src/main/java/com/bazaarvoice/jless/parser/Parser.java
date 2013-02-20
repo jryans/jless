@@ -26,6 +26,9 @@ import com.bazaarvoice.jless.ast.node.FilterArgumentNode;
 import com.bazaarvoice.jless.ast.node.FunctionNode;
 import com.bazaarvoice.jless.ast.node.InternalNode;
 import com.bazaarvoice.jless.ast.node.LineBreakNode;
+import com.bazaarvoice.jless.ast.node.MediaQueryNode;
+import com.bazaarvoice.jless.ast.node.MediaTypeNode;
+import com.bazaarvoice.jless.ast.node.MediaTypeRestriction;
 import com.bazaarvoice.jless.ast.node.Node;
 import com.bazaarvoice.jless.ast.node.ParametersNode;
 import com.bazaarvoice.jless.ast.node.PlaceholderNode;
@@ -48,6 +51,8 @@ import org.parboiled.Context;
 import org.parboiled.Rule;
 import org.parboiled.annotations.MemoMismatches;
 import org.parboiled.support.Var;
+
+import java.util.List;
 
 /**
  * Initially transcribed into Parboiled from the
@@ -103,6 +108,7 @@ public class Parser extends BaseParser<Node> {
                 ZeroOrMore(
                         FirstOf(
                                 Declaration(),
+                                MediaQuery(),
                                 RuleSet(),
                                 MixinReference(),
                                 Sequence(push(new WhiteSpaceCollectionNode()), Sp1Nodes())
@@ -113,6 +119,81 @@ public class Parser extends BaseParser<Node> {
     }
 
     // ********** CSS Rule Sets & Mixins **********
+
+    /**
+     * "@media" Ws0 "only "? MediaType
+     */
+    Rule MediaQuery() {
+        return Sequence(
+            push(new MediaQueryNode()),
+            MediaQueryDefinition(), peek(1).addChild(pop()), peek().addChild(new SimpleNode(" ")),
+            Ws0(),
+            Optional(OnlyIndicator()),
+            OneOrMore(MediaType()), Ws0(),
+            '{', Scope(), '}',
+            peek(1).addChild(pop()),
+            Ws0Nodes()
+        );
+    }
+
+    /**
+     * media type name Optional( and "(" Css property ")")
+     */
+    Rule MediaType() {
+        return Sequence(
+            push(new MediaTypeNode()),
+            MediaTypeName(),
+            peek(1).addChild(pop()),
+            FirstOf(
+                Sequence(
+                    MediaTypeRestriction(),
+                    peek(1).addChild(pop())
+                ),
+                Optional(Ws0(), push(new SpacingNode(" ")), peek(1).addChild(pop()))
+            ),
+            peek(1).addChild(pop())
+        );
+    }
+
+    /**
+    * simple media type name
+    */
+    Rule MediaTypeName() {
+        return Sequence(
+              OneOrMore(NameCharacter()),
+              push(new SimpleNode(match()))
+        );
+    }
+
+    /**
+     * Sequence ( Whitespace "and" Whitespace "(" Css Property ")" )
+     */
+    Rule MediaTypeRestriction() {
+        return Sequence(
+            push(new MediaTypeRestriction()),
+            Ws0(), "and", Ws0(), '(',
+            Sequence(
+                    Ident(), peek().addChild(new SimpleNode(match())),
+                    ':', peek().addChild(new SimpleNode(":")),
+                    Optional(Ws0()),
+                    peek().addChild(new SpacingNode(" ")),
+                    ExpressionPhrase()
+            ),
+            ')',
+            peek(1).addChild(pop())
+        );
+    }
+
+    /**
+     * "only" Whitespace
+     */
+    Rule OnlyIndicator() {
+        return Sequence(
+                "only",
+                peek().addChild(new SimpleNode(match())), peek().addChild(new SimpleNode(" ")),
+                Ws0()
+        );
+    }
 
     /**
      * (Selectors '{' Ws0 / Class Ws0 Parameters Ws0 '{' Ws0) Scope Ws0 '}' Ws0
@@ -516,6 +597,13 @@ public class Parser extends BaseParser<Node> {
         return Sequence(
                 Variable(),
                 pushVariableReference(match())
+        );
+    }
+
+    Rule MediaQueryDefinition() {
+        return Sequence(
+                "@media",
+                push(new SimpleNode(match()))
         );
     }
 
