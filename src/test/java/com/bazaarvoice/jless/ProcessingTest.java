@@ -116,6 +116,10 @@ public class ProcessingTest {
         runTestFor("ie");
     }
 
+    public void testMedia() {
+        runTestFor("media");
+    }
+
     public void testMixinsArgsMinimal() {
         runTestFor("mixins-args-minimal");
     }

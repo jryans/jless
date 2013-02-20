@@ -25,6 +25,9 @@ import com.bazaarvoice.jless.ast.node.ExpressionPhraseNode;
 import com.bazaarvoice.jless.ast.node.FilterArgumentNode;
 import com.bazaarvoice.jless.ast.node.FunctionNode;
 import com.bazaarvoice.jless.ast.node.LineBreakNode;
+import com.bazaarvoice.jless.ast.node.MediaQueryNode;
+import com.bazaarvoice.jless.ast.node.MediaTypeNode;
+import com.bazaarvoice.jless.ast.node.MediaTypeRestriction;
 import com.bazaarvoice.jless.ast.node.MultipleLineCommentNode;
 import com.bazaarvoice.jless.ast.node.Node;
 import com.bazaarvoice.jless.ast.node.PropertyNode;
@@ -96,6 +99,14 @@ public interface NodeNavigationVisitor {
 
     boolean exit(FilterArgumentNode node);
 
+    boolean enter(MediaTypeRestriction node);
+
+    boolean exit(MediaTypeRestriction node);
+
+    boolean enter(MediaTypeNode node);
+
+    boolean exit(MediaTypeNode node);
+
     boolean visit(LineBreakNode node);
 
     boolean visit(MultipleLineCommentNode node);
@@ -111,6 +122,12 @@ public interface NodeNavigationVisitor {
     boolean enter(ScopeNode node);
 
     boolean exit(ScopeNode node);
+
+    boolean visit(MediaQueryNode node);
+
+    boolean enter(MediaQueryNode node);
+
+    boolean exit(MediaQueryNode node);
 
     boolean enter(SelectorNode node);
 

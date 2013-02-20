@@ -25,6 +25,9 @@ import com.bazaarvoice.jless.ast.node.ExpressionPhraseNode;
 import com.bazaarvoice.jless.ast.node.FilterArgumentNode;
 import com.bazaarvoice.jless.ast.node.FunctionNode;
 import com.bazaarvoice.jless.ast.node.LineBreakNode;
+import com.bazaarvoice.jless.ast.node.MediaQueryNode;
+import com.bazaarvoice.jless.ast.node.MediaTypeNode;
+import com.bazaarvoice.jless.ast.node.MediaTypeRestriction;
 import com.bazaarvoice.jless.ast.node.MultipleLineCommentNode;
 import com.bazaarvoice.jless.ast.node.Node;
 import com.bazaarvoice.jless.ast.node.ParametersNode;
@@ -91,6 +94,41 @@ public abstract class DefaultNodeVisitor implements NodeAdditionVisitor, NodeNav
 
     @Override
     public boolean add(SelectorNode node) {
+        return defaultValue();
+    }
+
+    @Override
+    public boolean add(MediaQueryNode node) {
+        return defaultValue();
+    }
+
+    @Override
+    public boolean add(MediaTypeNode node) {
+        return defaultValue();
+    }
+
+    @Override
+    public boolean enter(MediaTypeNode node) {
+        return defaultValue();
+    }
+
+    @Override
+    public boolean exit(MediaTypeNode node) {
+        return defaultValue();
+    }
+
+    @Override
+    public boolean add(MediaTypeRestriction node) {
+        return defaultValue();
+    }
+
+    @Override
+    public boolean enter(MediaTypeRestriction node) {
+        return defaultValue();
+    }
+
+    @Override
+    public boolean exit(MediaTypeRestriction node) {
         return defaultValue();
     }
 
@@ -203,6 +241,21 @@ public abstract class DefaultNodeVisitor implements NodeAdditionVisitor, NodeNav
 
     @Override
     public boolean exit(SelectorNode node) {
+        return defaultValue();
+    }
+
+    @Override
+    public boolean enter(MediaQueryNode node) {
+        return defaultValue();
+    }
+
+    @Override
+    public boolean visit(MediaQueryNode node) {
+        return defaultValue();
+    }
+
+    @Override
+    public boolean exit(MediaQueryNode node) {
         return defaultValue();
     }
 
