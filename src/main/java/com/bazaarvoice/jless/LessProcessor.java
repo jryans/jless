@@ -80,7 +80,7 @@ public class LessProcessor {
 
     // Controls whether a compressed version of the output is printed.
     // There is no performance penalty for enabling compression.
-    private boolean _compressionEnabled = false;
+    private boolean _compressionEnabled = true;
 
     public boolean isTranslationEnabled() {
         return _translationEnabled;

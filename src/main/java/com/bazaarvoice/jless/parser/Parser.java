@@ -126,7 +126,7 @@ public class Parser extends BaseParser<Node> {
     Rule MediaQuery() {
         return Sequence(
             push(new MediaQueryNode()),
-            MediaQueryDefinition(), peek(1).addChild(pop()),
+            MediaQueryDefinition(), peek(1).addChild(pop()), peek().addChild(new SimpleNode(" ")),
             Ws0(),
             Optional(OnlyIndicator()),
             OneOrMore(MediaType()), Ws0(),
@@ -144,10 +144,12 @@ public class Parser extends BaseParser<Node> {
             push(new MediaTypeNode()),
             MediaTypeName(),
             peek(1).addChild(pop()),
-            peek().addChild(new SpacingNode(" ")),
-            Optional(
+            FirstOf(
+                Sequence(
                     MediaTypeRestriction(),
                     peek(1).addChild(pop())
+                ),
+                Optional(Ws0(), push(new SpacingNode(" ")), peek(1).addChild(pop()))
             ),
             peek(1).addChild(pop())
         );
@@ -168,14 +170,22 @@ public class Parser extends BaseParser<Node> {
      */
     Rule MediaTypeRestriction() {
         return Sequence(
-            Ws0(), "and", Ws0(), '(',
-            Sequence(Ident(), Optional(Ws0()), ':', Optional(Ws0())),
-            push(new SimpleNode(match())),
-            ExpressionPhrase(),
-            ')',
             push(new MediaTypeRestriction()),
-            peek().addChild(pop(2)),
-            peek().addChild(pop(1))
+            Ws0(), "and", Ws0(), '(',
+            Sequence(
+                    Ident(), peek().addChild(new SimpleNode(match())),
+                    ':', peek().addChild(new SimpleNode(":")),
+                    Optional(Ws0()),
+                    peek().addChild(new SpacingNode(" ")),
+                    ExpressionPhrase()
+            ),
+            ')',
+//            peek(5).addChild(pop(4)),
+//            peek(4).addChild(pop(3)),
+//            peek(3).addChild(pop(2)),
+//            peek(2).addChild(pop(1)),
+//            peek(1).addChild(pop()),
+            peek(1).addChild(pop())
         );
     }
 
@@ -184,9 +194,8 @@ public class Parser extends BaseParser<Node> {
      */
     Rule OnlyIndicator() {
         return Sequence(
-                peek().addChild(new SpacingNode(" ")),
                 "only",
-                peek().addChild(new SimpleNode(match())),
+                peek().addChild(new SimpleNode(match())), peek().addChild(new SimpleNode(" ")),
                 Ws0()
         );
     }
