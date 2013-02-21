@@ -1,3 +1,6 @@
+# Version 0.4.10 (Feb. 20, 2013)
+* Added support for media queries (Iaroslav Porodko)
+
 # Version 0.4.9 (Aug. 9, 2011)
 * Added support for Unicode characters and escapes in identifiers (per CSS spec)
 
