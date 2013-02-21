@@ -18,7 +18,6 @@
 package com.bazaarvoice.jless.ast.visitor;
 
 import com.bazaarvoice.jless.ast.node.MediaQueryNode;
-import com.bazaarvoice.jless.ast.node.Node;
 import com.bazaarvoice.jless.ast.node.RuleSetNode;
 import com.bazaarvoice.jless.ast.node.ScopeNode;
 import com.bazaarvoice.jless.ast.node.SelectorGroupNode;
