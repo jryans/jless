@@ -101,7 +101,6 @@ public class NestedMediaQueries extends InclusiveNodeVisitor {
                                 if (selectorNode.getChildren().get(j) instanceof SelectorSegmentNode) {
                                     SelectorSegmentNode selectorSegmentNode = (SelectorSegmentNode) selectorNode.getChildren().get(j).clone();
 
-//                                    selectorSegmentNode.setCombinator(" ");
                                     nestedSelectorNode.addChild(0, selectorSegmentNode);
                                 }
                             }
