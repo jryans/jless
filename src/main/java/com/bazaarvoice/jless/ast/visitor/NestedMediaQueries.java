@@ -18,10 +18,12 @@
 package com.bazaarvoice.jless.ast.visitor;
 
 import com.bazaarvoice.jless.ast.node.MediaQueryNode;
+import com.bazaarvoice.jless.ast.node.Node;
 import com.bazaarvoice.jless.ast.node.RuleSetNode;
 import com.bazaarvoice.jless.ast.node.ScopeNode;
 import com.bazaarvoice.jless.ast.node.SelectorGroupNode;
 import com.bazaarvoice.jless.ast.node.SelectorNode;
+import com.bazaarvoice.jless.ast.node.SelectorSegmentNode;
 import com.bazaarvoice.jless.ast.node.SpacingNode;
 import com.bazaarvoice.jless.ast.node.WhiteSpaceCollectionNode;
 import com.bazaarvoice.jless.ast.util.NodeTreeUtils;
@@ -88,10 +90,22 @@ public class NestedMediaQueries extends InclusiveNodeVisitor {
 
                     for (SelectorNode selectorNode : selectorNodes) {
                         for (SelectorNode nestedSelectorNode : nestedSelectorNodes) {
+                            if (nestedSelectorNode.getChildren().get(0) != null) {
+                                if (nestedSelectorNode.getChildren().get(0) instanceof SelectorSegmentNode) {
+                                    SelectorSegmentNode selectorSegmentNode = (SelectorSegmentNode) nestedSelectorNode.getChildren().get(0);
+                                    selectorSegmentNode.setCombinator(" ");
+                                }
+                            }
 
                             for (int j = selectorNode.getChildren().size() - 1; j >= 0; j--) {
-                                nestedSelectorNode.addChild(0, selectorNode.getChildren().get(j).clone());
+                                if (selectorNode.getChildren().get(j) instanceof SelectorSegmentNode) {
+                                    SelectorSegmentNode selectorSegmentNode = (SelectorSegmentNode) selectorNode.getChildren().get(j).clone();
+
+//                                    selectorSegmentNode.setCombinator(" ");
+                                    nestedSelectorNode.addChild(0, selectorSegmentNode);
+                                }
                             }
+
                             nestedSelectorGroupNode.addChild(nestedSelectorNode);
                             nestedSelectorGroupNode.addChild(new SpacingNode(" "));
                         }
