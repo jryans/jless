@@ -1,3 +1,6 @@
+# Version 0.4.11 (Feb. 22, 2013)
+* Fix whitespace issues (Iaroslav Porodko)
+
 # Version 0.4.10 (Feb. 20, 2013)
 * Added support for media queries (Iaroslav Porodko)
 
